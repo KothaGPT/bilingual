@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Documentation
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Model files (large files)
+*.model
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Data files (can be large)
+data/raw/*
+data/processed/*
+datasets/*/train.jsonl
+datasets/*/validation.jsonl
+datasets/*/test.jsonl
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!datasets/.gitkeep
+!models/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment variables
+.env
+.env.local
+
+# Package manager
+poetry.lock
+Pipfile.lock
