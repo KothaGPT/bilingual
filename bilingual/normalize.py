@@ -6,7 +6,7 @@ Handles Unicode normalization, punctuation, numerals, and script-specific cleani
 
 import re
 import unicodedata
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 # Bangla Unicode ranges
 BANGLA_RANGE = (0x0980, 0x09FF)

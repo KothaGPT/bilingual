@@ -1,8 +1,9 @@
 """
 Bilingual: High-quality Bangla and English NLP toolkit.
 
-This package provides production-ready tools for Bangla and English natural language processing,
-including tokenization, normalization, translation, and generation.
+This package provides production-ready tools for Bangla and English
+natural language processing, including tokenization, normalization,
+translation, and generation.
 """
 
 __version__ = "0.1.0"

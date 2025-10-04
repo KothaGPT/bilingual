@@ -7,7 +7,7 @@ Handles loading of various model types from different sources.
 import os
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 def load_model_from_name(
@@ -63,7 +63,7 @@ def _load_from_hub(
 ) -> Any:
     """Load a model from Hugging Face Hub or other remote source."""
     try:
-        from transformers import AutoModel, AutoTokenizer
+        from transformers import AutoModel
 
         model = AutoModel.from_pretrained(model_name, cache_dir=cache_dir, **kwargs)
 

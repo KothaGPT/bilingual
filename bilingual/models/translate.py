@@ -5,7 +5,7 @@ Handles Bangla ↔ English translation.
 """
 
 import warnings
-from typing import Any, List, Optional
+from typing import Any, List
 
 
 def translate_text(

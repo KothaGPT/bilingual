@@ -6,7 +6,6 @@ Provides easy access to common NLP tasks from the terminal.
 
 import argparse
 import sys
-from typing import Optional
 
 from bilingual import __version__
 from bilingual import bilingual_api as bb
