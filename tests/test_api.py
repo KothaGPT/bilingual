@@ -1,7 +1,5 @@
 """Tests for high-level API."""
 
-import pytest
-
 from bilingual import bilingual_api as bb
 
 

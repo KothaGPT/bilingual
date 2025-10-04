@@ -16,7 +16,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from bilingual.tokenizer import train_tokenizer
+from bilingual.tokenizer import train_tokenizer  # noqa: E402
 
 
 def main():
@@ -64,7 +64,7 @@ def main():
     # Set model prefix with output directory
     model_prefix = str(output_dir / args.model_prefix)
 
-    print(f"Training tokenizer with:")
+    print("Training tokenizer with:")
     print(f"  Input files: {', '.join(args.input)}")
     print(f"  Vocabulary size: {args.vocab_size}")
     print(f"  Model type: {args.model_type}")
@@ -81,7 +81,7 @@ def main():
         character_coverage=args.character_coverage,
     )
 
-    print(f"\nTokenizer trained successfully!")
+    print("\nTokenizer trained successfully!")
     print(f"Model saved to: {model_prefix}.model")
     print(f"Vocabulary saved to: {model_prefix}.vocab")
 

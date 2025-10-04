@@ -1,6 +1,5 @@
 """Tests for data utilities."""
 
-import json
 import tempfile
 from pathlib import Path
 

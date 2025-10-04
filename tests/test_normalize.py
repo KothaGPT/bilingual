@@ -1,7 +1,5 @@
 """Tests for text normalization utilities."""
 
-import pytest
-
 from bilingual.normalize import (
     contains_bangla,
     detect_language,
@@ -27,14 +25,14 @@ class TestUnicodeNormalization:
 
 class TestBanglaDetection:
     def test_is_bangla_char(self):
-        assert is_bangla_char("আ") == True
-        assert is_bangla_char("a") == False
-        assert is_bangla_char("1") == False
+        assert is_bangla_char("আ") is True
+        assert is_bangla_char("a") is False
+        assert is_bangla_char("1") is False
 
     def test_contains_bangla(self):
-        assert contains_bangla("আমি") == True
-        assert contains_bangla("Hello") == False
-        assert contains_bangla("আমি Hello") == True
+        assert contains_bangla("আমি") is True
+        assert contains_bangla("Hello") is False
+        assert contains_bangla("আমি Hello") is True
 
     def test_detect_language(self):
         assert detect_language("আমি স্কুলে যাই।") == "bn"

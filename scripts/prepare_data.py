@@ -24,8 +24,8 @@ from typing import List
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from bilingual.data_utils import BilingualDataset
-from bilingual.normalize import contains_bangla, detect_language, normalize_text
+from bilingual.data_utils import BilingualDataset  # noqa: E402
+from bilingual.normalize import detect_language, normalize_text  # noqa: E402
 
 
 def clean_and_filter_text(text: str, min_length: int = 10, max_length: int = 1000) -> bool:
@@ -197,7 +197,7 @@ def main():
         seed=args.seed,
     )
 
-    print(f"Split sizes:")
+    print("Split sizes:")
     print(f"  Train: {len(train_data)}")
     print(f"  Validation: {len(val_data)}")
     print(f"  Test: {len(test_data)}")
