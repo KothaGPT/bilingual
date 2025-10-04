@@ -5,7 +5,7 @@ Provides metrics for generation, translation, and classification tasks.
 """
 
 import warnings
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def compute_bleu(
@@ -14,7 +14,6 @@ def compute_bleu(
 ) -> float:
     """
     Compute BLEU score for translation.
-
     Args:
         predictions: List of predicted translations
         references: List of reference translations (can have multiple refs per prediction)
@@ -165,8 +164,8 @@ def evaluate_model(
     # Load dataset
     dataset = BilingualDataset(file_path=dataset_path)
 
-    # Load model
-    model = bb.load_model(model_name)
+    # Load model (not used yet in placeholder implementation)
+    _ = bb.load_model(model_name)
 
     results = {}
 

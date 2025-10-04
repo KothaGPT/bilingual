@@ -5,7 +5,7 @@ Handles text generation and language modeling tasks.
 """
 
 import warnings
-from typing import Any, List, Optional
+from typing import Any, List
 
 
 def generate_text(
