@@ -13,9 +13,9 @@ Usage:
 """
 
 import argparse
-from pathlib import Path
-import sys
 import json
+import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 def collect_wikipedia(lang: str, output_dir: Path, limit: int = None):
     """
     Collect data from Wikipedia.
-    
+
     Args:
         lang: Language code ('bn' or 'en')
         output_dir: Output directory
@@ -34,30 +34,30 @@ def collect_wikipedia(lang: str, output_dir: Path, limit: int = None):
     print("Note: This requires the 'wikipedia' package.")
     print("Install with: pip install wikipedia")
     print()
-    
+
     try:
         import wikipedia
     except ImportError:
         print("Error: wikipedia package not installed")
         print("Install with: pip install wikipedia")
         sys.exit(1)
-    
+
     # Set language
     wikipedia.set_lang(lang)
-    
+
     output_file = output_dir / f"wikipedia_{lang}.txt"
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # For demo purposes, collect a few sample articles
     # In production, you'd use Wikipedia dumps
     sample_queries = {
         "bn": ["বাংলাদেশ", "ঢাকা", "রবীন্দ্রনাথ ঠাকুর", "বাংলা ভাষা"],
         "en": ["Bangladesh", "Dhaka", "Rabindranath Tagore", "Bengali language"],
     }
-    
+
     queries = sample_queries.get(lang, [])
-    
-    with open(output_file, 'w', encoding='utf-8') as f:
+
+    with open(output_file, "w", encoding="utf-8") as f:
         for query in queries:
             try:
                 print(f"Fetching: {query}")
@@ -65,21 +65,21 @@ def collect_wikipedia(lang: str, output_dir: Path, limit: int = None):
                 f.write(page.content + "\n\n")
             except Exception as e:
                 print(f"  Error: {e}")
-    
+
     print(f"Saved to: {output_file}")
 
 
 def collect_sample_data(output_dir: Path):
     """
     Create sample bilingual data for testing.
-    
+
     Args:
         output_dir: Output directory
     """
     print("Creating sample bilingual data...")
-    
+
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Sample Bangla sentences
     bangla_samples = [
         "আমি স্কুলে যাই।",
@@ -93,7 +93,7 @@ def collect_sample_data(output_dir: Path):
         "আমি গান শুনতে ভালোবাসি।",
         "আমি প্রতিদিন স্কুলে যাই।",
     ]
-    
+
     # Sample English sentences
     english_samples = [
         "I go to school.",
@@ -107,7 +107,7 @@ def collect_sample_data(output_dir: Path):
         "I love to listen to music.",
         "I go to school every day.",
     ]
-    
+
     # Sample parallel corpus
     parallel_samples = [
         {"bn": "আমি স্কুলে যাই।", "en": "I go to school."},
@@ -116,22 +116,22 @@ def collect_sample_data(output_dir: Path):
         {"bn": "আমার নাম রহিম।", "en": "My name is Rahim."},
         {"bn": "আমি বাংলাদেশে থাকি।", "en": "I live in Bangladesh."},
     ]
-    
+
     # Save Bangla samples
-    with open(output_dir / "sample_bn.txt", 'w', encoding='utf-8') as f:
+    with open(output_dir / "sample_bn.txt", "w", encoding="utf-8") as f:
         for sentence in bangla_samples:
             f.write(sentence + "\n")
-    
+
     # Save English samples
-    with open(output_dir / "sample_en.txt", 'w', encoding='utf-8') as f:
+    with open(output_dir / "sample_en.txt", "w", encoding="utf-8") as f:
         for sentence in english_samples:
             f.write(sentence + "\n")
-    
+
     # Save parallel corpus
-    with open(output_dir / "parallel_corpus.jsonl", 'w', encoding='utf-8') as f:
+    with open(output_dir / "parallel_corpus.jsonl", "w", encoding="utf-8") as f:
         for pair in parallel_samples:
             f.write(json.dumps(pair, ensure_ascii=False) + "\n")
-    
+
     print(f"Saved sample data to {output_dir}/")
     print("  - sample_bn.txt")
     print("  - sample_en.txt")
@@ -142,48 +142,34 @@ def main():
     parser = argparse.ArgumentParser(
         description="Collect bilingual corpus data from various sources"
     )
-    
+
     parser.add_argument(
-        "--source",
-        choices=["wikipedia", "sample"],
-        default="sample",
-        help="Data source"
+        "--source", choices=["wikipedia", "sample"], default="sample", help="Data source"
     )
-    
+
     parser.add_argument(
-        "--lang",
-        choices=["bn", "en", "both"],
-        default="both",
-        help="Language to collect"
+        "--lang", choices=["bn", "en", "both"], default="both", help="Language to collect"
     )
-    
-    parser.add_argument(
-        "--output",
-        default="data/raw",
-        help="Output directory"
-    )
-    
-    parser.add_argument(
-        "--limit",
-        type=int,
-        help="Maximum number of items to collect"
-    )
-    
+
+    parser.add_argument("--output", default="data/raw", help="Output directory")
+
+    parser.add_argument("--limit", type=int, help="Maximum number of items to collect")
+
     args = parser.parse_args()
-    
+
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     if args.source == "sample":
         collect_sample_data(output_dir)
-    
+
     elif args.source == "wikipedia":
         if args.lang == "both":
             collect_wikipedia("bn", output_dir, args.limit)
             collect_wikipedia("en", output_dir, args.limit)
         else:
             collect_wikipedia(args.lang, output_dir, args.limit)
-    
+
     print("\nData collection complete!")
 
 

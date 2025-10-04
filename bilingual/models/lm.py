@@ -4,8 +4,8 @@ Language model implementations and utilities.
 Handles text generation and language modeling tasks.
 """
 
-from typing import Optional, Any, List
 import warnings
+from typing import Any, List, Optional
 
 
 def generate_text(
@@ -16,11 +16,11 @@ def generate_text(
     top_p: float = 0.9,
     top_k: int = 50,
     repetition_penalty: float = 1.0,
-    **kwargs
+    **kwargs,
 ) -> str:
     """
     Generate text using a language model.
-    
+
     Args:
         model: The language model instance
         prompt: Input prompt text
@@ -30,23 +30,23 @@ def generate_text(
         top_k: Top-k sampling parameter
         repetition_penalty: Penalty for repeating tokens
         **kwargs: Additional generation parameters
-        
+
     Returns:
         Generated text
     """
     # Check if model is a placeholder
-    if hasattr(model, '__class__') and model.__class__.__name__ == 'PlaceholderModel':
+    if hasattr(model, "__class__") and model.__class__.__name__ == "PlaceholderModel":
         warnings.warn(
             "Using placeholder model for generation. "
             "This will return a dummy response. Train a real model for actual generation."
         )
         return f"{prompt} [Generated text would appear here with a trained model]"
-    
+
     # Try to use transformers pipeline
     try:
         from transformers import pipeline
-        
-        generator = pipeline('text-generation', model=model)
+
+        generator = pipeline("text-generation", model=model)
         result = generator(
             prompt,
             max_new_tokens=max_tokens,
@@ -54,10 +54,10 @@ def generate_text(
             top_p=top_p,
             top_k=top_k,
             repetition_penalty=repetition_penalty,
-            **kwargs
+            **kwargs,
         )
-        
-        return result[0]['generated_text']
+
+        return result[0]["generated_text"]
     except ImportError:
         raise ImportError(
             "transformers is required for text generation. "
@@ -68,19 +68,15 @@ def generate_text(
         return prompt
 
 
-def compute_perplexity(
-    model: Any,
-    texts: List[str],
-    **kwargs
-) -> float:
+def compute_perplexity(model: Any, texts: List[str], **kwargs) -> float:
     """
     Compute perplexity of texts under the model.
-    
+
     Args:
         model: The language model instance
         texts: List of texts to evaluate
         **kwargs: Additional parameters
-        
+
     Returns:
         Average perplexity score
     """

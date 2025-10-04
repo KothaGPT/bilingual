@@ -11,7 +11,7 @@ __license__ = "Apache-2.0"
 
 from bilingual import api as bilingual_api
 from bilingual.normalize import normalize_text
-from bilingual.tokenizer import load_tokenizer, BilingualTokenizer
+from bilingual.tokenizer import BilingualTokenizer, load_tokenizer
 
 __all__ = [
     "bilingual_api",
