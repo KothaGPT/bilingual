@@ -36,17 +36,13 @@ def generate_text(
     """
     # Check if model is a placeholder
     if hasattr(model, "__class__") and model.__class__.__name__ == "PlaceholderModel":
-        warnings.warn(
-            "Using placeholder model for generation. "
-            "This will return a dummy response. Train a real model for actual generation."
-        )
-        return f"{prompt} [Generated text would appear here with a trained model]"
+        return model.generate(prompt, max_tokens=max_tokens, temperature=temperature, top_p=top_p)
 
     # Try to use transformers pipeline
     try:
         from transformers import pipeline
 
-        generator = pipeline("text-generation", model=model)
+        generator = pipeline("text-generation", model=model, tokenizer=kwargs.get("tokenizer"))
         result = generator(
             prompt,
             max_new_tokens=max_tokens,
@@ -54,6 +50,9 @@ def generate_text(
             top_p=top_p,
             top_k=top_k,
             repetition_penalty=repetition_penalty,
+            pad_token_id=(
+                model.config.pad_token_id if hasattr(model.config, "pad_token_id") else None
+            ),
             **kwargs,
         )
 

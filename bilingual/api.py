@@ -202,23 +202,117 @@ def readability_check(
     if lang is None:
         lang = detect_language(text)
 
-    # Placeholder implementation - will be replaced with actual model
-    # For now, use simple heuristics
-    words = text.split()
-    avg_word_length = sum(len(w) for w in words) / max(len(words), 1)
+    # Implement actual readability checking using linguistic features
+    # Extract features for better readability assessment
+    features = _extract_readability_features(text, lang)
+    return _calculate_readability_score(features, lang)
 
-    if avg_word_length < 4:
+
+def _extract_readability_features(text: str, lang: str) -> Dict[str, float]:
+    """
+    Extract features for readability scoring.
+
+    Args:
+        text: Input text
+        lang: Language code
+
+    Returns:
+        Dictionary of readability features
+    """
+    import re
+    from collections import Counter
+
+    # Split into sentences and words
+    if lang == "bn":
+        # For Bangla, use simple sentence splitting
+        sentences = re.split(r"[।!?]", text)
+        words = re.findall(r"\w+", text)
+    else:
+        sentences = re.split(r"[.!?]+", text)
+        words = re.findall(r"\b\w+\b", text)
+
+    sentences = [s.strip() for s in sentences if s.strip()]
+    words = [w for w in words if w.strip()]
+
+    num_sentences = len(sentences)
+    num_words = len(words)
+    num_chars = len(text)
+
+    if num_words == 0:
+        return {
+            "avg_words_per_sentence": 0,
+            "avg_word_length": 0,
+            "avg_syllables_per_word": 0,
+            "complexity_ratio": 0,
+        }
+
+    # Average words per sentence
+    avg_words_per_sentence = num_words / max(num_sentences, 1)
+
+    # Average word length
+    avg_word_length = sum(len(w) for w in words) / num_words
+
+    # Simple syllable estimation (works for both languages approximately)
+    def estimate_syllables(word):
+        # Simple heuristic: count vowel groups
+        vowels = "aeiou" if lang == "en" else "অআইঈউঊএঐওঔ"
+        syllables = 0
+        prev_vowel = False
+        for char in word:
+            is_vowel = char.lower() in vowels if lang == "en" else char in vowels
+            if is_vowel and not prev_vowel:
+                syllables += 1
+            prev_vowel = is_vowel
+        return max(syllables, 1)
+
+    syllables = sum(estimate_syllables(w) for w in words)
+    avg_syllables_per_word = syllables / num_words
+
+    # Complexity ratio (words with >6 characters / total words)
+    complex_words = sum(1 for w in words if len(w) > 6)
+    complexity_ratio = complex_words / num_words
+
+    return {
+        "avg_words_per_sentence": avg_words_per_sentence,
+        "avg_word_length": avg_word_length,
+        "avg_syllables_per_word": avg_syllables_per_word,
+        "complexity_ratio": complexity_ratio,
+    }
+
+
+def _calculate_readability_score(features: Dict[str, float], lang: str) -> Dict[str, Any]:
+    """
+    Calculate readability score based on extracted features.
+
+    Args:
+        features: Dictionary of readability features
+        lang: Language code
+
+    Returns:
+        Readability assessment dictionary
+    """
+    # Simple scoring model (can be replaced with trained model)
+    score = 0
+
+    # Weight different features
+    score += features["avg_words_per_sentence"] * 0.3
+    score += features["avg_word_length"] * 0.2
+    score += features["avg_syllables_per_word"] * 0.3
+    score += features["complexity_ratio"] * 0.2
+
+    # Normalize score to 0-10 scale
+    score = min(max(score, 0), 10)
+
+    # Determine level based on score
+    if score < 3:
         level = "elementary"
         age_range = "6-8"
-        score = 2.0
-    elif avg_word_length < 6:
+    elif score < 6:
         level = "intermediate"
         age_range = "9-12"
-        score = 5.0
     else:
         level = "advanced"
         age_range = "13+"
-        score = 8.0
 
     return {
         "level": level,
@@ -255,13 +349,25 @@ def safety_check(
     if lang is None:
         lang = detect_language(text)
 
-    # Placeholder implementation - will be replaced with actual model
-    # For now, use simple keyword-based filtering
+    # Implement actual safety checking with keyword-based filtering
+    # Enhanced safety check for child-friendly content
+    unsafe_keywords = {
+        "en": ["violence", "hate", "kill", "death", "blood", "weapon", "drug", "alcohol"],
+        "bn": ["হিংসা", "ঘৃণা", "মারা", "মৃত্যু", "রক্ত", "অস্ত্র", "মাদক", "মদ"],
+    }
 
-    # Simple safety check (to be replaced with ML model)
-    is_safe = True
+    text_lower = text.lower()
     flags = []
-    confidence = 0.9
+
+    # Check for unsafe keywords
+    keywords = unsafe_keywords.get(lang, unsafe_keywords["en"])
+    for keyword in keywords:
+        if keyword in text_lower:
+            flags.append(f"Contains potentially unsafe content: {keyword}")
+
+    # Basic safety assessment
+    is_safe = len(flags) == 0
+    confidence = 0.9 if is_safe else 0.6
 
     return {
         "is_safe": is_safe,
@@ -291,10 +397,206 @@ def classify(
         >>> classify("This is a story about animals.", labels=["story", "news", "dialogue"])
         {'story': 0.85, 'news': 0.05, 'dialogue': 0.10}
     """
-    # Placeholder implementation
-    # Return uniform distribution for now
-    score = 1.0 / len(labels)
-    return {label: score for label in labels}
+    # Implement actual text classification using simple heuristics
+    # Simple rule-based classification for common categories
+    text_lower = text.lower()
+    scores = {}
+
+    # Define category keywords
+    category_keywords = {
+        "story": ["story", "tale", "once upon", "গল্প", "কাহিনী", "একদা"],
+        "news": ["news", "report", "announce", "খবর", "সংবাদ", "রিপোর্ট"],
+        "dialogue": ["said", "asked", "replied", "বলল", "জিজ্ঞাসা", "উত্তর"],
+        "poetry": ["poem", "verse", "rhyme", "কবিতা", "ছন্দ", "পদ্য"],
+        "instruction": ["how to", "step by step", "guide", "কীভাবে", "ধাপে ধাপে", "নির্দেশনা"],
+    }
+
+    # Calculate scores based on keyword matches
+    for label in labels:
+        keywords = category_keywords.get(label.lower(), [])
+        matches = sum(1 for keyword in keywords if keyword in text_lower)
+        # Normalize score based on number of keywords
+        score = matches / max(len(keywords), 1) if keywords else 0
+        scores[label] = min(score, 1.0)  # Cap at 1.0
+
+    # Ensure at least some score is distributed if no matches
+    if sum(scores.values()) == 0:
+        base_score = 1.0 / len(labels)
+        scores = {label: base_score for label in labels}
+    else:
+        # Normalize scores to sum to 1.0
+        total = sum(scores.values())
+        scores = {label: score / total for label, score in scores.items()}
+
+    return scores
+
+
+def batch_process(texts: List[str], operation: str, **kwargs) -> List[Any]:
+    """
+    Process multiple texts in batch for improved efficiency.
+
+    Args:
+        texts: List of input texts to process
+        operation: Type of operation ('tokenize', 'normalize', 'generate', 'translate', 'readability_check', 'safety_check', 'classify')
+        **kwargs: Additional arguments for the operation
+
+    Returns:
+        List of results corresponding to each input text
+
+    Examples:
+        >>> texts = ["Hello world", "আমি বাংলায় কথা বলি"]
+        >>> results = batch_process(texts, 'tokenize')
+        >>> len(results)
+        2
+    """
+    if operation == "tokenize":
+        tokenizer = kwargs.get("tokenizer", "bilingual-tokenizer")
+        return_ids = kwargs.get("return_ids", False)
+        return [tokenize(text, tokenizer, return_ids) for text in texts]
+
+    elif operation == "normalize":
+        lang = kwargs.get("lang")
+        return [normalize_text(text, lang) for text in texts]
+
+    elif operation == "generate":
+        model_name = kwargs.get("model_name", "bilingual-small-lm")
+        max_tokens = kwargs.get("max_tokens", 100)
+        return [generate(text, model_name, max_tokens, **kwargs) for text in texts]
+
+    elif operation == "translate":
+        src = kwargs.get("src", "bn")
+        tgt = kwargs.get("tgt", "en")
+        model_name = kwargs.get("model_name", "bilingual-translate")
+        return [translate(text, src, tgt, model_name) for text in texts]
+
+    elif operation == "readability_check":
+        lang = kwargs.get("lang")
+        model_name = kwargs.get("model_name", "bilingual-readability")
+        return [readability_check(text, lang, model_name) for text in texts]
+
+    elif operation == "safety_check":
+        lang = kwargs.get("lang")
+        model_name = kwargs.get("model_name", "bilingual-safety")
+        return [safety_check(text, lang, model_name) for text in texts]
+
+    elif operation == "classify":
+        labels = kwargs.get("labels", [])
+        model_name = kwargs.get("model_name", "bilingual-classifier")
+        return [classify(text, labels, model_name) for text in texts]
+
+    else:
+        raise ValueError(f"Unsupported operation: {operation}")
+
+
+def fine_tune_model(
+    model_name: str,
+    train_data: List[Dict[str, str]],
+    output_dir: str,
+    epochs: int = 3,
+    learning_rate: float = 5e-5,
+    batch_size: int = 8,
+    **kwargs,
+) -> str:
+    """
+    Fine-tune a language model on custom data.
+
+    Args:
+        model_name: Name of the base model to fine-tune
+        train_data: List of training examples, each dict with 'input' and 'output' keys
+        output_dir: Directory to save the fine-tuned model
+        epochs: Number of training epochs
+        learning_rate: Learning rate for training
+        batch_size: Batch size for training
+        **kwargs: Additional training parameters
+
+    Returns:
+        Path to the fine-tuned model
+
+    Examples:
+        >>> train_data = [
+        ...     {"input": "Hello, how are you?", "output": "I'm doing well, thank you!"},
+        ...     {"input": "আমি কেমন আছি?", "output": "আমি ভালো আছি, ধন্যবাদ!"}
+        ... ]
+        >>> model_path = fine_tune_model("bilingual-small-lm", train_data, "my_model/")
+    """
+    try:
+        import torch
+        from torch.utils.data import Dataset
+        from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+    except ImportError:
+        raise ImportError(
+            "PyTorch and transformers are required for fine-tuning. Install with: pip install torch transformers"
+        )
+
+    # Load base model and tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+
+    # Prepare dataset
+    class CustomDataset(Dataset):
+        def __init__(self, data, tokenizer, max_length=512):
+            self.data = data
+            self.tokenizer = tokenizer
+            self.max_length = max_length
+
+        def __len__(self):
+            return len(self.data)
+
+        def __getitem__(self, idx):
+            item = self.data[idx]
+            input_text = item["input"]
+            target_text = item["output"]
+
+            # Combine input and output for language modeling
+            full_text = f"{input_text} {target_text}"
+
+            encodings = self.tokenizer(
+                full_text,
+                truncation=True,
+                padding="max_length",
+                max_length=self.max_length,
+                return_tensors="pt",
+            )
+
+            return {
+                "input_ids": encodings["input_ids"].flatten(),
+                "attention_mask": encodings["attention_mask"].flatten(),
+                "labels": encodings["input_ids"].flatten(),
+            }
+
+    dataset = CustomDataset(train_data, tokenizer)
+
+    # Training arguments
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        num_train_epochs=epochs,
+        per_device_train_batch_size=batch_size,
+        learning_rate=learning_rate,
+        save_steps=500,
+        save_total_limit=2,
+        logging_dir=f"{output_dir}/logs",
+        logging_steps=100,
+        **kwargs,
+    )
+
+    # Initialize trainer
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=dataset,
+    )
+
+    # Train the model
+    trainer.train()
+
+    # Save the fine-tuned model
+    model.save_pretrained(output_dir)
+    tokenizer.save_pretrained(output_dir)
+
+    return output_dir
 
 
 # Convenience aliases
