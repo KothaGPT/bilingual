@@ -12,8 +12,8 @@ This module provides various augmentation methods to expand datasets:
 
 import random
 import re
-from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
 
 
 class DataAugmenter:
@@ -25,39 +25,39 @@ class DataAugmenter:
         """Initialize the data augmenter."""
         # Common English synonyms
         self.english_synonyms = {
-            'good': ['excellent', 'great', 'wonderful', 'fantastic', 'amazing'],
-            'bad': ['terrible', 'awful', 'horrible', 'dreadful', 'poor'],
-            'big': ['large', 'huge', 'enormous', 'massive', 'gigantic'],
-            'small': ['tiny', 'little', 'miniature', 'compact', 'mini'],
-            'happy': ['joyful', 'cheerful', 'delighted', 'pleased', 'glad'],
-            'sad': ['unhappy', 'sorrowful', 'depressed', 'miserable', 'down'],
-            'fast': ['quick', 'rapid', 'speedy', 'swift', 'hasty'],
-            'slow': ['leisurely', 'sluggish', 'unhurried', 'languid', 'lazy'],
-            'love': ['adore', 'cherish', 'worship', 'treasure', 'fancy'],
-            'hate': ['despise', 'detest', 'loath', 'abhor', 'dislike'],
+            "good": ["excellent", "great", "wonderful", "fantastic", "amazing"],
+            "bad": ["terrible", "awful", "horrible", "dreadful", "poor"],
+            "big": ["large", "huge", "enormous", "massive", "gigantic"],
+            "small": ["tiny", "little", "miniature", "compact", "mini"],
+            "happy": ["joyful", "cheerful", "delighted", "pleased", "glad"],
+            "sad": ["unhappy", "sorrowful", "depressed", "miserable", "down"],
+            "fast": ["quick", "rapid", "speedy", "swift", "hasty"],
+            "slow": ["leisurely", "sluggish", "unhurried", "languid", "lazy"],
+            "love": ["adore", "cherish", "worship", "treasure", "fancy"],
+            "hate": ["despise", "detest", "loath", "abhor", "dislike"],
         }
 
         # Common Bengali synonyms (limited set for demo)
         self.bengali_synonyms = {
-            'ভালো': ['উত্তম', 'চমৎকার', 'সুন্দর', 'অসাধারণ'],
-            'খারাপ': ['মন্দ', 'নিকৃষ্ট', 'ভয়ানক', 'বাজে'],
-            'বড়': ['বিশাল', 'প্রকাণ্ড', 'অতিকায়', 'মহান'],
-            'ছোট': ['ক্ষুদ্র', 'ছোটখাটো', 'ক্ষুদ্রাকার', 'অণু'],
-            'খুশি': ['আনন্দিত', 'প্রফুল্ল', 'উল্লসিত', 'হর্ষিত'],
-            'দুঃখিত': ['বিষণ্ণ', 'শোকার্ত', 'বেদনার্ত', 'মর্মাহত'],
-            'দ্রুত': ['তাড়াতাড়ি', 'শীঘ্র', 'চটপট', 'জলদি'],
-            'ধীরে': ['আস্তে', 'শান্তভাবে', 'সময় নিয়ে', 'আরামে'],
+            "ভালো": ["উত্তম", "চমৎকার", "সুন্দর", "অসাধারণ"],
+            "খারাপ": ["মন্দ", "নিকৃষ্ট", "ভয়ানক", "বাজে"],
+            "বড়": ["বিশাল", "প্রকাণ্ড", "অতিকায়", "মহান"],
+            "ছোট": ["ক্ষুদ্র", "ছোটখাটো", "ক্ষুদ্রাকার", "অণু"],
+            "খুশি": ["আনন্দিত", "প্রফুল্ল", "উল্লসিত", "হর্ষিত"],
+            "দুঃখিত": ["বিষণ্ণ", "শোকার্ত", "বেদনার্ত", "মর্মাহত"],
+            "দ্রুত": ["তাড়াতাড়ি", "শীঘ্র", "চটপট", "জলদি"],
+            "ধীরে": ["আস্তে", "শান্তভাবে", "সময় নিয়ে", "আরামে"],
         }
 
         # Noise patterns for text corruption
         self.noise_patterns = [
-            ('keyboard_typos', self._add_keyboard_typos),
-            ('punctuation_noise', self._add_punctuation_noise),
-            ('spacing_noise', self._add_spacing_noise),
-            ('character_noise', self._add_character_noise),
+            ("keyboard_typos", self._add_keyboard_typos),
+            ("punctuation_noise", self._add_punctuation_noise),
+            ("spacing_noise", self._add_spacing_noise),
+            ("character_noise", self._add_character_noise),
         ]
 
-    def synonym_replacement(self, text: str, lang: str = 'en', n: int = 1) -> List[str]:
+    def synonym_replacement(self, text: str, lang: str = "en", n: int = 1) -> List[str]:
         """
         Replace words with their synonyms.
 
@@ -69,7 +69,7 @@ class DataAugmenter:
         Returns:
             List of augmented texts
         """
-        synonyms = self.english_synonyms if lang == 'en' else self.bengali_synonyms
+        synonyms = self.english_synonyms if lang == "en" else self.bengali_synonyms
         words = text.split()
 
         augmented_texts = []
@@ -80,8 +80,9 @@ class DataAugmenter:
 
             for _ in range(words_to_replace):
                 # Find a word that has synonyms
-                available_words = [i for i, word in enumerate(new_words)
-                                 if word.lower() in synonyms]
+                available_words = [
+                    i for i, word in enumerate(new_words) if word.lower() in synonyms
+                ]
 
                 if available_words:
                     idx = random.choice(available_words)
@@ -89,11 +90,11 @@ class DataAugmenter:
                     if original_word in synonyms:
                         new_words[idx] = random.choice(synonyms[original_word])
 
-            augmented_texts.append(' '.join(new_words))
+            augmented_texts.append(" ".join(new_words))
 
         return augmented_texts
 
-    def back_translation_augmentation(self, text: str, intermediate_lang: str = 'en') -> List[str]:
+    def back_translation_augmentation(self, text: str, intermediate_lang: str = "en") -> List[str]:
         """
         Simulate back-translation by converting to intermediate language and back.
         This is a simplified version - in practice, you'd use actual translation models.
@@ -119,11 +120,11 @@ class DataAugmenter:
 
         # Add some variation in punctuation
         if random.random() > 0.7:
-            words.append(random.choice(['.', '!', '?']))
+            words.append(random.choice([".", "!", "?"]))
 
-        return [' '.join(words)]
+        return [" ".join(words)]
 
-    def add_noise(self, text: str, noise_type: str = 'random', intensity: float = 0.1) -> str:
+    def add_noise(self, text: str, noise_type: str = "random", intensity: float = 0.1) -> str:
         """
         Add various types of noise to text.
 
@@ -135,12 +136,13 @@ class DataAugmenter:
         Returns:
             Noisy text
         """
-        if noise_type == 'random':
+        if noise_type == "random":
             noise_types = [pattern[0] for pattern in self.noise_patterns]
             noise_func = random.choice([pattern[1] for pattern in self.noise_patterns])
         else:
-            noise_func = next(pattern[1] for pattern in self.noise_patterns
-                            if pattern[0] == noise_type)
+            noise_func = next(
+                pattern[1] for pattern in self.noise_patterns if pattern[0] == noise_type
+            )
 
         return noise_func(text, intensity)
 
@@ -148,27 +150,44 @@ class DataAugmenter:
         """Add keyboard typo noise."""
         # Common keyboard adjacency typos
         keyboard_typos = {
-            'a': 'qwsz', 's': 'qwaedzxc', 'd': 'wersfxcv',
-            'f': 'drtgvc', 'g': 'fthyvbn', 'h': 'gjuybnm',
-            'j': 'hikunm', 'k': 'jilom', 'l': 'kop',
-            'q': 'wa', 'w': 'qase', 'e': 'wsdr', 'r': 'edft',
-            't': 'rfgy', 'y': 'tghu', 'u': 'yhji', 'i': 'ujko',
-            'o': 'iklp', 'p': 'ol',
+            "a": "qwsz",
+            "s": "qwaedzxc",
+            "d": "wersfxcv",
+            "f": "drtgvc",
+            "g": "fthyvbn",
+            "h": "gjuybnm",
+            "j": "hikunm",
+            "k": "jilom",
+            "l": "kop",
+            "q": "wa",
+            "w": "qase",
+            "e": "wsdr",
+            "r": "edft",
+            "t": "rfgy",
+            "y": "tghu",
+            "u": "yhji",
+            "i": "ujko",
+            "o": "iklp",
+            "p": "ol",
         }
 
         result = []
         for char in text:
             if char.lower() in keyboard_typos and random.random() < intensity:
                 typo_options = keyboard_typos[char.lower()]
-                result.append(random.choice(typo_options).upper() if char.isupper() else random.choice(typo_options))
+                result.append(
+                    random.choice(typo_options).upper()
+                    if char.isupper()
+                    else random.choice(typo_options)
+                )
             else:
                 result.append(char)
 
-        return ''.join(result)
+        return "".join(result)
 
     def _add_punctuation_noise(self, text: str, intensity: float) -> str:
         """Add random punctuation."""
-        punctuation = '.,!?;:-()[]{}"\''
+        punctuation = ".,!?;:-()[]{}\"'"
         result = []
 
         for char in text:
@@ -176,7 +195,7 @@ class DataAugmenter:
             if char.isspace() and random.random() < intensity:
                 result.append(random.choice(punctuation))
 
-        return ''.join(result)
+        return "".join(result)
 
     def _add_spacing_noise(self, text: str, intensity: float) -> str:
         """Add random spacing variations."""
@@ -185,13 +204,13 @@ class DataAugmenter:
             if char.isspace():
                 # Add extra spaces randomly
                 if random.random() < intensity:
-                    result.append(' ' * random.randint(1, 3))
+                    result.append(" " * random.randint(1, 3))
                 else:
                     result.append(char)
             else:
                 result.append(char)
 
-        return ''.join(result)
+        return "".join(result)
 
     def _add_character_noise(self, text: str, intensity: float) -> str:
         """Add random character insertions/deletions."""
@@ -209,7 +228,7 @@ class DataAugmenter:
                 random_char = chr(random.randint(32, 126))  # Printable ASCII
                 result.insert(idx, random_char)
 
-        return ''.join(result)
+        return "".join(result)
 
     def mix_languages(self, bn_text: str, en_text: str, ratio: float = 0.5) -> str:
         """
@@ -233,9 +252,9 @@ class DataAugmenter:
             elif i < len(en_words):
                 mixed_words.append(en_words[i])
 
-        return ' '.join(mixed_words)
+        return " ".join(mixed_words)
 
-    def paraphrase_text(self, text: str, lang: str = 'en', n: int = 3) -> List[str]:
+    def paraphrase_text(self, text: str, lang: str = "en", n: int = 3) -> List[str]:
         """
         Generate paraphrases of the input text.
 
@@ -281,33 +300,33 @@ class DataAugmenter:
             augmented_dataset.append(sample)
 
             # Detect language
-            text = sample.get('text', '')
-            lang = 'en'  # Default, could be enhanced with language detection
+            text = sample.get("text", "")
+            lang = "en"  # Default, could be enhanced with language detection
 
             # Generate augmentations
             for _ in range(augmentations_per_sample):
                 augmented_text = text
 
                 # Apply random augmentation techniques
-                techniques = ['synonym', 'noise', 'paraphrase']
+                techniques = ["synonym", "noise", "paraphrase"]
                 technique = random.choice(techniques)
 
-                if technique == 'synonym':
+                if technique == "synonym":
                     augmented_texts = self.synonym_replacement(augmented_text, lang, 1)
                     augmented_text = augmented_texts[0] if augmented_texts else augmented_text
 
-                elif technique == 'noise':
+                elif technique == "noise":
                     augmented_text = self.add_noise(augmented_text, intensity=0.1)
 
-                elif technique == 'paraphrase':
+                elif technique == "paraphrase":
                     paraphrases = self.paraphrase_text(augmented_text, lang, 1)
                     augmented_text = paraphrases[0] if paraphrases else augmented_text
 
                 # Add augmented sample
                 augmented_sample = sample.copy()
-                augmented_sample['text'] = augmented_text
-                augmented_sample['augmented'] = True
-                augmented_sample['original_text'] = text
+                augmented_sample["text"] = augmented_text
+                augmented_sample["augmented"] = True
+                augmented_sample["original_text"] = text
 
                 augmented_dataset.append(augmented_sample)
 
@@ -317,6 +336,7 @@ class DataAugmenter:
 # Global augmenter instance
 _augmenter = None
 
+
 def get_data_augmenter() -> DataAugmenter:
     """Get or create the global data augmenter instance."""
     global _augmenter
@@ -324,7 +344,8 @@ def get_data_augmenter() -> DataAugmenter:
         _augmenter = DataAugmenter()
     return _augmenter
 
-def augment_text(text: str, method: str = 'synonym', lang: str = 'en', **kwargs) -> List[str]:
+
+def augment_text(text: str, method: str = "synonym", lang: str = "en", **kwargs) -> List[str]:
     """
     Convenience function to augment text.
 
@@ -339,13 +360,17 @@ def augment_text(text: str, method: str = 'synonym', lang: str = 'en', **kwargs)
     """
     augmenter = get_data_augmenter()
 
-    if method == 'synonym':
-        return augmenter.synonym_replacement(text, lang, kwargs.get('n', 1))
-    elif method == 'noise':
-        return [augmenter.add_noise(text, kwargs.get('noise_type', 'random'), kwargs.get('intensity', 0.1))]
-    elif method == 'paraphrase':
-        return augmenter.paraphrase_text(text, lang, kwargs.get('n', 1))
-    elif method == 'back_translate':
-        return augmenter.back_translation_augmentation(text, kwargs.get('intermediate_lang', 'en'))
+    if method == "synonym":
+        return augmenter.synonym_replacement(text, lang, kwargs.get("n", 1))
+    elif method == "noise":
+        return [
+            augmenter.add_noise(
+                text, kwargs.get("noise_type", "random"), kwargs.get("intensity", 0.1)
+            )
+        ]
+    elif method == "paraphrase":
+        return augmenter.paraphrase_text(text, lang, kwargs.get("n", 1))
+    elif method == "back_translate":
+        return augmenter.back_translation_augmentation(text, kwargs.get("intermediate_lang", "en"))
     else:
         return [text]

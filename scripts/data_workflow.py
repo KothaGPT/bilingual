@@ -37,7 +37,7 @@ class DataWorkflow:
         working_dir: Path,
         quality_threshold: float = 0.7,
         remove_pii: bool = True,
-        verbose: bool = True
+        verbose: bool = True,
     ):
         """
         Initialize workflow.
@@ -59,15 +59,14 @@ class DataWorkflow:
         self.filtered_dir = working_dir / "filtered"
         self.final_dir = working_dir / "final"
 
-        for dir_path in [self.raw_dir, self.cleaned_dir,
-                         self.filtered_dir, self.final_dir]:
+        for dir_path in [self.raw_dir, self.cleaned_dir, self.filtered_dir, self.final_dir]:
             dir_path.mkdir(parents=True, exist_ok=True)
 
         self.stats = {
-            'start_time': datetime.now().isoformat(),
-            'steps_completed': [],
-            'data_counts': {},
-            'errors': []
+            "start_time": datetime.now().isoformat(),
+            "steps_completed": [],
+            "data_counts": {},
+            "errors": [],
         }
 
     def log(self, message: str):
@@ -89,28 +88,19 @@ class DataWorkflow:
         self.log(f"Starting step: {step_name}")
 
         try:
-            result = subprocess.run(
-                command,
-                check=True,
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
 
             if self.verbose and result.stdout:
                 print(result.stdout)
 
-            self.stats['steps_completed'].append(step_name)
+            self.stats["steps_completed"].append(step_name)
             self.log(f"✓ Completed: {step_name}")
             return True
 
         except subprocess.CalledProcessError as e:
             error_msg = f"✗ Failed: {step_name}\nError: {e.stderr}"
             self.log(error_msg)
-            self.stats['errors'].append({
-                'step': step_name,
-                'error': str(e),
-                'stderr': e.stderr
-            })
+            self.stats["errors"].append({"step": step_name, "error": str(e), "stderr": e.stderr})
             return False
 
     def step_1_collect_data(self, source: str, languages: List[str]) -> bool:
@@ -132,9 +122,12 @@ class DataWorkflow:
             command = [
                 sys.executable,
                 "scripts/collect_data.py",
-                "--source", source,
-                "--lang", lang,
-                "--output", str(self.raw_dir)
+                "--source",
+                source,
+                "--lang",
+                lang,
+                "--output",
+                str(self.raw_dir),
             ]
 
             if not self.run_step(f"collect_{lang}", command):
@@ -142,7 +135,7 @@ class DataWorkflow:
 
         # Count collected samples
         count = self._count_samples(self.raw_dir)
-        self.stats['data_counts']['raw'] = count
+        self.stats["data_counts"]["raw"] = count
         self.log(f"Collected {count} samples")
 
         return True
@@ -161,15 +154,17 @@ class DataWorkflow:
         command = [
             sys.executable,
             "scripts/prepare_data.py",
-            "--input", str(self.raw_dir),
-            "--output", str(self.cleaned_dir)
+            "--input",
+            str(self.raw_dir),
+            "--output",
+            str(self.cleaned_dir),
         ]
 
         success = self.run_step("normalize", command)
 
         if success:
             count = self._count_samples(self.cleaned_dir)
-            self.stats['data_counts']['cleaned'] = count
+            self.stats["data_counts"]["cleaned"] = count
             self.log(f"Cleaned {count} samples")
 
         return success
@@ -193,9 +188,12 @@ class DataWorkflow:
         command = [
             sys.executable,
             "scripts/pii_detection.py",
-            "--input", str(self.cleaned_dir),
-            "--output", str(self.cleaned_dir),
-            "--mode", "redact"
+            "--input",
+            str(self.cleaned_dir),
+            "--output",
+            str(self.cleaned_dir),
+            "--mode",
+            "redact",
         ]
 
         return self.run_step("pii_removal", command)
@@ -214,21 +212,25 @@ class DataWorkflow:
         command = [
             sys.executable,
             "scripts/quality_filter.py",
-            "--input", str(self.cleaned_dir),
-            "--output", str(self.filtered_dir),
-            "--min-quality", str(self.quality_threshold),
-            "--report", str(self.working_dir / "quality_report.json")
+            "--input",
+            str(self.cleaned_dir),
+            "--output",
+            str(self.filtered_dir),
+            "--min-quality",
+            str(self.quality_threshold),
+            "--report",
+            str(self.working_dir / "quality_report.json"),
         ]
 
         success = self.run_step("quality_filter", command)
 
         if success:
             count = self._count_samples(self.filtered_dir)
-            self.stats['data_counts']['filtered'] = count
+            self.stats["data_counts"]["filtered"] = count
             self.log(f"Filtered to {count} high-quality samples")
 
             # Calculate pass rate
-            raw_count = self.stats['data_counts'].get('cleaned', 0)
+            raw_count = self.stats["data_counts"].get("cleaned", 0)
             if raw_count > 0:
                 pass_rate = count / raw_count * 100
                 self.log(f"Quality pass rate: {pass_rate:.1f}%")
@@ -236,10 +238,7 @@ class DataWorkflow:
         return success
 
     def step_5_create_splits(
-        self,
-        train_ratio: float = 0.8,
-        val_ratio: float = 0.1,
-        test_ratio: float = 0.1
+        self, train_ratio: float = 0.8, val_ratio: float = 0.1, test_ratio: float = 0.1
     ) -> bool:
         """
         Step 5: Create train/val/test splits.
@@ -258,10 +257,10 @@ class DataWorkflow:
 
         # Load all filtered data
         all_samples = []
-        for file in self.filtered_dir.rglob('*.json*'):
-            if file.suffix in ['.json', '.jsonl']:
-                with open(file, 'r', encoding='utf-8') as f:
-                    if file.suffix == '.jsonl':
+        for file in self.filtered_dir.rglob("*.json*"):
+            if file.suffix in [".json", ".jsonl"]:
+                with open(file, "r", encoding="utf-8") as f:
+                    if file.suffix == ".jsonl":
                         samples = [json.loads(line) for line in f if line.strip()]
                     else:
                         data = json.load(f)
@@ -274,6 +273,7 @@ class DataWorkflow:
 
         # Shuffle and split
         import random
+
         random.seed(42)
         random.shuffle(all_samples)
 
@@ -282,22 +282,22 @@ class DataWorkflow:
         val_end = train_end + int(total * val_ratio)
 
         splits = {
-            'train': all_samples[:train_end],
-            'val': all_samples[train_end:val_end],
-            'test': all_samples[val_end:]
+            "train": all_samples[:train_end],
+            "val": all_samples[train_end:val_end],
+            "test": all_samples[val_end:],
         }
 
         # Save splits
         for split_name, samples in splits.items():
             output_file = self.final_dir / f"{split_name}.jsonl"
-            with open(output_file, 'w', encoding='utf-8') as f:
+            with open(output_file, "w", encoding="utf-8") as f:
                 for sample in samples:
-                    f.write(json.dumps(sample, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(sample, ensure_ascii=False) + "\n")
 
             self.log(f"Saved {len(samples)} samples to {split_name}.jsonl")
-            self.stats['data_counts'][split_name] = len(samples)
+            self.stats["data_counts"][split_name] = len(samples)
 
-        self.stats['steps_completed'].append('create_splits')
+        self.stats["steps_completed"].append("create_splits")
         return True
 
     def step_6_generate_dataset_card(self, dataset_name: str) -> bool:
@@ -396,20 +396,15 @@ for sample in train_data:
 **Last Updated**: {datetime.now().strftime('%Y-%m-%d')}
 """
 
-        with open(card_path, 'w', encoding='utf-8') as f:
+        with open(card_path, "w", encoding="utf-8") as f:
             f.write(card_content)
 
         self.log(f"✓ Dataset card generated: {card_path}")
-        self.stats['steps_completed'].append('generate_card')
+        self.stats["steps_completed"].append("generate_card")
 
         return True
 
-    def run_complete_workflow(
-        self,
-        source: str,
-        languages: List[str],
-        dataset_name: str
-    ) -> bool:
+    def run_complete_workflow(self, source: str, languages: List[str], dataset_name: str) -> bool:
         """
         Run complete data workflow.
 
@@ -443,9 +438,9 @@ for sample in train_data:
                 return False
 
         # Save stats
-        self.stats['end_time'] = datetime.now().isoformat()
+        self.stats["end_time"] = datetime.now().isoformat()
         stats_file = self.working_dir / "workflow_stats.json"
-        with open(stats_file, 'w', encoding='utf-8') as f:
+        with open(stats_file, "w", encoding="utf-8") as f:
             json.dump(self.stats, f, indent=2)
 
         self.log("\n" + "=" * 60)
@@ -454,8 +449,8 @@ for sample in train_data:
         self.log(f"\nFinal dataset location: {self.final_dir}")
         self.log(f"Statistics saved to: {stats_file}")
         self.log(f"\nDataset splits:")
-        for split in ['train', 'val', 'test']:
-            count = self.stats['data_counts'].get(split, 0)
+        for split in ["train", "val", "test"]:
+            count = self.stats["data_counts"].get(split, 0)
             self.log(f"  {split}: {count} samples")
 
         return True
@@ -463,11 +458,11 @@ for sample in train_data:
     def _count_samples(self, directory: Path) -> int:
         """Count total samples in directory."""
         count = 0
-        for file in directory.rglob('*.json*'):
-            if file.suffix in ['.json', '.jsonl']:
+        for file in directory.rglob("*.json*"):
+            if file.suffix in [".json", ".jsonl"]:
                 try:
-                    with open(file, 'r', encoding='utf-8') as f:
-                        if file.suffix == '.jsonl':
+                    with open(file, "r", encoding="utf-8") as f:
+                        if file.suffix == ".jsonl":
                             count += sum(1 for line in f if line.strip())
                         else:
                             data = json.load(f)
@@ -480,50 +475,30 @@ for sample in train_data:
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(
-        description='Run complete data collection and processing workflow'
+        description="Run complete data collection and processing workflow"
     )
 
     parser.add_argument(
-        '--source',
+        "--source", type=str, default="sample", help="Data source (sample, wikipedia, etc.)"
+    )
+    parser.add_argument(
+        "--languages",
         type=str,
-        default='sample',
-        help='Data source (sample, wikipedia, etc.)'
+        nargs="+",
+        default=["bn", "en"],
+        help="Languages to collect (default: bn en)",
     )
     parser.add_argument(
-        '--languages',
-        type=str,
-        nargs='+',
-        default=['bn', 'en'],
-        help='Languages to collect (default: bn en)'
+        "--output", type=str, required=True, help="Output directory for processed data"
     )
     parser.add_argument(
-        '--output',
-        type=str,
-        required=True,
-        help='Output directory for processed data'
+        "--dataset-name", type=str, default="Bilingual Corpus", help="Dataset name for card"
     )
     parser.add_argument(
-        '--dataset-name',
-        type=str,
-        default='Bilingual Corpus',
-        help='Dataset name for card'
+        "--quality-threshold", type=float, default=0.7, help="Minimum quality score (default: 0.7)"
     )
-    parser.add_argument(
-        '--quality-threshold',
-        type=float,
-        default=0.7,
-        help='Minimum quality score (default: 0.7)'
-    )
-    parser.add_argument(
-        '--no-pii-removal',
-        action='store_true',
-        help='Skip PII removal step'
-    )
-    parser.add_argument(
-        '--quiet',
-        action='store_true',
-        help='Minimize output'
-    )
+    parser.add_argument("--no-pii-removal", action="store_true", help="Skip PII removal step")
+    parser.add_argument("--quiet", action="store_true", help="Minimize output")
 
     args = parser.parse_args()
 
@@ -532,18 +507,16 @@ def main():
         working_dir=Path(args.output),
         quality_threshold=args.quality_threshold,
         remove_pii=not args.no_pii_removal,
-        verbose=not args.quiet
+        verbose=not args.quiet,
     )
 
     # Run workflow
     success = workflow.run_complete_workflow(
-        source=args.source,
-        languages=args.languages,
-        dataset_name=args.dataset_name
+        source=args.source, languages=args.languages, dataset_name=args.dataset_name
     )
 
     sys.exit(0 if success else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

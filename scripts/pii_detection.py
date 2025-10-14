@@ -40,61 +40,53 @@ class PIIDetector:
         """Compile regex patterns for PII detection."""
 
         # Email patterns
-        self.email_pattern = re.compile(
-            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        )
+        self.email_pattern = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 
         # Phone patterns (various formats)
         self.phone_patterns = [
             # Bangladesh: +880, 880, 01...
-            re.compile(r'\+?880[-\s]?1\d{9}'),
-            re.compile(r'\b01\d{9}\b'),
+            re.compile(r"\+?880[-\s]?1\d{9}"),
+            re.compile(r"\b01\d{9}\b"),
             # Generic international
-            re.compile(r'\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}'),
+            re.compile(r"\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}"),
             # US/Generic
-            re.compile(r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b'),
+            re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"),
         ]
 
         # URL patterns (may contain personal info)
         self.url_pattern = re.compile(
-            r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         )
 
         # Credit card patterns
-        self.credit_card_pattern = re.compile(
-            r'\b(?:\d{4}[-\s]?){3}\d{4}\b'
-        )
+        self.credit_card_pattern = re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b")
 
         # National ID patterns (Bangladesh)
-        self.nid_pattern = re.compile(
-            r'\b\d{10}(?:\d{3}|\d{7})?\b'  # 10, 13, or 17 digit NID
-        )
+        self.nid_pattern = re.compile(r"\b\d{10}(?:\d{3}|\d{7})?\b")  # 10, 13, or 17 digit NID
 
         # IP addresses
-        self.ip_pattern = re.compile(
-            r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
-        )
+        self.ip_pattern = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 
         # Common Bangla/English name patterns (requires NER for better detection)
         # These are simple heuristics
         self.name_indicators = [
             # English
-            r'\b(?:Mr|Mrs|Ms|Dr|Prof)\.?\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b',
+            r"\b(?:Mr|Mrs|Ms|Dr|Prof)\.?\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b",
             # Bangla honorifics followed by names
-            r'জনাব\s+\S+',
-            r'ডঃ\s+\S+',
-            r'প্রফেসর\s+\S+',
+            r"জনাব\s+\S+",
+            r"ডঃ\s+\S+",
+            r"প্রফেসর\s+\S+",
         ]
-        self.name_pattern = re.compile('|'.join(self.name_indicators))
+        self.name_pattern = re.compile("|".join(self.name_indicators))
 
         # Address patterns (basic detection)
         self.address_indicators = [
-            r'\b\d+\s+(?:[A-Z][a-z]+\s+){1,3}(?:Street|St|Avenue|Ave|Road|Rd|Lane|Ln)\b',
-            r'\b(?:Dhaka|Chittagong|Sylhet|Rajshahi|Khulna|Barisal)\s*-?\s*\d{4}\b',
-            r'রোড\s+\d+',
-            r'বাড়ি\s*(?:নং|নম্বর)?\s*\d+',
+            r"\b\d+\s+(?:[A-Z][a-z]+\s+){1,3}(?:Street|St|Avenue|Ave|Road|Rd|Lane|Ln)\b",
+            r"\b(?:Dhaka|Chittagong|Sylhet|Rajshahi|Khulna|Barisal)\s*-?\s*\d{4}\b",
+            r"রোড\s+\d+",
+            r"বাড়ি\s*(?:নং|নম্বর)?\s*\d+",
         ]
-        self.address_pattern = re.compile('|'.join(self.address_indicators), re.IGNORECASE)
+        self.address_pattern = re.compile("|".join(self.address_indicators), re.IGNORECASE)
 
     def detect_emails(self, text: str) -> List[Tuple[str, int, int]]:
         """
@@ -155,7 +147,7 @@ class PIIDetector:
         matches = []
         for match in self.credit_card_pattern.finditer(text):
             # Simple Luhn check to reduce false positives
-            number = match.group().replace('-', '').replace(' ', '')
+            number = match.group().replace("-", "").replace(" ", "")
             if self._luhn_check(number):
                 matches.append((match.group(), match.start(), match.end()))
         return matches
@@ -188,7 +180,7 @@ class PIIDetector:
         matches = []
         for match in self.ip_pattern.finditer(text):
             # Validate IP address
-            parts = match.group().split('.')
+            parts = match.group().split(".")
             if all(0 <= int(p) <= 255 for p in parts):
                 matches.append((match.group(), match.start(), match.end()))
         return matches
@@ -237,21 +229,18 @@ class PIIDetector:
             Dictionary mapping PII type to list of matches
         """
         return {
-            'emails': self.detect_emails(text),
-            'phones': self.detect_phones(text),
-            'urls': self.detect_urls(text),
-            'credit_cards': self.detect_credit_cards(text),
-            'nids': self.detect_nids(text),
-            'ip_addresses': self.detect_ip_addresses(text),
-            'names': self.detect_names(text),
-            'addresses': self.detect_addresses(text),
+            "emails": self.detect_emails(text),
+            "phones": self.detect_phones(text),
+            "urls": self.detect_urls(text),
+            "credit_cards": self.detect_credit_cards(text),
+            "nids": self.detect_nids(text),
+            "ip_addresses": self.detect_ip_addresses(text),
+            "names": self.detect_names(text),
+            "addresses": self.detect_addresses(text),
         }
 
     def redact_text(
-        self,
-        text: str,
-        mode: str = 'redact',
-        pii_types: Optional[List[str]] = None
+        self, text: str, mode: str = "redact", pii_types: Optional[List[str]] = None
     ) -> Tuple[str, Dict[str, int]]:
         """
         Redact PII from text.
@@ -265,8 +254,16 @@ class PIIDetector:
             Tuple of (redacted_text, statistics_dict)
         """
         if pii_types is None:
-            pii_types = ['emails', 'phones', 'urls', 'credit_cards',
-                         'nids', 'ip_addresses', 'names', 'addresses']
+            pii_types = [
+                "emails",
+                "phones",
+                "urls",
+                "credit_cards",
+                "nids",
+                "ip_addresses",
+                "names",
+                "addresses",
+            ]
 
         # Detect all PII
         all_pii = self.detect_all(text)
@@ -287,14 +284,14 @@ class PIIDetector:
         # Redact matches
         redacted_text = text
         for start, end, pii_type in matches_to_redact:
-            if mode == 'redact':
-                replacement = f'[{pii_type.upper()}]'
-            elif mode == 'remove':
-                replacement = ''
-            elif mode == 'mask':
-                replacement = '*' * (end - start)
+            if mode == "redact":
+                replacement = f"[{pii_type.upper()}]"
+            elif mode == "remove":
+                replacement = ""
+            elif mode == "mask":
+                replacement = "*" * (end - start)
             else:
-                replacement = '[REDACTED]'
+                replacement = "[REDACTED]"
 
             redacted_text = redacted_text[:start] + replacement + redacted_text[end:]
 
@@ -311,6 +308,7 @@ class PIIDetector:
         Returns:
             True if valid according to Luhn algorithm
         """
+
         def digits_of(n):
             return [int(d) for d in str(n)]
 
@@ -327,8 +325,8 @@ def process_file(
     input_file: Path,
     output_file: Path,
     detector: PIIDetector,
-    mode: str = 'redact',
-    report_only: bool = False
+    mode: str = "redact",
+    report_only: bool = False,
 ) -> Dict:
     """
     Process a single file for PII detection/removal.
@@ -346,40 +344,40 @@ def process_file(
     print(f"Processing: {input_file}")
 
     total_stats = {
-        'samples_processed': 0,
-        'samples_with_pii': 0,
-        'total_pii_found': 0,
-        'emails': 0,
-        'phones': 0,
-        'urls': 0,
-        'credit_cards': 0,
-        'nids': 0,
-        'ip_addresses': 0,
-        'names': 0,
-        'addresses': 0,
+        "samples_processed": 0,
+        "samples_with_pii": 0,
+        "total_pii_found": 0,
+        "emails": 0,
+        "phones": 0,
+        "urls": 0,
+        "credit_cards": 0,
+        "nids": 0,
+        "ip_addresses": 0,
+        "names": 0,
+        "addresses": 0,
     }
 
     output_data = []
 
     # Read input file
-    with open(input_file, 'r', encoding='utf-8') as f:
-        if input_file.suffix == '.jsonl':
+    with open(input_file, "r", encoding="utf-8") as f:
+        if input_file.suffix == ".jsonl":
             samples = [json.loads(line) for line in f if line.strip()]
-        elif input_file.suffix == '.json':
+        elif input_file.suffix == ".json":
             samples = json.load(f)
             if not isinstance(samples, list):
                 samples = [samples]
         else:
             # Plain text file
-            samples = [{'text': line.strip()} for line in f if line.strip()]
+            samples = [{"text": line.strip()} for line in f if line.strip()]
 
     # Process each sample
     for sample in samples:
-        text = sample.get('text', '')
+        text = sample.get("text", "")
         if not text:
             continue
 
-        total_stats['samples_processed'] += 1
+        total_stats["samples_processed"] += 1
 
         # Redact PII
         redacted_text, pii_stats = detector.redact_text(text, mode=mode)
@@ -387,26 +385,26 @@ def process_file(
         # Update statistics
         pii_found = sum(pii_stats.values())
         if pii_found > 0:
-            total_stats['samples_with_pii'] += 1
-            total_stats['total_pii_found'] += pii_found
+            total_stats["samples_with_pii"] += 1
+            total_stats["total_pii_found"] += pii_found
             for key, value in pii_stats.items():
                 total_stats[key] += value
 
         # Prepare output
         if not report_only:
             output_sample = sample.copy()
-            output_sample['text'] = redacted_text
+            output_sample["text"] = redacted_text
             if pii_found > 0:
-                output_sample['pii_removed'] = pii_stats
+                output_sample["pii_removed"] = pii_stats
             output_data.append(output_sample)
 
     # Write output
     if not report_only and output_data:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
-            if output_file.suffix == '.jsonl':
+        with open(output_file, "w", encoding="utf-8") as f:
+            if output_file.suffix == ".jsonl":
                 for sample in output_data:
-                    f.write(json.dumps(sample, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(sample, ensure_ascii=False) + "\n")
             else:
                 json.dump(output_data, f, ensure_ascii=False, indent=2)
 
@@ -417,45 +415,31 @@ def process_file(
 
 def main():
     """Main function."""
-    parser = argparse.ArgumentParser(
-        description='Detect and remove PII from bilingual corpus'
-    )
+    parser = argparse.ArgumentParser(description="Detect and remove PII from bilingual corpus")
 
+    parser.add_argument("--input", type=str, required=True, help="Input file or directory")
     parser.add_argument(
-        '--input',
-        type=str,
-        required=True,
-        help='Input file or directory'
+        "--output", type=str, help="Output file or directory (required unless --report-only)"
     )
     parser.add_argument(
-        '--output',
+        "--mode",
         type=str,
-        help='Output file or directory (required unless --report-only)'
+        default="redact",
+        choices=["redact", "remove", "mask"],
+        help="Redaction mode: redact=[TAG], remove=delete, mask=***",
     )
     parser.add_argument(
-        '--mode',
+        "--language",
         type=str,
-        default='redact',
-        choices=['redact', 'remove', 'mask'],
-        help='Redaction mode: redact=[TAG], remove=delete, mask=***'
+        default="mixed",
+        choices=["bn", "en", "mixed"],
+        help="Target language",
     )
     parser.add_argument(
-        '--language',
-        type=str,
-        default='mixed',
-        choices=['bn', 'en', 'mixed'],
-        help='Target language'
+        "--report-only", action="store_true", help="Only report PII statistics without redacting"
     )
     parser.add_argument(
-        '--report-only',
-        action='store_true',
-        help='Only report PII statistics without redacting'
-    )
-    parser.add_argument(
-        '--pii-types',
-        type=str,
-        nargs='+',
-        help='Specific PII types to detect (default: all)'
+        "--pii-types", type=str, nargs="+", help="Specific PII types to detect (default: all)"
     )
 
     args = parser.parse_args()
@@ -474,11 +458,7 @@ def main():
         # Single file
         output_path = Path(args.output) if args.output else None
         stats = process_file(
-            input_path,
-            output_path,
-            detector,
-            mode=args.mode,
-            report_only=args.report_only
+            input_path, output_path, detector, mode=args.mode, report_only=args.report_only
         )
 
         # Print statistics
@@ -490,7 +470,7 @@ def main():
         print(f"Total PII instances: {stats['total_pii_found']}")
         print("\nBreakdown:")
         for key, value in stats.items():
-            if key not in ['samples_processed', 'samples_with_pii', 'total_pii_found']:
+            if key not in ["samples_processed", "samples_with_pii", "total_pii_found"]:
                 if value > 0:
                     print(f"  {key}: {value}")
 
@@ -500,13 +480,13 @@ def main():
         output_dir = Path(args.output) if args.output else None
 
         combined_stats = {
-            'samples_processed': 0,
-            'samples_with_pii': 0,
-            'total_pii_found': 0,
+            "samples_processed": 0,
+            "samples_with_pii": 0,
+            "total_pii_found": 0,
         }
 
-        for file in input_path.rglob('*.json*'):
-            if file.suffix in ['.json', '.jsonl']:
+        for file in input_path.rglob("*.json*"):
+            if file.suffix in [".json", ".jsonl"]:
                 if output_dir:
                     rel_path = file.relative_to(input_path)
                     output_file = output_dir / rel_path
@@ -514,11 +494,7 @@ def main():
                     output_file = None
 
                 stats = process_file(
-                    file,
-                    output_file,
-                    detector,
-                    mode=args.mode,
-                    report_only=args.report_only
+                    file, output_file, detector, mode=args.mode, report_only=args.report_only
                 )
 
                 # Aggregate stats
@@ -538,5 +514,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

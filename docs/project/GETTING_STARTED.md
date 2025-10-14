@@ -254,19 +254,19 @@ for expected_level, text in stories.items():
 
 ## ❓ FAQ
 
-**Q: Do I need trained models to use the package?**  
+**Q: Do I need trained models to use the package?**
 A: Basic features (normalization, data utilities) work without models. For generation and translation, you'll need trained models.
 
-**Q: How do I train my own models?**  
+**Q: How do I train my own models?**
 A: See the training scripts in `scripts/` and documentation in `docs/en/training.md` (coming soon).
 
-**Q: Can I use this for commercial projects?**  
+**Q: Can I use this for commercial projects?**
 A: Yes! The package is licensed under Apache 2.0, which allows commercial use.
 
-**Q: How can I contribute?**  
+**Q: How can I contribute?**
 A: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines. We welcome all contributions!
 
-**Q: Is there support for other languages?**  
+**Q: Is there support for other languages?**
 A: Currently focused on Bangla and English, but the architecture is extensible.
 
 ## 🎉 Success!

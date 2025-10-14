@@ -274,6 +274,7 @@ def combine_corpora(*datasets: BilingualDataset) -> BilingualDataset:
     for dataset in datasets:
         combined_data.extend(dataset.data)
 
+
 """
 Enhanced data collection utilities for bilingual corpus.
 
@@ -285,11 +286,15 @@ import json
 import re
 import time
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-import requests
-from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
+try:
+    from fake_useragent import UserAgent
+
+    FAKE_USERAGENT_AVAILABLE = True
+except ImportError:
+    FAKE_USERAGENT_AVAILABLE = False
+    UserAgent = None
 
 
 class EnhancedDataCollector:
@@ -306,16 +311,21 @@ class EnhancedDataCollector:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.ua = UserAgent()
+        self.ua = UserAgent() if FAKE_USERAGENT_AVAILABLE else None
 
         # Headers for requests
+        user_agent = (
+            self.ua.random
+            if self.ua
+            else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        )
         self.headers = {
-            'User-Agent': self.ua.random,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
+            "User-Agent": user_agent,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
         }
 
     def scrape_educational_content(self, url: str, limit: Optional[int] = None) -> List[str]:
@@ -334,7 +344,7 @@ class EnhancedDataCollector:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
 
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, "html.parser")
 
             # Remove script and style elements
             for script in soup(["script", "style"]):
@@ -345,17 +355,23 @@ class EnhancedDataCollector:
 
             # Try different content selectors for educational sites
             content_selectors = [
-                'article', '.content', '.post-content', '.entry-content',
-                'main', '.main-content', 'div[class*="content"]',
-                'div[class*="article"]', 'div[class*="post"]'
+                "article",
+                ".content",
+                ".post-content",
+                ".entry-content",
+                "main",
+                ".main-content",
+                'div[class*="content"]',
+                'div[class*="article"]',
+                'div[class*="post"]',
             ]
 
             content_found = False
             for selector in content_selectors:
                 content_divs = soup.select(selector)
                 if content_divs:
-                    for div in content_divs[:limit or 5]:  # Limit articles
-                        text = div.get_text(separator=' ', strip=True)
+                    for div in content_divs[: limit or 5]:  # Limit articles
+                        text = div.get_text(separator=" ", strip=True)
                         if len(text) > 100:  # Only substantial content
                             text_content.append(text)
                             content_found = True
@@ -366,18 +382,18 @@ class EnhancedDataCollector:
 
             # Fallback: get all paragraph text
             if not content_found:
-                paragraphs = soup.find_all('p')
-                for p in paragraphs[:limit or 10]:
+                paragraphs = soup.find_all("p")
+                for p in paragraphs[: limit or 10]:
                     text = p.get_text(strip=True)
                     if len(text) > 50:
                         text_content.append(text)
 
             # Save to file
             if text_content:
-                domain = url.split('//')[1].split('/')[0].replace('.', '_')
+                domain = url.split("//")[1].split("/")[0].replace(".", "_")
                 filename = self.output_dir / f"educational_{domain}.txt"
 
-                with open(filename, 'a', encoding='utf-8') as f:
+                with open(filename, "a", encoding="utf-8") as f:
                     for content in text_content:
                         f.write(content + "\n\n")
                         f.write("=" * 80 + "\n\n")
@@ -406,7 +422,7 @@ class EnhancedDataCollector:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
 
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, "html.parser")
 
             # Remove script and style elements
             for script in soup(["script", "style"]):
@@ -416,17 +432,23 @@ class EnhancedDataCollector:
 
             # Try different article selectors for news sites
             article_selectors = [
-                'article', '.news-item', '.post', '.entry',
-                'div[class*="article"]', 'div[class*="news"]',
-                'div[class*="post"]', '.story', '.headline'
+                "article",
+                ".news-item",
+                ".post",
+                ".entry",
+                'div[class*="article"]',
+                'div[class*="news"]',
+                'div[class*="post"]',
+                ".story",
+                ".headline",
             ]
 
             for selector in article_selectors:
                 article_divs = soup.select(selector)
-                for div in article_divs[:limit or 10]:
+                for div in article_divs[: limit or 10]:
                     # Extract title and content
-                    title_elem = div.find(['h1', 'h2', 'h3', '.title', '.headline'])
-                    content_elem = div.find(['p', '.content', '.summary', '.excerpt'])
+                    title_elem = div.find(["h1", "h2", "h3", ".title", ".headline"])
+                    content_elem = div.find(["p", ".content", ".summary", ".excerpt"])
 
                     title = title_elem.get_text(strip=True) if title_elem else ""
                     content = content_elem.get_text(strip=True) if content_elem else ""
@@ -443,10 +465,10 @@ class EnhancedDataCollector:
 
             # Save to file
             if articles:
-                domain = url.split('//')[1].split('/')[0].replace('.', '_')
+                domain = url.split("//")[1].split("/")[0].replace(".", "_")
                 filename = self.output_dir / f"news_{domain}.txt"
 
-                with open(filename, 'a', encoding='utf-8') as f:
+                with open(filename, "a", encoding="utf-8") as f:
                     for article in articles:
                         f.write(article + "\n\n")
                         f.write("=" * 80 + "\n\n")
@@ -470,16 +492,20 @@ class EnhancedDataCollector:
             Cleaned text
         """
         # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"\s+", " ", text)
 
         # Remove special characters but keep Bengali and English
-        text = re.sub(r'[^\u0980-\u09FF\u0000-\u007F\s]', '', text)
+        text = re.sub(r"[^\u0980-\u09FF\u0000-\u007F\s]", "", text)
 
         # Remove URLs
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+        text = re.sub(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            "",
+            text,
+        )
 
         # Remove email addresses
-        text = re.sub(r'\S+@\S+', '', text)
+        text = re.sub(r"\S+@\S+", "", text)
 
         return text.strip()
 
@@ -497,10 +523,10 @@ class EnhancedDataCollector:
         parallel_data = []
 
         try:
-            with open(bn_file, 'r', encoding='utf-8') as f:
+            with open(bn_file, "r", encoding="utf-8") as f:
                 bn_sentences = [line.strip() for line in f if line.strip()]
 
-            with open(en_file, 'r', encoding='utf-8') as f:
+            with open(en_file, "r", encoding="utf-8") as f:
                 en_sentences = [line.strip() for line in f if line.strip()]
 
             # Simple alignment (take min length and pair sequentially)
@@ -508,14 +534,16 @@ class EnhancedDataCollector:
 
             for i in range(min_len):
                 if len(bn_sentences[i]) > 10 and len(en_sentences[i]) > 10:
-                    parallel_data.append({
-                        "bn": self.clean_text(bn_sentences[i]),
-                        "en": self.clean_text(en_sentences[i])
-                    })
+                    parallel_data.append(
+                        {
+                            "bn": self.clean_text(bn_sentences[i]),
+                            "en": self.clean_text(en_sentences[i]),
+                        }
+                    )
 
             # Save parallel corpus
             parallel_file = self.output_dir / "parallel_corpus.jsonl"
-            with open(parallel_file, 'w', encoding='utf-8') as f:
+            with open(parallel_file, "w", encoding="utf-8") as f:
                 for pair in parallel_data:
                     f.write(json.dumps(pair, ensure_ascii=False) + "\n")
 

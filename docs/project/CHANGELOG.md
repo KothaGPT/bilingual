@@ -96,5 +96,3 @@ Thanks to all contributors who made this release possible!
 **Built with ❤️ for the Bengali language community worldwide**
 
 *For questions or support: [GitHub Issues](https://github.com/kothagpt/bilingual/issues)*
-
-

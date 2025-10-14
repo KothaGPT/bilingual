@@ -40,15 +40,15 @@ test:
 	pytest tests/ -v
 
 test-cov:
-	pytest tests/ --cov=bilingual --cov-report=html --cov-report=term
+	pytest tests/ --cov=src/bilingual --cov-report=html --cov-report=term
 
 lint:
-	flake8 bilingual/ tests/ scripts/
-	mypy bilingual/
+	flake8 src/bilingual/ tests/ scripts/
+	mypy src/bilingual/
 
 format:
-	black bilingual/ tests/ scripts/
-	isort bilingual/ tests/ scripts/
+	black src/bilingual/ tests/ scripts/
+	isort src/bilingual/ tests/ scripts/
 
 clean:
 	rm -rf build/
@@ -67,38 +67,38 @@ docs:
 	@echo "  Bangla:  docs/bn/README.md"
 
 example:
-	python examples/basic_usage.py
+	python3 examples/basic_usage.py
 
 collect-data:
-	python scripts/collect_data.py --source sample --output data/raw/
+	python3 scripts/collect_data.py --source sample --output data/raw/
 
 prepare-data:
-	python scripts/prepare_data.py --input data/raw/ --output datasets/processed/
+	python3 scripts/prepare_data.py --input data/raw/ --output datasets/processed/
 
 remove-pii:
-	python scripts/pii_detection.py --input data/raw/ --output data/cleaned/ --mode redact
+	python3 scripts/pii_detection.py --input data/raw/ --output data/cleaned/ --mode redact
 
 filter-quality:
-	python scripts/quality_filter.py --input data/cleaned/ --output data/filtered/ --min-quality 0.7
+	python3 scripts/quality_filter.py --input data/cleaned/ --output data/filtered/ --min-quality 0.7
 
 data-workflow:
-	python scripts/data_workflow.py --source sample --output datasets/processed/ --dataset-name "Bilingual Corpus"
+	python3 scripts/data_workflow.py --source sample --output datasets/processed/ --dataset-name "Bilingual Corpus"
 
 # Model training and evaluation commands
 train-tokenizer:
-	python scripts/train_tokenizer.py --input datasets/processed/ --output models/tokenizer/
+	python3 scripts/train_tokenizer.py --input datasets/processed/final/train.jsonl datasets/processed/final/val.jsonl datasets/processed/final/test.jsonl --output models/tokenizer/ --vocab-size 1000
 
 train-lm:
-	python scripts/train_lm.py --train_data datasets/processed/final/train.jsonl --val_data datasets/processed/final/val.jsonl --output_dir models/bilingual-lm/
+	python3 scripts/train_lm.py --train_data datasets/processed/final/train.jsonl --val_data datasets/processed/final/val.jsonl --output_dir models/bilingual-lm/ --model_name_or_path microsoft/DialoGPT-small
 
 train-translation:
-	python scripts/train_translation.py --data datasets/processed/final/ --output models/translation/
+	python3 scripts/train_translation.py --data datasets/processed/final/ --output models/translation/
 
 train-classifier:
-	python scripts/train_classifier.py --task readability --data datasets/processed/final/ --output models/readability-classifier/ --synthetic-labels
+	python3 scripts/train_classifier.py --task readability --data datasets/processed/final/ --output models/readability-classifier/ --synthetic-labels
 
 evaluate-models:
-	python scripts/evaluate_models.py --model models/bilingual-lm/ --test-data datasets/processed/final/test.jsonl --task generation --output results/evaluation.json
+	python3 scripts/evaluate_models.py --model models/bilingual-lm/ --test-data datasets/processed/final/test.jsonl --task generation --output results/evaluation.json
 
 benchmark-models:
-	python scripts/benchmark_models.py --models models/bilingual-lm/ --tasks generation --output results/benchmark.json
+	python3 scripts/benchmark_models.py --models models/bilingual-lm/ --tasks generation --output results/benchmark.json

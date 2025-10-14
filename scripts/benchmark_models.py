@@ -19,13 +19,13 @@ Usage:
 
 import argparse
 import json
-import psutil
 import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import numpy as np
+import psutil
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -45,30 +45,31 @@ class ModelBenchmark:
         """
         self.output_file = output_file
         self.results = {
-            'benchmark_info': {
-                'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
-                'system_info': self.get_system_info()
+            "benchmark_info": {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "system_info": self.get_system_info(),
             },
-            'models': {}
+            "models": {},
         }
 
     def get_system_info(self) -> Dict:
         """Get system information for benchmarking context."""
         try:
             import torch
+
             gpu_info = {
-                'cuda_available': torch.cuda.is_available(),
-                'gpu_count': torch.cuda.device_count() if torch.cuda.is_available() else 0,
-                'gpu_name': torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+                "cuda_available": torch.cuda.is_available(),
+                "gpu_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+                "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
             }
         except ImportError:
-            gpu_info = {'cuda_available': False, 'gpu_count': 0, 'gpu_name': None}
+            gpu_info = {"cuda_available": False, "gpu_count": 0, "gpu_name": None}
 
         return {
-            'cpu_count': psutil.cpu_count(),
-            'memory_gb': round(psutil.virtual_memory().total / (1024**3), 2),
-            'python_version': sys.version.split()[0],
-            **gpu_info
+            "cpu_count": psutil.cpu_count(),
+            "memory_gb": round(psutil.virtual_memory().total / (1024**3), 2),
+            "python_version": sys.version.split()[0],
+            **gpu_info,
         }
 
     def benchmark_generation(
@@ -76,7 +77,7 @@ class ModelBenchmark:
         model_name: str,
         prompts: List[str],
         max_tokens: int = 50,
-        batch_sizes: List[int] = [1, 4, 8]
+        batch_sizes: List[int] = [1, 4, 8],
     ) -> Dict:
         """
         Benchmark text generation performance.
@@ -91,15 +92,15 @@ class ModelBenchmark:
             Generation benchmark results
         """
         print(f"Benchmarking generation for: {model_name}")
-        
+
         results = {
-            'task': 'generation',
-            'model': model_name,
-            'max_tokens': max_tokens,
-            'batch_performance': {},
-            'latency_stats': {},
-            'memory_usage': {},
-            'error_rate': 0.0
+            "task": "generation",
+            "model": model_name,
+            "max_tokens": max_tokens,
+            "batch_performance": {},
+            "latency_stats": {},
+            "memory_usage": {},
+            "error_rate": 0.0,
         }
 
         total_attempts = 0
@@ -107,7 +108,7 @@ class ModelBenchmark:
 
         for batch_size in batch_sizes:
             print(f"  Testing batch size: {batch_size}")
-            
+
             batch_prompts = prompts[:batch_size] * (batch_size // len(prompts) + 1)
             batch_prompts = batch_prompts[:batch_size]
 
@@ -130,11 +131,7 @@ class ModelBenchmark:
 
                 try:
                     start_time = time.time()
-                    generated = bb.generate(
-                        prompt,
-                        model_name=model_name,
-                        max_tokens=max_tokens
-                    )
+                    generated = bb.generate(prompt, model_name=model_name, max_tokens=max_tokens)
                     end_time = time.time()
 
                     if generated:  # Successful generation
@@ -158,12 +155,12 @@ class ModelBenchmark:
                 tokens_per_second = max_tokens / avg_latency if avg_latency > 0 else 0
                 throughput = batch_size / avg_latency if avg_latency > 0 else 0
 
-                results['batch_performance'][str(batch_size)] = {
-                    'avg_latency_ms': avg_latency * 1000,
-                    'tokens_per_second': tokens_per_second,
-                    'throughput_requests_per_second': throughput,
-                    'successful_generations': successful_generations,
-                    'memory_used_mb': memory_used
+                results["batch_performance"][str(batch_size)] = {
+                    "avg_latency_ms": avg_latency * 1000,
+                    "tokens_per_second": tokens_per_second,
+                    "throughput_requests_per_second": throughput,
+                    "successful_generations": successful_generations,
+                    "memory_used_mb": memory_used,
                 }
 
                 print(f"    Avg latency: {avg_latency*1000:.1f}ms")
@@ -172,20 +169,20 @@ class ModelBenchmark:
 
         # Overall latency statistics
         all_latencies = []
-        for batch_data in results['batch_performance'].values():
-            if 'avg_latency_ms' in batch_data:
-                all_latencies.append(batch_data['avg_latency_ms'] / 1000)
+        for batch_data in results["batch_performance"].values():
+            if "avg_latency_ms" in batch_data:
+                all_latencies.append(batch_data["avg_latency_ms"] / 1000)
 
         if all_latencies:
-            results['latency_stats'] = {
-                'mean_latency_ms': np.mean(all_latencies) * 1000,
-                'median_latency_ms': np.median(all_latencies) * 1000,
-                'p95_latency_ms': np.percentile(all_latencies, 95) * 1000,
-                'p99_latency_ms': np.percentile(all_latencies, 99) * 1000
+            results["latency_stats"] = {
+                "mean_latency_ms": np.mean(all_latencies) * 1000,
+                "median_latency_ms": np.median(all_latencies) * 1000,
+                "p95_latency_ms": np.percentile(all_latencies, 95) * 1000,
+                "p99_latency_ms": np.percentile(all_latencies, 99) * 1000,
             }
 
         # Error rate
-        results['error_rate'] = total_errors / total_attempts if total_attempts > 0 else 0
+        results["error_rate"] = total_errors / total_attempts if total_attempts > 0 else 0
 
         print(f"  Error rate: {results['error_rate']*100:.1f}%")
         print()
@@ -193,10 +190,7 @@ class ModelBenchmark:
         return results
 
     def benchmark_translation(
-        self,
-        model_name: str,
-        text_pairs: List[Dict],
-        batch_sizes: List[int] = [1, 4, 8]
+        self, model_name: str, text_pairs: List[Dict], batch_sizes: List[int] = [1, 4, 8]
     ) -> Dict:
         """
         Benchmark translation performance.
@@ -210,14 +204,14 @@ class ModelBenchmark:
             Translation benchmark results
         """
         print(f"Benchmarking translation for: {model_name}")
-        
+
         results = {
-            'task': 'translation',
-            'model': model_name,
-            'batch_performance': {},
-            'latency_stats': {},
-            'memory_usage': {},
-            'error_rate': 0.0
+            "task": "translation",
+            "model": model_name,
+            "batch_performance": {},
+            "latency_stats": {},
+            "memory_usage": {},
+            "error_rate": 0.0,
         }
 
         total_attempts = 0
@@ -225,7 +219,7 @@ class ModelBenchmark:
 
         for batch_size in batch_sizes:
             print(f"  Testing batch size: {batch_size}")
-            
+
             batch_pairs = text_pairs[:batch_size] * (batch_size // len(text_pairs) + 1)
             batch_pairs = batch_pairs[:batch_size]
 
@@ -233,10 +227,10 @@ class ModelBenchmark:
             try:
                 first_pair = batch_pairs[0]
                 _ = bb.translate(
-                    first_pair['text'][:50],
-                    src=first_pair['src'],
-                    tgt=first_pair['tgt'],
-                    model_name=model_name
+                    first_pair["text"][:50],
+                    src=first_pair["src"],
+                    tgt=first_pair["tgt"],
+                    model_name=model_name,
                 )
             except Exception:
                 pass
@@ -255,10 +249,7 @@ class ModelBenchmark:
                 try:
                     start_time = time.time()
                     translated = bb.translate(
-                        pair['text'],
-                        src=pair['src'],
-                        tgt=pair['tgt'],
-                        model_name=model_name
+                        pair["text"], src=pair["src"], tgt=pair["tgt"], model_name=model_name
                     )
                     end_time = time.time()
 
@@ -282,11 +273,11 @@ class ModelBenchmark:
                 avg_latency = np.mean(latencies)
                 throughput = batch_size / avg_latency if avg_latency > 0 else 0
 
-                results['batch_performance'][str(batch_size)] = {
-                    'avg_latency_ms': avg_latency * 1000,
-                    'throughput_translations_per_second': throughput,
-                    'successful_translations': successful_translations,
-                    'memory_used_mb': memory_used
+                results["batch_performance"][str(batch_size)] = {
+                    "avg_latency_ms": avg_latency * 1000,
+                    "throughput_translations_per_second": throughput,
+                    "successful_translations": successful_translations,
+                    "memory_used_mb": memory_used,
                 }
 
                 print(f"    Avg latency: {avg_latency*1000:.1f}ms")
@@ -295,20 +286,20 @@ class ModelBenchmark:
 
         # Overall latency statistics
         all_latencies = []
-        for batch_data in results['batch_performance'].values():
-            if 'avg_latency_ms' in batch_data:
-                all_latencies.append(batch_data['avg_latency_ms'] / 1000)
+        for batch_data in results["batch_performance"].values():
+            if "avg_latency_ms" in batch_data:
+                all_latencies.append(batch_data["avg_latency_ms"] / 1000)
 
         if all_latencies:
-            results['latency_stats'] = {
-                'mean_latency_ms': np.mean(all_latencies) * 1000,
-                'median_latency_ms': np.median(all_latencies) * 1000,
-                'p95_latency_ms': np.percentile(all_latencies, 95) * 1000,
-                'p99_latency_ms': np.percentile(all_latencies, 99) * 1000
+            results["latency_stats"] = {
+                "mean_latency_ms": np.mean(all_latencies) * 1000,
+                "median_latency_ms": np.median(all_latencies) * 1000,
+                "p95_latency_ms": np.percentile(all_latencies, 95) * 1000,
+                "p99_latency_ms": np.percentile(all_latencies, 99) * 1000,
             }
 
         # Error rate
-        results['error_rate'] = total_errors / total_attempts if total_attempts > 0 else 0
+        results["error_rate"] = total_errors / total_attempts if total_attempts > 0 else 0
 
         print(f"  Error rate: {results['error_rate']*100:.1f}%")
         print()
@@ -319,8 +310,8 @@ class ModelBenchmark:
         self,
         model_name: str,
         texts: List[str],
-        task: str = 'readability',
-        batch_sizes: List[int] = [1, 8, 16]
+        task: str = "readability",
+        batch_sizes: List[int] = [1, 8, 16],
     ) -> Dict:
         """
         Benchmark classification performance.
@@ -335,14 +326,14 @@ class ModelBenchmark:
             Classification benchmark results
         """
         print(f"Benchmarking {task} classification for: {model_name}")
-        
+
         results = {
-            'task': f'{task}_classification',
-            'model': model_name,
-            'batch_performance': {},
-            'latency_stats': {},
-            'memory_usage': {},
-            'error_rate': 0.0
+            "task": f"{task}_classification",
+            "model": model_name,
+            "batch_performance": {},
+            "latency_stats": {},
+            "memory_usage": {},
+            "error_rate": 0.0,
         }
 
         total_attempts = 0
@@ -350,15 +341,15 @@ class ModelBenchmark:
 
         for batch_size in batch_sizes:
             print(f"  Testing batch size: {batch_size}")
-            
+
             batch_texts = texts[:batch_size] * (batch_size // len(texts) + 1)
             batch_texts = batch_texts[:batch_size]
 
             # Warm up
             try:
-                if task == 'readability':
+                if task == "readability":
                     _ = bb.readability_check(batch_texts[0][:100])
-                elif task == 'safety':
+                elif task == "safety":
                     _ = bb.safety_check(batch_texts[0][:100])
             except Exception:
                 pass
@@ -376,14 +367,14 @@ class ModelBenchmark:
 
                 try:
                     start_time = time.time()
-                    
-                    if task == 'readability':
+
+                    if task == "readability":
                         result = bb.readability_check(text)
-                    elif task == 'safety':
+                    elif task == "safety":
                         result = bb.safety_check(text)
                     else:
                         result = None
-                    
+
                     end_time = time.time()
 
                     if result:  # Successful classification
@@ -406,11 +397,11 @@ class ModelBenchmark:
                 avg_latency = np.mean(latencies)
                 throughput = batch_size / avg_latency if avg_latency > 0 else 0
 
-                results['batch_performance'][str(batch_size)] = {
-                    'avg_latency_ms': avg_latency * 1000,
-                    'throughput_classifications_per_second': throughput,
-                    'successful_classifications': successful_classifications,
-                    'memory_used_mb': memory_used
+                results["batch_performance"][str(batch_size)] = {
+                    "avg_latency_ms": avg_latency * 1000,
+                    "throughput_classifications_per_second": throughput,
+                    "successful_classifications": successful_classifications,
+                    "memory_used_mb": memory_used,
                 }
 
                 print(f"    Avg latency: {avg_latency*1000:.1f}ms")
@@ -419,20 +410,20 @@ class ModelBenchmark:
 
         # Overall latency statistics
         all_latencies = []
-        for batch_data in results['batch_performance'].values():
-            if 'avg_latency_ms' in batch_data:
-                all_latencies.append(batch_data['avg_latency_ms'] / 1000)
+        for batch_data in results["batch_performance"].values():
+            if "avg_latency_ms" in batch_data:
+                all_latencies.append(batch_data["avg_latency_ms"] / 1000)
 
         if all_latencies:
-            results['latency_stats'] = {
-                'mean_latency_ms': np.mean(all_latencies) * 1000,
-                'median_latency_ms': np.median(all_latencies) * 1000,
-                'p95_latency_ms': np.percentile(all_latencies, 95) * 1000,
-                'p99_latency_ms': np.percentile(all_latencies, 99) * 1000
+            results["latency_stats"] = {
+                "mean_latency_ms": np.mean(all_latencies) * 1000,
+                "median_latency_ms": np.median(all_latencies) * 1000,
+                "p95_latency_ms": np.percentile(all_latencies, 95) * 1000,
+                "p99_latency_ms": np.percentile(all_latencies, 99) * 1000,
             }
 
         # Error rate
-        results['error_rate'] = total_errors / total_attempts if total_attempts > 0 else 0
+        results["error_rate"] = total_errors / total_attempts if total_attempts > 0 else 0
 
         print(f"  Error rate: {results['error_rate']*100:.1f}%")
         print()
@@ -440,10 +431,7 @@ class ModelBenchmark:
         return results
 
     def benchmark_model(
-        self,
-        model_name: str,
-        tasks: List[str],
-        test_data: Optional[Dict] = None
+        self, model_name: str, tasks: List[str], test_data: Optional[Dict] = None
     ) -> Dict:
         """
         Benchmark a model across multiple tasks.
@@ -461,58 +449,60 @@ class ModelBenchmark:
         print("=" * 60)
         print()
 
-        model_results = {
-            'model_name': model_name,
-            'tasks': {},
-            'summary': {}
-        }
+        model_results = {"model_name": model_name, "tasks": {}, "summary": {}}
 
         # Default test data
         default_prompts = [
             "আমার নাম",
             "Once upon a time",
             "বাংলাদেশ একটি সুন্দর দেশ",
-            "The quick brown fox jumps"
+            "The quick brown fox jumps",
         ]
 
         default_translations = [
-            {'text': 'আমি স্কুলে যাচ্ছি।', 'src': 'bn', 'tgt': 'en'},
-            {'text': 'I am going to school.', 'src': 'en', 'tgt': 'bn'},
-            {'text': 'বই পড়া ভালো অভ্যাস।', 'src': 'bn', 'tgt': 'en'},
-            {'text': 'Reading books is a good habit.', 'src': 'en', 'tgt': 'bn'}
+            {"text": "আমি স্কুলে যাচ্ছি।", "src": "bn", "tgt": "en"},
+            {"text": "I am going to school.", "src": "en", "tgt": "bn"},
+            {"text": "বই পড়া ভালো অভ্যাস।", "src": "bn", "tgt": "en"},
+            {"text": "Reading books is a good habit.", "src": "en", "tgt": "bn"},
         ]
 
         default_texts = [
             "আমি একটি ছোট গল্প বলব।",
             "This is a simple story for children.",
             "বাচ্চাদের জন্য শিক্ষামূলক বই।",
-            "Educational content for young learners."
+            "Educational content for young learners.",
         ]
 
         # Run benchmarks for each task
         for task in tasks:
             try:
-                if task == 'generation':
-                    prompts = test_data.get('prompts', default_prompts) if test_data else default_prompts
+                if task == "generation":
+                    prompts = (
+                        test_data.get("prompts", default_prompts) if test_data else default_prompts
+                    )
                     task_results = self.benchmark_generation(model_name, prompts)
-                
-                elif task == 'translation':
-                    translations = test_data.get('translations', default_translations) if test_data else default_translations
+
+                elif task == "translation":
+                    translations = (
+                        test_data.get("translations", default_translations)
+                        if test_data
+                        else default_translations
+                    )
                     task_results = self.benchmark_translation(model_name, translations)
-                
-                elif task in ['readability', 'safety']:
-                    texts = test_data.get('texts', default_texts) if test_data else default_texts
+
+                elif task in ["readability", "safety"]:
+                    texts = test_data.get("texts", default_texts) if test_data else default_texts
                     task_results = self.benchmark_classification(model_name, texts, task)
-                
+
                 else:
                     print(f"Unknown task: {task}")
                     continue
 
-                model_results['tasks'][task] = task_results
+                model_results["tasks"][task] = task_results
 
             except Exception as e:
                 print(f"Error benchmarking {task}: {e}")
-                model_results['tasks'][task] = {'error': str(e)}
+                model_results["tasks"][task] = {"error": str(e)}
 
         # Calculate summary metrics
         self.calculate_summary_metrics(model_results)
@@ -522,11 +512,11 @@ class ModelBenchmark:
     def calculate_summary_metrics(self, model_results: Dict):
         """Calculate summary metrics across all tasks."""
         summary = {
-            'avg_latency_ms': 0.0,
-            'total_throughput': 0.0,
-            'avg_memory_usage_mb': 0.0,
-            'overall_error_rate': 0.0,
-            'tasks_completed': 0
+            "avg_latency_ms": 0.0,
+            "total_throughput": 0.0,
+            "avg_memory_usage_mb": 0.0,
+            "overall_error_rate": 0.0,
+            "tasks_completed": 0,
         }
 
         latencies = []
@@ -534,46 +524,46 @@ class ModelBenchmark:
         memory_usages = []
         error_rates = []
 
-        for task_name, task_results in model_results['tasks'].items():
-            if 'error' in task_results:
+        for task_name, task_results in model_results["tasks"].items():
+            if "error" in task_results:
                 continue
 
-            summary['tasks_completed'] += 1
+            summary["tasks_completed"] += 1
 
             # Collect metrics
-            if 'latency_stats' in task_results and 'mean_latency_ms' in task_results['latency_stats']:
-                latencies.append(task_results['latency_stats']['mean_latency_ms'])
+            if (
+                "latency_stats" in task_results
+                and "mean_latency_ms" in task_results["latency_stats"]
+            ):
+                latencies.append(task_results["latency_stats"]["mean_latency_ms"])
 
-            if 'error_rate' in task_results:
-                error_rates.append(task_results['error_rate'])
+            if "error_rate" in task_results:
+                error_rates.append(task_results["error_rate"])
 
             # Collect batch performance metrics
-            for batch_size, batch_data in task_results.get('batch_performance', {}).items():
-                if 'memory_used_mb' in batch_data:
-                    memory_usages.append(batch_data['memory_used_mb'])
+            for batch_size, batch_data in task_results.get("batch_performance", {}).items():
+                if "memory_used_mb" in batch_data:
+                    memory_usages.append(batch_data["memory_used_mb"])
 
                 # Collect throughput (different keys for different tasks)
                 for key in batch_data:
-                    if 'throughput' in key or 'per_second' in key:
+                    if "throughput" in key or "per_second" in key:
                         throughputs.append(batch_data[key])
 
         # Calculate averages
         if latencies:
-            summary['avg_latency_ms'] = np.mean(latencies)
+            summary["avg_latency_ms"] = np.mean(latencies)
         if throughputs:
-            summary['total_throughput'] = np.sum(throughputs)
+            summary["total_throughput"] = np.sum(throughputs)
         if memory_usages:
-            summary['avg_memory_usage_mb'] = np.mean(memory_usages)
+            summary["avg_memory_usage_mb"] = np.mean(memory_usages)
         if error_rates:
-            summary['overall_error_rate'] = np.mean(error_rates)
+            summary["overall_error_rate"] = np.mean(error_rates)
 
-        model_results['summary'] = summary
+        model_results["summary"] = summary
 
     def run_benchmarks(
-        self,
-        models: List[str],
-        tasks: List[str],
-        test_data: Optional[Dict] = None
+        self, models: List[str], tasks: List[str], test_data: Optional[Dict] = None
     ) -> Dict:
         """
         Run benchmarks for multiple models and tasks.
@@ -602,10 +592,10 @@ class ModelBenchmark:
         for model_name in models:
             try:
                 model_results = self.benchmark_model(model_name, tasks, test_data)
-                self.results['models'][model_name] = model_results
+                self.results["models"][model_name] = model_results
             except Exception as e:
                 print(f"Error benchmarking model {model_name}: {e}")
-                self.results['models'][model_name] = {'error': str(e)}
+                self.results["models"][model_name] = {"error": str(e)}
 
         # Save results
         if self.output_file:
@@ -621,7 +611,7 @@ class ModelBenchmark:
         output_path = Path(self.output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(self.results, f, indent=2, ensure_ascii=False)
 
         print(f"Benchmark results saved to: {output_path}")
@@ -632,12 +622,12 @@ class ModelBenchmark:
         print("BENCHMARK SUMMARY")
         print("=" * 60)
 
-        for model_name, model_data in self.results['models'].items():
-            if 'error' in model_data:
+        for model_name, model_data in self.results["models"].items():
+            if "error" in model_data:
                 print(f"\n{model_name}: ERROR - {model_data['error']}")
                 continue
 
-            summary = model_data.get('summary', {})
+            summary = model_data.get("summary", {})
             print(f"\n{model_name}:")
             print(f"  Tasks completed: {summary.get('tasks_completed', 0)}")
             print(f"  Avg latency: {summary.get('avg_latency_ms', 0):.1f}ms")
@@ -648,35 +638,19 @@ class ModelBenchmark:
 
 def main():
     """Main function."""
-    parser = argparse.ArgumentParser(
-        description='Benchmark bilingual models for performance'
-    )
+    parser = argparse.ArgumentParser(description="Benchmark bilingual models for performance")
 
+    parser.add_argument("--models", type=str, nargs="+", required=True, help="Models to benchmark")
     parser.add_argument(
-        '--models',
+        "--tasks",
         type=str,
-        nargs='+',
-        required=True,
-        help='Models to benchmark'
+        nargs="+",
+        default=["generation"],
+        choices=["generation", "translation", "readability", "safety"],
+        help="Tasks to benchmark",
     )
-    parser.add_argument(
-        '--tasks',
-        type=str,
-        nargs='+',
-        default=['generation'],
-        choices=['generation', 'translation', 'readability', 'safety'],
-        help='Tasks to benchmark'
-    )
-    parser.add_argument(
-        '--output',
-        type=str,
-        help='Output file for benchmark results (JSON)'
-    )
-    parser.add_argument(
-        '--test-data',
-        type=str,
-        help='JSON file with test data for benchmarking'
-    )
+    parser.add_argument("--output", type=str, help="Output file for benchmark results (JSON)")
+    parser.add_argument("--test-data", type=str, help="JSON file with test data for benchmarking")
 
     args = parser.parse_args()
 
@@ -684,7 +658,7 @@ def main():
     test_data = None
     if args.test_data:
         try:
-            with open(args.test_data, 'r', encoding='utf-8') as f:
+            with open(args.test_data, "r", encoding="utf-8") as f:
                 test_data = json.load(f)
         except Exception as e:
             print(f"Warning: Could not load test data: {e}")
@@ -696,11 +670,11 @@ def main():
     try:
         results = benchmarker.run_benchmarks(args.models, args.tasks, test_data)
         print("\nBenchmarking completed successfully!")
-        
+
     except Exception as e:
         print(f"Error during benchmarking: {e}")
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

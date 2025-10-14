@@ -46,7 +46,7 @@ python -m wikiextractor.WikiExtractor bnwiki-latest-pages-articles.xml.bz2 \
     --compress
 ```
 
-**Pros**: Large, high-quality, public domain  
+**Pros**: Large, high-quality, public domain
 **Cons**: May be too formal for children
 
 ### 2. Project Gutenberg
@@ -85,7 +85,7 @@ wget https://www.gutenberg.org/cache/epub/[ID]/pg[ID].txt \
 
 **Tools**: Use official APIs with proper authentication
 
-**Important**: 
+**Important**:
 - Only collect public posts
 - Anonymize user information
 - Follow platform ToS
@@ -109,18 +109,18 @@ wget https://www.gutenberg.org/cache/epub/[ID]/pg[ID].txt \
 
 ### 2. Educational Resources
 
-**OpenStax**: https://openstax.org/  
-**Khan Academy**: https://www.khanacademy.org/ (check licensing)  
+**OpenStax**: https://openstax.org/
+**Khan Academy**: https://www.khanacademy.org/ (check licensing)
 **Wikipedia Simple English**: https://simple.wikipedia.org/
 
 ### 3. News for Kids
 
-**Newsela**: https://newsela.com/ (check licensing)  
+**Newsela**: https://newsela.com/ (check licensing)
 **Time for Kids**: https://www.timeforkids.com/ (check licensing)
 
 ### 4. Story Collections
 
-**Storynory**: https://www.storynory.com/ (check licensing)  
+**Storynory**: https://www.storynory.com/ (check licensing)
 **International Children's Digital Library**: http://childrenslibrary.org/
 
 ---
@@ -188,11 +188,11 @@ from bs4 import BeautifulSoup
 def scrape_article(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
-    
+
     # Extract text
     article = soup.find('article')
     text = article.get_text(strip=True)
-    
+
     return text
 ```
 
@@ -232,16 +232,16 @@ import re
 def clean_text(text):
     # Remove HTML tags
     text = re.sub(r'<[^>]+>', '', text)
-    
+
     # Remove URLs
     text = re.sub(r'http\S+', '', text)
-    
+
     # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text)
-    
+
     # Remove special characters (keep Bangla and English)
     text = re.sub(r'[^\u0980-\u09FF\u0020-\u007E\s]', '', text)
-    
+
     return text.strip()
 ```
 
@@ -262,16 +262,16 @@ def quality_filter(text, min_length=50, max_length=1000):
     # Length check
     if len(text) < min_length or len(text) > max_length:
         return False
-    
+
     # Check for proper sentences
     if not text.endswith(('.', '।', '?', '!')):
         return False
-    
+
     # Check for minimum word count
     words = text.split()
     if len(words) < 10:
         return False
-    
+
     return True
 ```
 
@@ -281,14 +281,14 @@ def quality_filter(text, min_length=50, max_length=1000):
 def deduplicate(texts):
     seen = set()
     unique_texts = []
-    
+
     for text in texts:
         # Use hash for efficient comparison
         text_hash = hash(text)
         if text_hash not in seen:
             seen.add(text_hash)
             unique_texts.append(text)
-    
+
     return unique_texts
 ```
 

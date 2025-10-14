@@ -10,17 +10,24 @@ This module provides integration with Transformer-based models:
 """
 
 import warnings
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Dict, List, Optional, Union
+
 import torch
 
 try:
     from transformers import (
-        T5Tokenizer, T5ForConditionalGeneration,
-        BartTokenizer, BartForConditionalGeneration,
-        MT5Tokenizer, MT5ForConditionalGeneration,
-        AutoTokenizer, AutoModelForSeq2SeqLM,
-        pipeline, GenerationConfig
+        AutoModelForSeq2SeqLM,
+        AutoTokenizer,
+        BartForConditionalGeneration,
+        BartTokenizer,
+        GenerationConfig,
+        MT5ForConditionalGeneration,
+        MT5Tokenizer,
+        T5ForConditionalGeneration,
+        T5Tokenizer,
+        pipeline,
     )
+
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
@@ -35,7 +42,9 @@ class TransformerModelManager:
     def __init__(self):
         """Initialize the model manager."""
         if not TRANSFORMERS_AVAILABLE:
-            warnings.warn("Transformers not available. Install with: pip install transformers torch")
+            warnings.warn(
+                "Transformers not available. Install with: pip install transformers torch"
+            )
 
         self.models = {}
         self.tokenizers = {}
@@ -110,7 +119,7 @@ class TransformerModelManager:
         do_sample: bool = False,
         top_k: int = 50,
         top_p: float = 0.95,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         Generate text using a loaded model.
@@ -155,7 +164,7 @@ class TransformerModelManager:
                 top_p=top_p,
                 early_stopping=True,
                 pad_token_id=tokenizer.eos_token_id,
-                **kwargs
+                **kwargs,
             )
 
         # Decode output
@@ -163,12 +172,7 @@ class TransformerModelManager:
         return generated_text
 
     def translate(
-        self,
-        model_name: str,
-        text: str,
-        src_lang: str = "en",
-        tgt_lang: str = "bn",
-        **kwargs
+        self, model_name: str, text: str, src_lang: str = "en", tgt_lang: str = "bn", **kwargs
     ) -> str:
         """
         Translate text using a translation model.
@@ -214,11 +218,7 @@ class TransformerModelManager:
         return self.generate(model_name, prompt, max_length=max_length, **kwargs)
 
     def zero_shot_classify(
-        self,
-        model_name: str,
-        text: str,
-        labels: List[str],
-        **kwargs
+        self, model_name: str, text: str, labels: List[str], **kwargs
     ) -> Dict[str, float]:
         """
         Perform zero-shot classification.
@@ -241,7 +241,7 @@ class TransformerModelManager:
             classifier = pipeline(
                 "zero-shot-classification",
                 model=model_name,
-                device=0 if torch.cuda.is_available() else -1
+                device=0 if torch.cuda.is_available() else -1,
             )
 
             result = classifier(text, labels, **kwargs)
@@ -252,11 +252,7 @@ class TransformerModelManager:
             return {label: 1.0 / len(labels) for label in labels}
 
     def multilingual_generate(
-        self,
-        model_name: str,
-        prompt: str,
-        target_language: str = "english",
-        **kwargs
+        self, model_name: str, prompt: str, target_language: str = "english", **kwargs
     ) -> str:
         """
         Generate text in a specific target language.
@@ -292,10 +288,10 @@ class TransformerModelManager:
         return {
             "model_name": model_name,
             "model_type": type(model).__name__,
-            "vocab_size": getattr(tokenizer, 'vocab_size', 'unknown'),
+            "vocab_size": getattr(tokenizer, "vocab_size", "unknown"),
             "device": str(self.device),
             "parameters": sum(p.numel() for p in model.parameters()),
-            "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad)
+            "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad),
         }
 
     def list_loaded_models(self) -> List[str]:
@@ -306,6 +302,7 @@ class TransformerModelManager:
 # Global model manager instance
 _model_manager = None
 
+
 def get_model_manager() -> TransformerModelManager:
     """Get or create the global model manager instance."""
     global _model_manager
@@ -313,26 +310,36 @@ def get_model_manager() -> TransformerModelManager:
         _model_manager = TransformerModelManager()
     return _model_manager
 
+
 def load_model(model_name: str, model_type: str = "auto") -> None:
     """Convenience function to load a model."""
     return get_model_manager().load_model(model_name, model_type)
+
 
 def generate_text(model_name: str, prompt: str, **kwargs) -> str:
     """Convenience function to generate text."""
     return get_model_manager().generate(model_name, prompt, **kwargs)
 
-def translate_text(model_name: str, text: str, src_lang: str = "en", tgt_lang: str = "bn", **kwargs) -> str:
+
+def translate_text(
+    model_name: str, text: str, src_lang: str = "en", tgt_lang: str = "bn", **kwargs
+) -> str:
     """Convenience function to translate text."""
     return get_model_manager().translate(model_name, text, src_lang, tgt_lang, **kwargs)
+
 
 def summarize_text(model_name: str, text: str, **kwargs) -> str:
     """Convenience function to summarize text."""
     return get_model_manager().summarize(model_name, text, **kwargs)
 
+
 def zero_shot_classify(model_name: str, text: str, labels: List[str], **kwargs) -> Dict[str, float]:
     """Convenience function for zero-shot classification."""
     return get_model_manager().zero_shot_classify(model_name, text, labels, **kwargs)
 
-def multilingual_generate(model_name: str, prompt: str, target_language: str = "english", **kwargs) -> str:
+
+def multilingual_generate(
+    model_name: str, prompt: str, target_language: str = "english", **kwargs
+) -> str:
     """Convenience function for multilingual generation."""
     return get_model_manager().multilingual_generate(model_name, prompt, target_language, **kwargs)

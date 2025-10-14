@@ -34,12 +34,7 @@ class ClassificationTrainer:
     """Train classification models for bilingual text."""
 
     def __init__(
-        self,
-        task: str,
-        data_dir: str,
-        base_model: str,
-        output_dir: str,
-        max_length: int = 512
+        self, task: str, data_dir: str, base_model: str, output_dir: str, max_length: int = 512
     ):
         """
         Initialize trainer.
@@ -62,34 +57,34 @@ class ClassificationTrainer:
 
         # Task-specific configurations
         self.task_configs = {
-            'readability': {
-                'labels': ['6-8', '9-10', '11-12', 'general'],
-                'label_field': 'age_range',
-                'description': 'Age-appropriate readability classification'
+            "readability": {
+                "labels": ["6-8", "9-10", "11-12", "general"],
+                "label_field": "age_range",
+                "description": "Age-appropriate readability classification",
             },
-            'safety': {
-                'labels': ['safe', 'unsafe'],
-                'label_field': 'safety_label',
-                'description': 'Child-safety content classification'
+            "safety": {
+                "labels": ["safe", "unsafe"],
+                "label_field": "safety_label",
+                "description": "Child-safety content classification",
             },
-            'language': {
-                'labels': ['bn', 'en', 'mixed'],
-                'label_field': 'language',
-                'description': 'Language identification'
+            "language": {
+                "labels": ["bn", "en", "mixed"],
+                "label_field": "language",
+                "description": "Language identification",
             },
-            'domain': {
-                'labels': ['story', 'education', 'dialogue', 'description', 'instruction'],
-                'label_field': 'domain',
-                'description': 'Content domain classification'
-            }
+            "domain": {
+                "labels": ["story", "education", "dialogue", "description", "instruction"],
+                "label_field": "domain",
+                "description": "Content domain classification",
+            },
         }
 
         if task not in self.task_configs:
             raise ValueError(f"Unknown task: {task}. Available: {list(self.task_configs.keys())}")
 
         self.config = self.task_configs[task]
-        self.num_labels = len(self.config['labels'])
-        self.label_to_id = {label: i for i, label in enumerate(self.config['labels'])}
+        self.num_labels = len(self.config["labels"])
+        self.label_to_id = {label: i for i, label in enumerate(self.config["labels"])}
         self.id_to_label = {i: label for label, i in self.label_to_id.items()}
 
     def load_and_prepare_data(self) -> Tuple[List[Dict], List[Dict], List[Dict]]:
@@ -126,7 +121,11 @@ class ClassificationTrainer:
             print(f"Prepared {len(prepared)} {name} samples for {self.task}")
 
         print()
-        return prepared_datasets.get('train', []), prepared_datasets.get('val', []), prepared_datasets.get('test', [])
+        return (
+            prepared_datasets.get("train", []),
+            prepared_datasets.get("val", []),
+            prepared_datasets.get("test", []),
+        )
 
     def prepare_samples_for_task(self, samples: List[Dict]) -> List[Dict]:
         """
@@ -139,22 +138,22 @@ class ClassificationTrainer:
             Prepared samples with labels
         """
         prepared = []
-        label_field = self.config['label_field']
+        label_field = self.config["label_field"]
 
         for sample in samples:
-            text = sample.get('text', '')
+            text = sample.get("text", "")
             if not text:
                 continue
 
             # Get label based on task
-            if self.task == 'readability':
+            if self.task == "readability":
                 label = self.prepare_readability_label(sample)
-            elif self.task == 'safety':
+            elif self.task == "safety":
                 label = self.prepare_safety_label(sample)
-            elif self.task == 'language':
-                label = sample.get('language', 'mixed')
-            elif self.task == 'domain':
-                label = sample.get('domain', 'general')
+            elif self.task == "language":
+                label = sample.get("language", "mixed")
+            elif self.task == "domain":
+                label = sample.get("domain", "general")
             else:
                 continue
 
@@ -162,60 +161,65 @@ class ClassificationTrainer:
             if label not in self.label_to_id:
                 continue
 
-            prepared.append({
-                'text': text,
-                'label': label,
-                'label_id': self.label_to_id[label]
-            })
+            prepared.append({"text": text, "label": label, "label_id": self.label_to_id[label]})
 
         return prepared
 
     def prepare_readability_label(self, sample: Dict) -> str:
         """Prepare readability label from sample."""
         # Use existing age_range if available
-        if 'age_range' in sample:
-            return sample['age_range']
+        if "age_range" in sample:
+            return sample["age_range"]
 
         # Generate readability label based on text features
-        text = sample.get('text', '')
+        text = sample.get("text", "")
         words = text.split()
-        
+
         if not words:
-            return 'general'
+            return "general"
 
         avg_word_length = sum(len(w) for w in words) / len(words)
-        sentence_count = len([s for s in text.split('.') if s.strip()])
+        sentence_count = len([s for s in text.split(".") if s.strip()])
         avg_sentence_length = len(words) / max(sentence_count, 1)
 
         # Simple heuristic for age classification
         if avg_word_length < 4 and avg_sentence_length < 8:
-            return '6-8'
+            return "6-8"
         elif avg_word_length < 6 and avg_sentence_length < 12:
-            return '9-10'
+            return "9-10"
         elif avg_word_length < 8 and avg_sentence_length < 16:
-            return '11-12'
+            return "11-12"
         else:
-            return 'general'
+            return "general"
 
     def prepare_safety_label(self, sample: Dict) -> str:
         """Prepare safety label from sample."""
         # Use existing safety label if available
-        if 'safety_label' in sample:
-            return sample['safety_label']
+        if "safety_label" in sample:
+            return sample["safety_label"]
 
         # Simple keyword-based safety classification
-        text = sample.get('text', '').lower()
-        
+        text = sample.get("text", "").lower()
+
         unsafe_keywords = [
-            'violence', 'weapon', 'scary', 'horror', 'death', 'kill',
-            'সহিংসতা', 'অস্ত্র', 'ভয়ানক', 'মৃত্যু', 'হত্যা'
+            "violence",
+            "weapon",
+            "scary",
+            "horror",
+            "death",
+            "kill",
+            "সহিংসতা",
+            "অস্ত্র",
+            "ভয়ানক",
+            "মৃত্যু",
+            "হত্যা",
         ]
 
         for keyword in unsafe_keywords:
             if keyword in text:
-                return 'unsafe'
+                return "unsafe"
 
-        return 'safe'
+        return "safe"
 
     def create_synthetic_labels(self, samples: List[Dict]) -> List[Dict]:
         """
@@ -229,47 +233,45 @@ class ClassificationTrainer:
             Samples with synthetic labels
         """
         print("Creating synthetic labels for demonstration...")
-        
+
         labeled_samples = []
         for sample in samples:
-            text = sample.get('text', '')
+            text = sample.get("text", "")
             if not text:
                 continue
 
             # Create synthetic label based on text characteristics
-            if self.task == 'readability':
+            if self.task == "readability":
                 label = self.prepare_readability_label(sample)
-            elif self.task == 'safety':
+            elif self.task == "safety":
                 label = self.prepare_safety_label(sample)
-            elif self.task == 'language':
+            elif self.task == "language":
                 # Simple language detection based on script
-                bn_chars = sum(1 for c in text if '\u0980' <= c <= '\u09FF')
+                bn_chars = sum(1 for c in text if "\u0980" <= c <= "\u09ff")
                 en_chars = sum(1 for c in text if c.isascii() and c.isalpha())
-                
+
                 if bn_chars > en_chars * 2:
-                    label = 'bn'
+                    label = "bn"
                 elif en_chars > bn_chars * 2:
-                    label = 'en'
+                    label = "en"
                 else:
-                    label = 'mixed'
-            elif self.task == 'domain':
+                    label = "mixed"
+            elif self.task == "domain":
                 # Simple domain classification based on keywords
-                if any(word in text.lower() for word in ['story', 'once', 'গল্প']):
-                    label = 'story'
-                elif any(word in text.lower() for word in ['learn', 'teach', 'শিক্ষা']):
-                    label = 'education'
-                elif any(word in text.lower() for word in ['said', 'asked', 'বলল']):
-                    label = 'dialogue'
+                if any(word in text.lower() for word in ["story", "once", "গল্প"]):
+                    label = "story"
+                elif any(word in text.lower() for word in ["learn", "teach", "শিক্ষা"]):
+                    label = "education"
+                elif any(word in text.lower() for word in ["said", "asked", "বলল"]):
+                    label = "dialogue"
                 else:
-                    label = 'description'
+                    label = "description"
             else:
                 continue
 
-            labeled_samples.append({
-                'text': text,
-                'label': label,
-                'label_id': self.label_to_id.get(label, 0)
-            })
+            labeled_samples.append(
+                {"text": text, "label": label, "label_id": self.label_to_id.get(label, 0)}
+            )
 
         return labeled_samples
 
@@ -298,6 +300,7 @@ class ClassificationTrainer:
                 Trainer,
                 TrainingArguments,
             )
+
             from datasets import Dataset
         except ImportError:
             print("Error: transformers and datasets libraries required")
@@ -311,7 +314,7 @@ class ClassificationTrainer:
             self.base_model,
             num_labels=self.num_labels,
             id2label=self.id_to_label,
-            label2id=self.label_to_id
+            label2id=self.label_to_id,
         )
 
         # Add padding token if needed
@@ -324,10 +327,7 @@ class ClassificationTrainer:
         # Tokenize data
         def tokenize_function(examples):
             return tokenizer(
-                examples['text'],
-                truncation=True,
-                max_length=self.max_length,
-                padding=True
+                examples["text"], truncation=True, max_length=self.max_length, padding=True
             )
 
         # Create datasets
@@ -379,14 +379,18 @@ class ClassificationTrainer:
 
         # Save task configuration
         config_file = self.output_dir / "task_config.json"
-        with open(config_file, 'w') as f:
-            json.dump({
-                'task': self.task,
-                'labels': self.config['labels'],
-                'label_to_id': self.label_to_id,
-                'id_to_label': self.id_to_label,
-                'description': self.config['description']
-            }, f, indent=2)
+        with open(config_file, "w") as f:
+            json.dump(
+                {
+                    "task": self.task,
+                    "labels": self.config["labels"],
+                    "label_to_id": self.label_to_id,
+                    "id_to_label": self.id_to_label,
+                    "description": self.config["description"],
+                },
+                f,
+                indent=2,
+            )
 
         print(f"Model saved to: {self.output_dir}")
         return str(self.output_dir)
@@ -394,21 +398,26 @@ class ClassificationTrainer:
     def _create_placeholder_model(self) -> str:
         """Create placeholder model info when transformers not available."""
         print("Creating placeholder model configuration...")
-        
+
         config_file = self.output_dir / "task_config.json"
-        with open(config_file, 'w') as f:
-            json.dump({
-                'task': self.task,
-                'labels': self.config['labels'],
-                'label_to_id': self.label_to_id,
-                'id_to_label': self.id_to_label,
-                'description': self.config['description'],
-                'status': 'placeholder'
-            }, f, indent=2)
+        with open(config_file, "w") as f:
+            json.dump(
+                {
+                    "task": self.task,
+                    "labels": self.config["labels"],
+                    "label_to_id": self.label_to_id,
+                    "id_to_label": self.id_to_label,
+                    "description": self.config["description"],
+                    "status": "placeholder",
+                },
+                f,
+                indent=2,
+            )
 
         readme_file = self.output_dir / "README.md"
-        with open(readme_file, 'w') as f:
-            f.write(f"""# {self.task.title()} Classifier
+        with open(readme_file, "w") as f:
+            f.write(
+                f"""# {self.task.title()} Classifier
 
 ## Task: {self.config['description']}
 
@@ -431,7 +440,8 @@ from bilingual import bilingual_api as bb
 result = bb.{self.task}_check("Your text here")
 print(result)
 ```
-""")
+"""
+            )
 
         print(f"Placeholder configuration saved to: {self.output_dir}")
         return str(self.output_dir)
@@ -439,44 +449,25 @@ print(result)
 
 def main():
     """Main function."""
-    parser = argparse.ArgumentParser(
-        description='Train classification models for bilingual text'
-    )
+    parser = argparse.ArgumentParser(description="Train classification models for bilingual text")
 
     parser.add_argument(
-        '--task',
+        "--task",
         type=str,
         required=True,
-        choices=['readability', 'safety', 'language', 'domain'],
-        help='Classification task to train'
+        choices=["readability", "safety", "language", "domain"],
+        help="Classification task to train",
     )
     parser.add_argument(
-        '--data',
-        type=str,
-        required=True,
-        help='Directory containing training data'
+        "--data", type=str, required=True, help="Directory containing training data"
     )
     parser.add_argument(
-        '--model',
-        type=str,
-        default='bert-base-multilingual-cased',
-        help='Base model to fine-tune'
+        "--model", type=str, default="bert-base-multilingual-cased", help="Base model to fine-tune"
     )
+    parser.add_argument("--output", type=str, help="Output directory for trained model")
+    parser.add_argument("--max-length", type=int, default=512, help="Maximum sequence length")
     parser.add_argument(
-        '--output',
-        type=str,
-        help='Output directory for trained model'
-    )
-    parser.add_argument(
-        '--max-length',
-        type=int,
-        default=512,
-        help='Maximum sequence length'
-    )
-    parser.add_argument(
-        '--synthetic-labels',
-        action='store_true',
-        help='Create synthetic labels for demonstration'
+        "--synthetic-labels", action="store_true", help="Create synthetic labels for demonstration"
     )
 
     args = parser.parse_args()
@@ -491,7 +482,7 @@ def main():
         data_dir=args.data,
         base_model=args.model,
         output_dir=args.output,
-        max_length=args.max_length
+        max_length=args.max_length,
     )
 
     try:
@@ -504,7 +495,7 @@ def main():
             # Load raw data and create synthetic labels
             raw_train = BilingualDataset(file_path=str(Path(args.data) / "train.jsonl"))
             train_data = trainer.create_synthetic_labels(list(raw_train)[:1000])  # Limit for demo
-            
+
             raw_val = BilingualDataset(file_path=str(Path(args.data) / "val.jsonl"))
             val_data = trainer.create_synthetic_labels(list(raw_val)[:200])
 
@@ -518,7 +509,7 @@ def main():
 
         # Train model
         model_path = trainer.train_model(train_data, val_data)
-        
+
         print("\n" + "=" * 60)
         print("TRAINING COMPLETED")
         print("=" * 60)
@@ -531,5 +522,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

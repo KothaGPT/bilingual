@@ -12,26 +12,28 @@ Provides REST API endpoints for all bilingual functionality including:
 
 import asyncio
 import json
+
+# Import bilingual functionality
+import sys
 import time
 import traceback
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Dict, List, Optional, Union
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field, validator
 
-# Import bilingual functionality
-import sys
 sys.path.insert(0, str(Path(__file__).parent))
 
 try:
     import bilingual as bb
     from bilingual.config import get_settings
+
     BILINGUAL_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Bilingual package not available: {e}")
@@ -39,16 +41,19 @@ except ImportError as e:
 
 # Prometheus metrics (optional)
 try:
-    from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
     from fastapi.responses import Response
+    from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
+
 
 # Request/Response Models
 class LanguageDetectionRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=10000)
     method: str = Field("combined", description="Detection method")
+
 
 class LanguageDetectionResponse(BaseModel):
     language: str
@@ -56,11 +61,13 @@ class LanguageDetectionResponse(BaseModel):
     method: str
     processing_time_ms: float
 
+
 class TranslationRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=5000)
     source_lang: str = Field("auto", description="Source language")
     target_lang: str = Field("en", description="Target language")
     model: str = Field("t5-small", description="Translation model")
+
 
 class TranslationResponse(BaseModel):
     original_text: str
@@ -70,6 +77,7 @@ class TranslationResponse(BaseModel):
     model_used: str
     processing_time_ms: float
 
+
 class GenerationRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=1000)
     model: str = Field("t5-small", description="Generation model")
@@ -77,21 +85,25 @@ class GenerationRequest(BaseModel):
     temperature: float = Field(1.0, ge=0.1, le=2.0)
     num_beams: int = Field(4, ge=1, le=10)
 
+
 class GenerationResponse(BaseModel):
     prompt: str
     generated_text: str
     model_used: str
     processing_time_ms: float
 
+
 class EvaluationRequest(BaseModel):
     task: str = Field(..., description="Evaluation task (translation, generation)")
     references: List[str] = Field(..., min_items=1)
     candidates: List[str] = Field(..., min_items=1)
 
+
 class EvaluationResponse(BaseModel):
     task: str
     results: Dict[str, Any]
     processing_time_ms: float
+
 
 class HealthResponse(BaseModel):
     status: str
@@ -101,6 +113,7 @@ class HealthResponse(BaseModel):
     models_loaded: List[str]
     memory_usage_mb: Optional[float] = None
 
+
 # Global variables for monitoring
 START_TIME = time.time()
 REQUEST_COUNT = 0
@@ -108,9 +121,12 @@ ERROR_COUNT = 0
 
 # Metrics (if Prometheus available)
 if PROMETHEUS_AVAILABLE:
-    REQUEST_COUNTER = Counter('bilingual_requests_total', 'Total requests', ['endpoint', 'method'])
-    REQUEST_DURATION = Histogram('bilingual_request_duration_seconds', 'Request duration', ['endpoint'])
-    ERROR_COUNTER = Counter('bilingual_errors_total', 'Total errors', ['endpoint', 'error_type'])
+    REQUEST_COUNTER = Counter("bilingual_requests_total", "Total requests", ["endpoint", "method"])
+    REQUEST_DURATION = Histogram(
+        "bilingual_request_duration_seconds", "Request duration", ["endpoint"]
+    )
+    ERROR_COUNTER = Counter("bilingual_errors_total", "Total errors", ["endpoint", "error_type"])
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -141,12 +157,13 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("👋 Shutting down Bilingual API Server...")
 
+
 # Create FastAPI app
 app = FastAPI(
     title="Bilingual NLP API",
     description="Production-ready API for the Bilingual NLP Toolkit",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -157,6 +174,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Request timing middleware
 @app.middleware("http")
@@ -178,6 +196,7 @@ async def add_process_time_header(request, call_next):
 
     return response
 
+
 # Error handling middleware
 @app.middleware("http")
 async def error_handling_middleware(request, call_next):
@@ -191,8 +210,7 @@ async def error_handling_middleware(request, call_next):
             ERROR_COUNT += 1
             if PROMETHEUS_AVAILABLE:
                 ERROR_COUNTER.labels(
-                    endpoint=str(request.url.path),
-                    error_type=str(response.status_code)
+                    endpoint=str(request.url.path), error_type=str(response.status_code)
                 ).inc()
 
         return response
@@ -200,10 +218,7 @@ async def error_handling_middleware(request, call_next):
     except Exception as e:
         ERROR_COUNT += 1
         if PROMETHEUS_AVAILABLE:
-            ERROR_COUNTER.labels(
-                endpoint=str(request.url.path),
-                error_type=type(e).__name__
-            ).inc()
+            ERROR_COUNTER.labels(endpoint=str(request.url.path), error_type=type(e).__name__).inc()
 
         # Return error response
         return JSONResponse(
@@ -211,11 +226,13 @@ async def error_handling_middleware(request, call_next):
             content={
                 "error": "Internal server error",
                 "message": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
+
 # Routes
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -288,6 +305,7 @@ async def root():
     </html>
     """
 
+
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint with system information."""
@@ -306,6 +324,7 @@ async def health_check():
     memory_usage = None
     try:
         import psutil
+
         process = psutil.Process()
         memory_usage = process.memory_info().rss / 1024 / 1024  # MB
     except ImportError:
@@ -317,8 +336,9 @@ async def health_check():
         version="1.0.0",
         uptime_seconds=uptime,
         models_loaded=loaded_models,
-        memory_usage_mb=memory_usage
+        memory_usage_mb=memory_usage,
     )
+
 
 @app.post("/detect-language", response_model=LanguageDetectionResponse)
 async def detect_language_endpoint(request: LanguageDetectionRequest):
@@ -337,11 +357,12 @@ async def detect_language_endpoint(request: LanguageDetectionRequest):
             language=result["language"],
             confidence=result["confidence"],
             method=result["method"],
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Language detection failed: {str(e)}")
+
 
 @app.post("/translate", response_model=TranslationResponse)
 async def translate_endpoint(request: TranslationRequest):
@@ -361,10 +382,7 @@ async def translate_endpoint(request: TranslationRequest):
         # Load model and translate
         bb.load_model(request.model, "t5")
         translated_text = bb.translate_text(
-            request.model,
-            request.text,
-            source_lang,
-            request.target_lang
+            request.model, request.text, source_lang, request.target_lang
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -375,11 +393,12 @@ async def translate_endpoint(request: TranslationRequest):
             source_lang=source_lang,
             target_lang=request.target_lang,
             model_used=request.model,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
+
 
 @app.post("/generate", response_model=GenerationResponse)
 async def generate_endpoint(request: GenerationRequest):
@@ -396,7 +415,7 @@ async def generate_endpoint(request: GenerationRequest):
             request.prompt,
             max_length=request.max_length,
             temperature=request.temperature,
-            num_beams=request.num_beams
+            num_beams=request.num_beams,
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -405,11 +424,12 @@ async def generate_endpoint(request: GenerationRequest):
             prompt=request.prompt,
             generated_text=generated_text,
             model_used=request.model,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
 
 @app.post("/evaluate", response_model=EvaluationResponse)
 async def evaluate_endpoint(request: EvaluationRequest):
@@ -430,13 +450,12 @@ async def evaluate_endpoint(request: EvaluationRequest):
         processing_time = (time.time() - start_time) * 1000
 
         return EvaluationResponse(
-            task=request.task,
-            results=results,
-            processing_time_ms=processing_time
+            task=request.task, results=results, processing_time_ms=processing_time
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+
 
 @app.get("/metrics")
 async def metrics_endpoint():
@@ -445,6 +464,7 @@ async def metrics_endpoint():
         raise HTTPException(status_code=503, detail="Prometheus metrics not available")
 
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 @app.get("/status")
 async def status_endpoint():
@@ -457,19 +477,16 @@ async def status_endpoint():
         "total_requests": REQUEST_COUNT,
         "total_errors": ERROR_COUNT,
         "error_rate": ERROR_COUNT / max(REQUEST_COUNT, 1),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     return app
 
-def run_server(
-    host: str = "localhost",
-    port: int = 8000,
-    workers: int = 1,
-    reload: bool = False
-):
+
+def run_server(host: str = "localhost", port: int = 8000, workers: int = 1, reload: bool = False):
     """Run the FastAPI server."""
     print(f"🚀 Starting server on {host}:{port}")
     print(f"📚 API docs available at: http://{host}:{port}/docs")
@@ -481,8 +498,9 @@ def run_server(
         port=port,
         workers=workers,
         reload=reload,
-        log_level="info"
+        log_level="info",
     )
+
 
 if __name__ == "__main__":
     import argparse

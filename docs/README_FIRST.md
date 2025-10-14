@@ -129,7 +129,7 @@ bilingual readability --text "আমি স্কুলে যাই।" --lang 
 
 ## 📊 Project Status
 
-**Current Phase**: Foundation Complete ✅  
+**Current Phase**: Foundation Complete ✅
 **Next Phase**: Data Collection & Model Training
 
 ### Completion Status

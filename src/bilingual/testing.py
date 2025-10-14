@@ -12,18 +12,19 @@ Provides testing utilities including:
 """
 
 import json
-import time
 import random
 import string
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable
+import time
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 try:
-    import pytest
     import hypothesis
+    import pytest
     from hypothesis import strategies as st
     from hypothesis.extra import numpy as np_st
+
     PYTEST_AVAILABLE = True
 except ImportError:
     PYTEST_AVAILABLE = False
@@ -31,10 +32,12 @@ except ImportError:
 
 # Add parent directory to path for imports
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     import bilingual as bb
+
     BILINGUAL_AVAILABLE = True
 except ImportError:
     BILINGUAL_AVAILABLE = False
@@ -44,6 +47,7 @@ except ImportError:
 @dataclass
 class TestResult:
     """Test result container."""
+
     test_name: str
     passed: bool
     duration: float
@@ -112,16 +116,11 @@ class BilingualTestSuite:
                 test_name=test_name,
                 passed=passed,
                 duration=duration,
-                metadata={"test_cases": len(test_cases)}
+                metadata={"test_cases": len(test_cases)},
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def _test_text_normalization(self) -> TestResult:
         """Test text normalization."""
@@ -139,19 +138,10 @@ class BilingualTestSuite:
 
             duration = time.time() - start_time
 
-            return TestResult(
-                test_name=test_name,
-                passed=passed,
-                duration=duration
-            )
+            return TestResult(test_name=test_name, passed=passed, duration=duration)
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def _test_tokenization(self) -> TestResult:
         """Test tokenization functionality."""
@@ -174,16 +164,11 @@ class BilingualTestSuite:
                 test_name=test_name,
                 passed=passed,
                 duration=duration,
-                metadata={"tokens_count": len(tokens)}
+                metadata={"tokens_count": len(tokens)},
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def _test_data_augmentation(self) -> TestResult:
         """Test data augmentation functionality."""
@@ -205,16 +190,11 @@ class BilingualTestSuite:
                 test_name=test_name,
                 passed=passed,
                 duration=duration,
-                metadata={"augmentations": len(augmented)}
+                metadata={"augmentations": len(augmented)},
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def _test_evaluation_metrics(self) -> TestResult:
         """Test evaluation metrics."""
@@ -234,19 +214,11 @@ class BilingualTestSuite:
             duration = time.time() - start_time
 
             return TestResult(
-                test_name=test_name,
-                passed=passed,
-                duration=duration,
-                metadata={"bleu_score": bleu}
+                test_name=test_name, passed=passed, duration=duration, metadata={"bleu_score": bleu}
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def run_fuzz_tests(self, num_tests: int = 100) -> Dict[str, Any]:
         """Run fuzz testing for robustness."""
@@ -276,10 +248,11 @@ class BilingualTestSuite:
             for _ in range(num_tests):
                 # Generate random text
                 length = random.randint(1, 100)
-                random_text = ''.join(random.choices(
-                    string.ascii_letters + "আমিযাচ্ছিভালো" + string.punctuation + " ",
-                    k=length
-                ))
+                random_text = "".join(
+                    random.choices(
+                        string.ascii_letters + "আমিযাচ্ছিভালো" + string.punctuation + " ", k=length
+                    )
+                )
 
                 try:
                     result = bb.detect_language(random_text)
@@ -296,16 +269,11 @@ class BilingualTestSuite:
                 test_name=test_name,
                 passed=passed and errors < num_tests * 0.1,  # Allow 10% error rate
                 duration=duration,
-                metadata={"tests_run": num_tests, "errors": errors}
+                metadata={"tests_run": num_tests, "errors": errors},
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def _fuzz_evaluation(self, num_tests: int) -> TestResult:
         """Fuzz test evaluation metrics."""
@@ -319,8 +287,8 @@ class BilingualTestSuite:
 
             for _ in range(num_tests):
                 # Generate random texts
-                ref = ''.join(random.choices(string.ascii_letters + " ", k=random.randint(10, 50)))
-                cand = ''.join(random.choices(string.ascii_letters + " ", k=random.randint(10, 50)))
+                ref = "".join(random.choices(string.ascii_letters + " ", k=random.randint(10, 50)))
+                cand = "".join(random.choices(string.ascii_letters + " ", k=random.randint(10, 50)))
 
                 try:
                     bleu = bb.bleu_score(ref, cand)
@@ -337,16 +305,11 @@ class BilingualTestSuite:
                 test_name=test_name,
                 passed=passed and errors < num_tests * 0.1,
                 duration=duration,
-                metadata={"tests_run": num_tests, "errors": errors}
+                metadata={"tests_run": num_tests, "errors": errors},
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def run_integration_tests(self) -> Dict[str, Any]:
         """Run integration tests for end-to-end workflows."""
@@ -382,26 +345,15 @@ class BilingualTestSuite:
 
             # Basic checks
             passed = (
-                isinstance(lang_result, dict) and
-                "language" in lang_result and
-                0.0 <= bleu <= 1.0
+                isinstance(lang_result, dict) and "language" in lang_result and 0.0 <= bleu <= 1.0
             )
 
             duration = time.time() - start_time
 
-            return TestResult(
-                test_name=test_name,
-                passed=passed,
-                duration=duration
-            )
+            return TestResult(test_name=test_name, passed=passed, duration=duration)
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def _test_model_integration(self) -> TestResult:
         """Test model loading and inference."""
@@ -433,16 +385,11 @@ class BilingualTestSuite:
                 test_name=test_name,
                 passed=passed,
                 duration=duration,
-                metadata={"model_loaded": model_loaded, "tokenizer_loaded": tokenizer_loaded}
+                metadata={"model_loaded": model_loaded, "tokenizer_loaded": tokenizer_loaded},
             )
 
         except Exception as e:
-            return TestResult(
-                test_name=test_name,
-                passed=False,
-                duration=0.0,
-                error_message=str(e)
-            )
+            return TestResult(test_name=test_name, passed=False, duration=0.0, error_message=str(e))
 
     def run_performance_benchmarks(self) -> Dict[str, Any]:
         """Run performance benchmarks."""
@@ -480,7 +427,7 @@ class BilingualTestSuite:
                 "total_time": total_time,
                 "avg_time_per_sample": total_time / len(texts),
                 "samples_per_second": len(texts) / total_time,
-                "num_samples": len(texts)
+                "num_samples": len(texts),
             }
 
         except Exception as e:
@@ -509,7 +456,7 @@ class BilingualTestSuite:
                 "total_time": total_time,
                 "avg_time_per_sample": total_time / len(pairs),
                 "samples_per_second": len(pairs) / total_time,
-                "num_samples": len(pairs)
+                "num_samples": len(pairs),
             }
 
         except Exception as e:
@@ -524,8 +471,9 @@ class BilingualTestSuite:
 
         # Calculate summary statistics
         total_tests = len(unit_results) + len(integration_results)
-        passed_tests = sum(1 for result in unit_results.values() if result.passed) + \
-                      sum(1 for result in integration_results.values() if result.passed)
+        passed_tests = sum(1 for result in unit_results.values() if result.passed) + sum(
+            1 for result in integration_results.values() if result.passed
+        )
 
         # Compile report
         report = {
@@ -534,14 +482,14 @@ class BilingualTestSuite:
                 "passed_tests": passed_tests,
                 "failed_tests": total_tests - passed_tests,
                 "success_rate": passed_tests / total_tests if total_tests > 0 else 0.0,
-                "generated_at": time.strftime("%Y-%m-%d %H:%M:%S")
+                "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             },
             "unit_tests": {
                 name: {
                     "passed": result.passed,
                     "duration": result.duration,
                     "error": result.error_message,
-                    "metadata": result.metadata
+                    "metadata": result.metadata,
                 }
                 for name, result in unit_results.items()
             },
@@ -550,15 +498,15 @@ class BilingualTestSuite:
                     "passed": result.passed,
                     "duration": result.duration,
                     "error": result.error_message,
-                    "metadata": result.metadata
+                    "metadata": result.metadata,
                 }
                 for name, result in integration_results.items()
             },
-            "performance_benchmarks": perf_results
+            "performance_benchmarks": perf_results,
         }
 
         # Save report
-        with open(self.output_dir / output_file, 'w', encoding='utf-8') as f:
+        with open(self.output_dir / output_file, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
 
         print(f"📊 Test report saved to: {self.output_dir / output_file}")
@@ -568,6 +516,7 @@ class BilingualTestSuite:
 # Global test suite instance
 _test_suite = None
 
+
 def get_test_suite(output_dir: str = "test_results/") -> BilingualTestSuite:
     """Get or create the global test suite instance."""
     global _test_suite
@@ -575,17 +524,21 @@ def get_test_suite(output_dir: str = "test_results/") -> BilingualTestSuite:
         _test_suite = BilingualTestSuite(output_dir)
     return _test_suite
 
+
 def run_unit_tests() -> Dict[str, Any]:
     """Convenience function to run unit tests."""
     return get_test_suite().run_unit_tests()
+
 
 def run_integration_tests() -> Dict[str, Any]:
     """Convenience function to run integration tests."""
     return get_test_suite().run_integration_tests()
 
+
 def run_performance_benchmarks() -> Dict[str, Any]:
     """Convenience function to run performance benchmarks."""
     return get_test_suite().run_performance_benchmarks()
+
 
 def generate_test_report(output_file: str = "test_report.json") -> Dict[str, Any]:
     """Convenience function to generate test report."""

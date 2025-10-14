@@ -8,7 +8,7 @@ to improve project organization and contributor experience.
 
 import json
 import sys
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 # Comprehensive label definitions for the bilingual project
 GITHUB_LABELS = [
@@ -16,210 +16,110 @@ GITHUB_LABELS = [
     {
         "name": "priority:critical",
         "color": "b60205",
-        "description": "Critical priority - blocking release or security issue"
+        "description": "Critical priority - blocking release or security issue",
     },
     {
         "name": "priority:high",
         "color": "d93f0b",
-        "description": "High priority - should be addressed soon"
+        "description": "High priority - should be addressed soon",
     },
     {
         "name": "priority:medium",
         "color": "fbca04",
-        "description": "Medium priority - address in next sprint"
+        "description": "Medium priority - address in next sprint",
     },
     {
         "name": "priority:low",
         "color": "0e8a16",
-        "description": "Low priority - can be addressed later"
+        "description": "Low priority - can be addressed later",
     },
-
     # Type Labels
-    {
-        "name": "type:bug",
-        "color": "d73a49",
-        "description": "Bug reports and fixes"
-    },
+    {"name": "type:bug", "color": "d73a49", "description": "Bug reports and fixes"},
     {
         "name": "type:enhancement",
         "color": "a2eeef",
-        "description": "Feature requests and enhancements"
+        "description": "Feature requests and enhancements",
     },
     {
         "name": "type:documentation",
         "color": "0075ca",
-        "description": "Documentation improvements and updates"
+        "description": "Documentation improvements and updates",
     },
     {
         "name": "type:refactoring",
         "color": "fbca04",
-        "description": "Code refactoring and improvements"
+        "description": "Code refactoring and improvements",
     },
-    {
-        "name": "type:testing",
-        "color": "c2e0c6",
-        "description": "Testing related changes"
-    },
-    {
-        "name": "type:performance",
-        "color": "fbca04",
-        "description": "Performance optimizations"
-    },
-    {
-        "name": "type:security",
-        "color": "ee0701",
-        "description": "Security related issues"
-    },
+    {"name": "type:testing", "color": "c2e0c6", "description": "Testing related changes"},
+    {"name": "type:performance", "color": "fbca04", "description": "Performance optimizations"},
+    {"name": "type:security", "color": "ee0701", "description": "Security related issues"},
     {
         "name": "type:dependencies",
         "color": "0366d6",
-        "description": "Dependency updates and changes"
+        "description": "Dependency updates and changes",
     },
-    {
-        "name": "type:ci-cd",
-        "color": "1d76db",
-        "description": "CI/CD pipeline changes"
-    },
-
+    {"name": "type:ci-cd", "color": "1d76db", "description": "CI/CD pipeline changes"},
     # Component Labels
-    {
-        "name": "component:api",
-        "color": "0052cc",
-        "description": "API related changes"
-    },
-    {
-        "name": "component:cli",
-        "color": "0052cc",
-        "description": "Command-line interface changes"
-    },
-    {
-        "name": "component:models",
-        "color": "0052cc",
-        "description": "Model training and inference"
-    },
+    {"name": "component:api", "color": "0052cc", "description": "API related changes"},
+    {"name": "component:cli", "color": "0052cc", "description": "Command-line interface changes"},
+    {"name": "component:models", "color": "0052cc", "description": "Model training and inference"},
     {
         "name": "component:tokenizer",
         "color": "0052cc",
-        "description": "Tokenization related changes"
+        "description": "Tokenization related changes",
     },
     {
         "name": "component:evaluation",
         "color": "0052cc",
-        "description": "Evaluation metrics and testing"
+        "description": "Evaluation metrics and testing",
     },
-    {
-        "name": "component:data",
-        "color": "0052cc",
-        "description": "Data collection and processing"
-    },
-    {
-        "name": "component:docs",
-        "color": "0052cc",
-        "description": "Documentation changes"
-    },
-    {
-        "name": "component:deployment",
-        "color": "0052cc",
-        "description": "Deployment and DevOps"
-    },
-
+    {"name": "component:data", "color": "0052cc", "description": "Data collection and processing"},
+    {"name": "component:docs", "color": "0052cc", "description": "Documentation changes"},
+    {"name": "component:deployment", "color": "0052cc", "description": "Deployment and DevOps"},
     # Language Labels
     {
         "name": "language:bangla",
         "color": "5319e7",
-        "description": "Bangla/Bengali language specific"
+        "description": "Bangla/Bengali language specific",
     },
-    {
-        "name": "language:english",
-        "color": "5319e7",
-        "description": "English language specific"
-    },
+    {"name": "language:english", "color": "5319e7", "description": "English language specific"},
     {
         "name": "language:multilingual",
         "color": "5319e7",
-        "description": "Multilingual/cross-language features"
+        "description": "Multilingual/cross-language features",
     },
-
     # Status Labels
-    {
-        "name": "status:ready",
-        "color": "0e8a16",
-        "description": "Ready for review or merge"
-    },
-    {
-        "name": "status:in-progress",
-        "color": "fbca04",
-        "description": "Currently being worked on"
-    },
+    {"name": "status:ready", "color": "0e8a16", "description": "Ready for review or merge"},
+    {"name": "status:in-progress", "color": "fbca04", "description": "Currently being worked on"},
     {
         "name": "status:review-needed",
         "color": "fbca04",
-        "description": "Needs review from maintainers"
+        "description": "Needs review from maintainers",
     },
-    {
-        "name": "status:blocked",
-        "color": "b60205",
-        "description": "Blocked by external factors"
-    },
-    {
-        "name": "status:duplicate",
-        "color": "cccccc",
-        "description": "Duplicate of another issue"
-    },
-    {
-        "name": "status:wont-fix",
-        "color": "ffffff",
-        "description": "Will not be fixed"
-    },
-
+    {"name": "status:blocked", "color": "b60205", "description": "Blocked by external factors"},
+    {"name": "status:duplicate", "color": "cccccc", "description": "Duplicate of another issue"},
+    {"name": "status:wont-fix", "color": "ffffff", "description": "Will not be fixed"},
     # Size Labels
-    {
-        "name": "size:xs",
-        "color": "0e8a16",
-        "description": "Extra small change (< 10 lines)"
-    },
-    {
-        "name": "size:s",
-        "color": "0e8a16",
-        "description": "Small change (10-50 lines)"
-    },
-    {
-        "name": "size:m",
-        "color": "fbca04",
-        "description": "Medium change (50-200 lines)"
-    },
-    {
-        "name": "size:l",
-        "color": "d93f0b",
-        "description": "Large change (200-500 lines)"
-    },
-    {
-        "name": "size:xl",
-        "color": "b60205",
-        "description": "Extra large change (> 500 lines)"
-    },
-
+    {"name": "size:xs", "color": "0e8a16", "description": "Extra small change (< 10 lines)"},
+    {"name": "size:s", "color": "0e8a16", "description": "Small change (10-50 lines)"},
+    {"name": "size:m", "color": "fbca04", "description": "Medium change (50-200 lines)"},
+    {"name": "size:l", "color": "d93f0b", "description": "Large change (200-500 lines)"},
+    {"name": "size:xl", "color": "b60205", "description": "Extra large change (> 500 lines)"},
     # Good First Issue Labels
     {
         "name": "good first issue",
         "color": "7057ff",
-        "description": "Good for newcomers to contribute"
+        "description": "Good for newcomers to contribute",
     },
-    {
-        "name": "help wanted",
-        "color": "008672",
-        "description": "Extra attention needed"
-    },
-    {
-        "name": "question",
-        "color": "d876e3",
-        "description": "Questions and discussions"
-    }
+    {"name": "help wanted", "color": "008672", "description": "Extra attention needed"},
+    {"name": "question", "color": "d876e3", "description": "Questions and discussions"},
 ]
+
 
 def generate_labels_json():
     """Generate GitHub labels configuration as JSON."""
     return json.dumps(GITHUB_LABELS, indent=2, ensure_ascii=False)
+
 
 def print_labels_table():
     """Print labels in a formatted table."""
@@ -248,6 +148,7 @@ def print_labels_table():
     for label in status_labels:
         print(f"  • {label['name']} ({label['color']}) - {label['description']}")
 
+
 def main():
     """Main function to display GitHub labels configuration."""
     print("🚀 Bilingual NLP Toolkit - GitHub Labels Configuration")
@@ -273,6 +174,7 @@ def main():
         print("\n✅ Labels configuration saved to: .github/labels.json")
     except Exception as e:
         print(f"\n❌ Could not save labels file: {e}")
+
 
 if __name__ == "__main__":
     main()

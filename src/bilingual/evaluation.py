@@ -178,6 +178,7 @@ def evaluate_model(
     results["model"] = model_name
     results["num_samples"] = str(len(dataset))
 
+
 """
 Evaluation metrics and utilities for bilingual models.
 
@@ -185,16 +186,17 @@ Provides metrics for generation, translation, and classification tasks.
 """
 
 import math
-import warnings
-from typing import Any, Dict, List
-from collections import Counter
 import re
+import warnings
+from collections import Counter
+from typing import Any, Dict, List
 
 try:
     import nltk
-    from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-    from nltk.translate.meteor_score import meteor_score
     from nltk.tokenize import word_tokenize
+    from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
+    from nltk.translate.meteor_score import meteor_score
+
     NLTK_AVAILABLE = True
 except ImportError:
     NLTK_AVAILABLE = False
@@ -211,17 +213,17 @@ class BilingualEvaluator:
         if NLTK_AVAILABLE:
             try:
                 # Download required NLTK data
-                nltk.data.find('tokenizers/punkt')
-                nltk.data.find('punkt_tab')
+                nltk.data.find("tokenizers/punkt")
+                nltk.data.find("punkt_tab")
             except LookupError:
                 print("Downloading NLTK punkt tokenizer...")
-                nltk.download('punkt', quiet=True)
-                nltk.download('punkt_tab', quiet=True)
+                nltk.download("punkt", quiet=True)
+                nltk.download("punkt_tab", quiet=True)
 
         # Smoothing function for BLEU
         self.smoothing = SmoothingFunction().method4 if NLTK_AVAILABLE else None
 
-    def tokenize_text(self, text: str, lang: str = 'en') -> List[str]:
+    def tokenize_text(self, text: str, lang: str = "en") -> List[str]:
         """
         Tokenize text for evaluation.
 
@@ -240,7 +242,7 @@ class BilingualEvaluator:
 
         # Fallback tokenization
         # Remove punctuation and split
-        text = re.sub(r'[^\w\s]', ' ', text.lower())
+        text = re.sub(r"[^\w\s]", " ", text.lower())
         return text.split()
 
     def bleu_score(self, reference: str, candidate: str, n_gram: int = 4) -> float:
@@ -265,10 +267,10 @@ class BilingualEvaluator:
             return 0.0
 
         try:
-            weights = tuple(1.0/n_gram for _ in range(n_gram))
-            return sentence_bleu(ref_tokens, cand_tokens,
-                              smoothing_function=self.smoothing,
-                              weights=weights)
+            weights = tuple(1.0 / n_gram for _ in range(n_gram))
+            return sentence_bleu(
+                ref_tokens, cand_tokens, smoothing_function=self.smoothing, weights=weights
+            )
         except:
             return self._simple_bleu_fallback(reference, candidate, n_gram)
 
@@ -310,11 +312,11 @@ class BilingualEvaluator:
         """Get n-grams from token list."""
         ngrams = set()
         for i in range(len(tokens) - n + 1):
-            ngram = ' '.join(tokens[i:i+n])
+            ngram = " ".join(tokens[i : i + n])
             ngrams.add(ngram)
         return ngrams
 
-    def rouge_score(self, reference: str, candidate: str, rouge_type: str = 'rouge-l') -> float:
+    def rouge_score(self, reference: str, candidate: str, rouge_type: str = "rouge-l") -> float:
         """
         Calculate ROUGE score for text summarization/generation.
 
@@ -329,11 +331,11 @@ class BilingualEvaluator:
         ref_tokens = set(self.tokenize_text(reference))
         cand_tokens = set(self.tokenize_text(candidate))
 
-        if rouge_type == 'rouge-1':
+        if rouge_type == "rouge-1":
             return self._rouge_n(ref_tokens, cand_tokens, 1)
-        elif rouge_type == 'rouge-2':
+        elif rouge_type == "rouge-2":
             return self._rouge_n(ref_tokens, cand_tokens, 2)
-        elif rouge_type == 'rouge-l':
+        elif rouge_type == "rouge-l":
             return self._rouge_l(reference, candidate)
         else:
             return 0.0
@@ -376,10 +378,10 @@ class BilingualEvaluator:
 
         for i in range(1, m + 1):
             for j in range(1, n + 1):
-                if seq1[i-1] == seq2[j-1]:
-                    dp[i][j] = dp[i-1][j-1] + 1
+                if seq1[i - 1] == seq2[j - 1]:
+                    dp[i][j] = dp[i - 1][j - 1] + 1
                 else:
-                    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
 
         return dp[m][n]
 
@@ -458,14 +460,17 @@ class BilingualEvaluator:
         # Average the two scores
         return (f1_1gram + f1_4gram) / 2.0
 
-    def _char_f_score(self, ref_chars: List[str], cand_chars: List[str],
-                     n: int, beta: float) -> float:
+    def _char_f_score(
+        self, ref_chars: List[str], cand_chars: List[str], n: int, beta: float
+    ) -> float:
         """Calculate character n-gram F-score."""
         ref_ngrams = self._get_char_ngrams(ref_chars, n)
         cand_ngrams = self._get_char_ngrams(cand_chars, n)
 
-        matches = sum(min(ref_ngrams.get(ngram, 0), cand_ngrams.get(ngram, 0))
-                     for ngram in set(ref_ngrams) | set(cand_ngrams))
+        matches = sum(
+            min(ref_ngrams.get(ngram, 0), cand_ngrams.get(ngram, 0))
+            for ngram in set(ref_ngrams) | set(cand_ngrams)
+        )
 
         total_ref = sum(ref_ngrams.values())
         total_cand = sum(cand_ngrams.values())
@@ -476,7 +481,7 @@ class BilingualEvaluator:
         if precision + recall == 0:
             return 0.0
 
-        beta_sq = beta ** 2
+        beta_sq = beta**2
         f_score = (1 + beta_sq) * precision * recall / (beta_sq * precision + recall)
 
         return f_score
@@ -485,7 +490,7 @@ class BilingualEvaluator:
         """Get character n-grams."""
         ngrams = Counter()
         for i in range(len(chars) - n + 1):
-            ngram = ''.join(chars[i:i+n])
+            ngram = "".join(chars[i : i + n])
             ngrams[ngram] += 1
         return ngrams
 
@@ -500,7 +505,7 @@ class BilingualEvaluator:
             Dictionary of diversity metrics
         """
         if not texts:
-            return {'unique_ngrams': 0.0, 'distinct_ngrams': 0.0, 'entropy': 0.0}
+            return {"unique_ngrams": 0.0, "distinct_ngrams": 0.0, "entropy": 0.0}
 
         all_ngrams = []
         for text in texts:
@@ -509,7 +514,7 @@ class BilingualEvaluator:
             all_ngrams.extend(list(ngrams))
 
         if not all_ngrams:
-            return {'unique_ngrams': 0.0, 'distinct_ngrams': 0.0, 'entropy': 0.0}
+            return {"unique_ngrams": 0.0, "distinct_ngrams": 0.0, "entropy": 0.0}
 
         # Unique n-grams ratio
         unique_ngrams = len(set(all_ngrams))
@@ -529,9 +534,9 @@ class BilingualEvaluator:
                 entropy -= prob * math.log2(prob)
 
         return {
-            'unique_ngrams': unique_ratio,
-            'distinct_ngrams': distinct_ratio,
-            'entropy': entropy
+            "unique_ngrams": unique_ratio,
+            "distinct_ngrams": distinct_ratio,
+            "entropy": entropy,
         }
 
     def classification_metrics(self, y_true: List[str], y_pred: List[str]) -> Dict[str, float]:
@@ -562,32 +567,43 @@ class BilingualEvaluator:
 
             precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
             recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-            f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+            f1 = (
+                (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+            )
 
             metrics[label] = {
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
-                'support': tp + fn
+                "precision": precision,
+                "recall": recall,
+                "f1": f1,
+                "support": tp + fn,
             }
 
         # Macro-averaged metrics
-        macro_precision = sum(m['precision'] for m in metrics.values()) / len(metrics) if metrics else 0.0
-        macro_recall = sum(m['recall'] for m in metrics.values()) / len(metrics) if metrics else 0.0
-        macro_f1 = sum(m['f1'] for m in metrics.values()) / len(metrics) if metrics else 0.0
+        macro_precision = (
+            sum(m["precision"] for m in metrics.values()) / len(metrics) if metrics else 0.0
+        )
+        macro_recall = sum(m["recall"] for m in metrics.values()) / len(metrics) if metrics else 0.0
+        macro_f1 = sum(m["f1"] for m in metrics.values()) / len(metrics) if metrics else 0.0
 
         # Micro-averaged metrics (overall)
-        total_tp = sum(m['f1'] * m['support'] for m in metrics.values()) / sum(m['support'] for m in metrics.values()) if metrics else 0.0
+        total_tp = (
+            sum(m["f1"] * m["support"] for m in metrics.values())
+            / sum(m["support"] for m in metrics.values())
+            if metrics
+            else 0.0
+        )
 
         return {
-            'macro_precision': macro_precision,
-            'macro_recall': macro_recall,
-            'macro_f1': macro_f1,
-            'micro_f1': total_tp,
-            'per_class': metrics
+            "macro_precision": macro_precision,
+            "macro_recall": macro_recall,
+            "macro_f1": macro_f1,
+            "micro_f1": total_tp,
+            "per_class": metrics,
         }
 
-    def evaluate_translation(self, references: List[str], candidates: List[str]) -> Dict[str, float]:
+    def evaluate_translation(
+        self, references: List[str], candidates: List[str]
+    ) -> Dict[str, float]:
         """
         Comprehensive evaluation for translation tasks.
 
@@ -611,10 +627,10 @@ class BilingualEvaluator:
             chrf_scores.append(self.chrF_score(ref, cand))
 
         return {
-            'bleu': sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0.0,
-            'meteor': sum(meteor_scores) / len(meteor_scores) if meteor_scores else 0.0,
-            'chrf': sum(chrf_scores) / len(chrf_scores) if chrf_scores else 0.0,
-            'num_samples': len(references)
+            "bleu": sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0.0,
+            "meteor": sum(meteor_scores) / len(meteor_scores) if meteor_scores else 0.0,
+            "chrf": sum(chrf_scores) / len(chrf_scores) if chrf_scores else 0.0,
+            "num_samples": len(references),
         }
 
     def evaluate_generation(self, references: List[str], candidates: List[str]) -> Dict[str, Any]:
@@ -638,25 +654,26 @@ class BilingualEvaluator:
 
         for ref, cand in zip(references, candidates):
             bleu_scores.append(self.bleu_score(ref, cand))
-            rouge1_scores.append(self.rouge_score(ref, cand, 'rouge-1'))
-            rouge2_scores.append(self.rouge_score(ref, cand, 'rouge-2'))
-            rougel_scores.append(self.rouge_score(ref, cand, 'rouge-l'))
+            rouge1_scores.append(self.rouge_score(ref, cand, "rouge-1"))
+            rouge2_scores.append(self.rouge_score(ref, cand, "rouge-2"))
+            rougel_scores.append(self.rouge_score(ref, cand, "rouge-l"))
 
         # Diversity metrics
         diversity = self.diversity_metrics(candidates)
 
         return {
-            'bleu': sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0.0,
-            'rouge_1': sum(rouge1_scores) / len(rouge1_scores) if rouge1_scores else 0.0,
-            'rouge_2': sum(rouge2_scores) / len(rouge2_scores) if rouge2_scores else 0.0,
-            'rouge_l': sum(rougel_scores) / len(rougel_scores) if rougel_scores else 0.0,
-            'diversity': diversity,
-            'num_samples': len(references)
+            "bleu": sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0.0,
+            "rouge_1": sum(rouge1_scores) / len(rouge1_scores) if rouge1_scores else 0.0,
+            "rouge_2": sum(rouge2_scores) / len(rouge2_scores) if rouge2_scores else 0.0,
+            "rouge_l": sum(rougel_scores) / len(rougel_scores) if rougel_scores else 0.0,
+            "diversity": diversity,
+            "num_samples": len(references),
         }
 
 
 # Global evaluator instance
 _evaluator = None
+
 
 def get_evaluator() -> BilingualEvaluator:
     """Get or create the global evaluator instance."""
@@ -665,18 +682,22 @@ def get_evaluator() -> BilingualEvaluator:
         _evaluator = BilingualEvaluator()
     return _evaluator
 
+
 def evaluate_translation(references: List[str], candidates: List[str]) -> Dict[str, float]:
     """Convenience function for translation evaluation."""
     return get_evaluator().evaluate_translation(references, candidates)
+
 
 def evaluate_generation(references: List[str], candidates: List[str]) -> Dict[str, Any]:
     """Convenience function for generation evaluation."""
     return get_evaluator().evaluate_generation(references, candidates)
 
+
 def bleu_score(reference: str, candidate: str) -> float:
     """Convenience function for BLEU score calculation."""
     return get_evaluator().bleu_score(reference, candidate)
 
-def rouge_score(reference: str, candidate: str, rouge_type: str = 'rouge-l') -> float:
+
+def rouge_score(reference: str, candidate: str, rouge_type: str = "rouge-l") -> float:
     """Convenience function for ROUGE score calculation."""
     return get_evaluator().rouge_score(reference, candidate, rouge_type)

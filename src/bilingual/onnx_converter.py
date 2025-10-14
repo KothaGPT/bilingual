@@ -9,18 +9,23 @@ for faster inference in production environments.
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Dict, List, Optional, Union
 
 try:
-    import torch
     import onnx
     import onnxruntime as ort
+    import torch
     from transformers import (
-        T5Tokenizer, T5ForConditionalGeneration,
-        BartTokenizer, BartForConditionalGeneration,
-        MT5Tokenizer, MT5ForConditionalGeneration,
-        AutoTokenizer, AutoModelForSeq2SeqLM
+        AutoModelForSeq2SeqLM,
+        AutoTokenizer,
+        BartForConditionalGeneration,
+        BartTokenizer,
+        MT5ForConditionalGeneration,
+        MT5Tokenizer,
+        T5ForConditionalGeneration,
+        T5Tokenizer,
     )
+
     ONNX_AVAILABLE = True
 except ImportError:
     ONNX_AVAILABLE = False
@@ -46,7 +51,7 @@ class ONNXConverter:
         onnx_output_path: str,
         model_type: str = "auto",
         opset_version: int = 11,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         Convert a PyTorch model to ONNX format.
@@ -105,9 +110,9 @@ class ONNXConverter:
                 dynamic_axes={
                     "input_ids": {0: "batch_size", 1: "sequence_length"},
                     "attention_mask": {0: "batch_size", 1: "sequence_length"},
-                    "output": {0: "batch_size", 1: "sequence_length"}
+                    "output": {0: "batch_size", 1: "sequence_length"},
                 },
-                **kwargs
+                **kwargs,
             )
 
             # Verify the ONNX model
@@ -117,7 +122,7 @@ class ONNXConverter:
             self.converted_models[model_name] = {
                 "onnx_path": str(onnx_path),
                 "model_type": model_type,
-                "tokenizer_path": pytorch_model_path
+                "tokenizer_path": pytorch_model_path,
             }
 
             print(f"✅ Converted {model_type.upper()} model to ONNX: {onnx_path}")
@@ -143,9 +148,7 @@ class ONNXConverter:
             return "auto"
 
     def create_inference_session(
-        self,
-        model_name: str,
-        providers: Optional[List[str]] = None
+        self, model_name: str, providers: Optional[List[str]] = None
     ) -> Any:
         """
         Create an ONNX Runtime inference session.
@@ -166,13 +169,10 @@ class ONNXConverter:
         model_info = self.converted_models[model_name]
 
         if providers is None:
-            providers = ['CPUExecutionProvider']
+            providers = ["CPUExecutionProvider"]
 
         try:
-            session = ort.InferenceSession(
-                model_info["onnx_path"],
-                providers=providers
-            )
+            session = ort.InferenceSession(model_info["onnx_path"], providers=providers)
 
             print(f"✅ Created ONNX Runtime session for {model_name}")
             return session
@@ -182,10 +182,7 @@ class ONNXConverter:
             raise
 
     def benchmark_onnx_model(
-        self,
-        model_name: str,
-        sample_inputs: List[str],
-        num_runs: int = 100
+        self, model_name: str, sample_inputs: List[str], num_runs: int = 100
     ) -> Dict[str, float]:
         """
         Benchmark ONNX model performance.
@@ -219,6 +216,7 @@ class ONNXConverter:
 
         # Prepare inputs
         import time
+
         import numpy as np
 
         latencies = []
@@ -237,13 +235,7 @@ class ONNXConverter:
             start_time = time.time()
 
             # Run inference
-            outputs = session.run(
-                None,
-                {
-                    "input_ids": input_ids,
-                    "attention_mask": attention_mask
-                }
-            )
+            outputs = session.run(None, {"input_ids": input_ids, "attention_mask": attention_mask})
 
             end_time = time.time()
 
@@ -261,14 +253,10 @@ class ONNXConverter:
             "max_latency_ms": np.max(latencies),
             "average_throughput_chars_per_sec": np.mean(throughputs),
             "throughput_std_chars_per_sec": np.std(throughputs),
-            "num_runs": num_runs
+            "num_runs": num_runs,
         }
 
-    def optimize_onnx_model(
-        self,
-        model_name: str,
-        optimization_level: str = "basic"
-    ) -> str:
+    def optimize_onnx_model(self, model_name: str, optimization_level: str = "basic") -> str:
         """
         Optimize ONNX model for better performance.
 
@@ -293,10 +281,19 @@ class ONNXConverter:
 
             # Define optimization settings
             optimizations = {
-                "basic": ["eliminate_identity", "eliminate_nop_transpose", "fuse_consecutive_transposes"],
-                "extended": ["eliminate_identity", "eliminate_nop_transpose", "fuse_consecutive_transposes",
-                           "fuse_transpose_into_gemm", "enable_gelu_approximation"],
-                "all": []  # Use all available optimizations
+                "basic": [
+                    "eliminate_identity",
+                    "eliminate_nop_transpose",
+                    "fuse_consecutive_transposes",
+                ],
+                "extended": [
+                    "eliminate_identity",
+                    "eliminate_nop_transpose",
+                    "fuse_consecutive_transposes",
+                    "fuse_transpose_into_gemm",
+                    "enable_gelu_approximation",
+                ],
+                "all": [],  # Use all available optimizations
             }
 
             if optimization_level == "all":
@@ -330,6 +327,7 @@ class ONNXConverter:
 # Global ONNX converter instance
 _onnx_converter = None
 
+
 def get_onnx_converter() -> ONNXConverter:
     """Get or create the global ONNX converter instance."""
     global _onnx_converter
@@ -337,25 +335,29 @@ def get_onnx_converter() -> ONNXConverter:
         _onnx_converter = ONNXConverter()
     return _onnx_converter
 
+
 def convert_to_onnx(
     model_name: str,
     pytorch_model_path: str,
     onnx_output_path: str,
     model_type: str = "auto",
-    **kwargs
+    **kwargs,
 ) -> str:
     """Convenience function to convert a model to ONNX."""
     return get_onnx_converter().convert_model(
         model_name, pytorch_model_path, onnx_output_path, model_type, **kwargs
     )
 
+
 def create_onnx_session(model_name: str, **kwargs) -> Any:
     """Convenience function to create an ONNX inference session."""
     return get_onnx_converter().create_inference_session(model_name, **kwargs)
 
+
 def benchmark_onnx_model(model_name: str, sample_inputs: List[str], **kwargs) -> Dict[str, float]:
     """Convenience function to benchmark an ONNX model."""
     return get_onnx_converter().benchmark_onnx_model(model_name, sample_inputs, **kwargs)
+
 
 def optimize_onnx_model(model_name: str, optimization_level: str = "basic") -> str:
     """Convenience function to optimize an ONNX model."""

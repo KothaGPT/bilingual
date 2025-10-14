@@ -6,27 +6,26 @@ This hook analyzes staged changes and suggests commit messages with
 appropriate emojis based on the conventional commit format.
 """
 
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+
 def get_staged_files():
     """Get list of staged files."""
     try:
         result = subprocess.run(
-            ["git", "diff", "--cached", "--name-only"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True, check=True
         )
-        return [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
+        return [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
     except subprocess.CalledProcessError:
         return []
+
 
 def analyze_changes(files):
     """Analyze files to determine commit type and scope."""
@@ -81,6 +80,7 @@ def analyze_changes(files):
             types.append("perf")
 
     return types, scopes
+
 
 def generate_commit_message(types, scopes):
     """Generate a commit message with emojis."""
@@ -137,15 +137,12 @@ def generate_commit_message(types, scopes):
 
     return f"{prefix} {desc}"
 
+
 def main():
     """Main pre-commit hook function."""
     # Check if we're in a git repository
     try:
-        subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
-            capture_output=True,
-            check=True
-        )
+        subprocess.run(["git", "rev-parse", "--git-dir"], capture_output=True, check=True)
     except subprocess.CalledProcessError:
         print("❌ Not in a git repository")
         sys.exit(1)
@@ -200,11 +197,12 @@ def main():
         # Set the commit message as an environment variable for git
         # This would be used by a wrapper script that calls git commit
         print(f"\n✅ Using commit message: {final_message}")
-        print(f"💻 Run: git commit -m \"{final_message}\"")
+        print(f'💻 Run: git commit -m "{final_message}"')
 
     except KeyboardInterrupt:
         print("\n❌ Cancelled.")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

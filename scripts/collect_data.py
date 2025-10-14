@@ -169,29 +169,29 @@ def collect_web_data(output_dir: Path, platforms: list = None, limit: int = None
         return
 
     if platforms is None:
-        platforms = ['educational', 'news']
+        platforms = ["educational", "news"]
 
     collector = EnhancedDataCollector(output_dir)
 
     for platform in platforms:
         print(f"\n🔍 Scraping {platform} content...")
-        if platform == 'educational':
+        if platform == "educational":
             # Educational platforms
             urls = [
-                'https://www.khanacademy.org/',  # Educational content
-                'https://www.bbc.com/bengali',   # Bengali news/educational
-                'https://bangla.zeitung.com/',   # Bengali content
+                "https://www.khanacademy.org/",  # Educational content
+                "https://www.bbc.com/bengali",  # Bengali news/educational
+                "https://bangla.zeitung.com/",  # Bengali content
             ]
-        elif platform == 'news':
+        elif platform == "news":
             # News sources (respectful scraping)
             urls = [
-                'https://www.prothomalo.com/',   # Major Bengali newspaper
-                'https://www.bbc.com/bengali',   # BBC Bengali
+                "https://www.prothomalo.com/",  # Major Bengali newspaper
+                "https://www.bbc.com/bengali",  # BBC Bengali
             ]
-        elif platform == 'books':
+        elif platform == "books":
             # Public domain books
             urls = [
-                'https://www.gutenberg.org/',    # Project Gutenberg
+                "https://www.gutenberg.org/",  # Project Gutenberg
             ]
 
         for url in urls:
@@ -211,7 +211,10 @@ def main():
     )
 
     parser.add_argument(
-        "--source", choices=["wikipedia", "sample", "web-scrape"], default="sample", help="Data source"
+        "--source",
+        choices=["wikipedia", "sample", "web-scrape"],
+        default="sample",
+        help="Data source",
     )
 
     parser.add_argument(
@@ -222,7 +225,9 @@ def main():
 
     parser.add_argument("--limit", type=int, help="Maximum number of items to collect")
 
-    parser.add_argument("--platforms", nargs="+", help="Platforms for web scraping (educational, news, books)")
+    parser.add_argument(
+        "--platforms", nargs="+", help="Platforms for web scraping (educational, news, books)"
+    )
 
     args = parser.parse_args()
 
@@ -240,7 +245,7 @@ def main():
             collect_wikipedia(args.lang, output_dir, args.limit)
 
     elif args.source == "web-scrape":
-        platforms = args.platforms if args.platforms else ['educational', 'news']
+        platforms = args.platforms if args.platforms else ["educational", "news"]
         collect_web_data(output_dir, platforms, args.limit)
 
     print("\nData collection complete!")

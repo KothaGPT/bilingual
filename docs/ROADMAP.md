@@ -204,4 +204,3 @@ Add **LangServe** or **Ollama backend** to serve models locally.
 | 🧩 Integration    | LangChain / LlamaIndex support | RAG pipelines          |
 | 🧠 Knowledge      | Bilingual RAG datasets         | Vector DB + embeddings |
 | ☁️ Serving        | Ollama + LangServe bridge      | Local + cloud parity   |
-

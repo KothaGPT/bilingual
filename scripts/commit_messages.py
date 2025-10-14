@@ -6,43 +6,41 @@ This script analyzes git changes and generates standardized commit messages
 with appropriate emojis based on the type and scope of changes.
 """
 
-import subprocess
 import re
+import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 # Emoji mappings for different types of changes
 EMOJI_MAPPINGS = {
     # Types
-    "feat": "✨",        # New feature
-    "fix": "🐛",         # Bug fix
-    "docs": "📚",        # Documentation
-    "style": "💅",       # Code style/formatting
-    "refactor": "♻️",    # Code refactoring
-    "test": "🧪",        # Tests
-    "chore": "🔧",       # Maintenance tasks
-    "perf": "⚡",        # Performance improvements
-    "ci": "🚀",          # CI/CD changes
-    "build": "🏗️",       # Build system changes
-    "revert": "⏪",      # Reverting changes
-
+    "feat": "✨",  # New feature
+    "fix": "🐛",  # Bug fix
+    "docs": "📚",  # Documentation
+    "style": "💅",  # Code style/formatting
+    "refactor": "♻️",  # Code refactoring
+    "test": "🧪",  # Tests
+    "chore": "🔧",  # Maintenance tasks
+    "perf": "⚡",  # Performance improvements
+    "ci": "🚀",  # CI/CD changes
+    "build": "🏗️",  # Build system changes
+    "revert": "⏪",  # Reverting changes
     # Scopes
-    "api": "🔌",         # API changes
-    "cli": "💻",         # CLI changes
-    "models": "🤖",      # Model changes
-    "tokenizer": "🔤",   # Tokenization
+    "api": "🔌",  # API changes
+    "cli": "💻",  # CLI changes
+    "models": "🤖",  # Model changes
+    "tokenizer": "🔤",  # Tokenization
     "evaluation": "📊",  # Evaluation/metrics
-    "data": "📁",        # Data processing
-    "docs": "📖",        # Documentation
+    "data": "📁",  # Data processing
+    "docs": "📖",  # Documentation
     "deployment": "🚢",  # Deployment
-    "config": "⚙️",      # Configuration
-    "testing": "🧪",     # Testing framework
-
+    "config": "⚙️",  # Configuration
+    "testing": "🧪",  # Testing framework
     # Special cases
-    "security": "🔒",    # Security fixes
-    "breaking": "💥",    # Breaking changes
-    "experimental": "🧪", # Experimental features
+    "security": "🔒",  # Security fixes
+    "breaking": "💥",  # Breaking changes
+    "experimental": "🧪",  # Experimental features
 }
 
 # Commit message patterns
@@ -51,57 +49,53 @@ COMMIT_PATTERNS = [
     (r"add.*feature|implement.*feature|new.*feature", "feat"),
     (r"add.*functionality|implement.*functionality", "feat"),
     (r"introduce.*capability|add.*capability", "feat"),
-
     # Bug fix patterns
     (r"fix.*bug|resolve.*bug|fix.*issue", "fix"),
     (r"correct.*error|fix.*error", "fix"),
     (r"resolve.*problem|fix.*problem", "fix"),
-
     # Documentation patterns
     (r"update.*doc|add.*doc|improve.*doc", "docs"),
     (r"add.*example|update.*example", "docs"),
     (r"document.*feature|document.*function", "docs"),
-
     # Refactoring patterns
     (r"refactor.*code|improve.*code|optimize.*code", "refactor"),
     (r"clean.*code|restructure.*code", "refactor"),
     (r"simplify.*logic|improve.*logic", "refactor"),
-
     # Test patterns
     (r"add.*test|implement.*test|write.*test", "test"),
     (r"test.*functionality|test.*feature", "test"),
     (r"add.*assertion|add.*test.*case", "test"),
-
     # Performance patterns
     (r"improve.*performance|optimize.*performance", "perf"),
     (r"increase.*speed|reduce.*latency", "perf"),
     (r"enhance.*efficiency|optimize.*efficiency", "perf"),
-
     # CI/CD patterns
     (r"update.*ci|modify.*ci|improve.*ci", "ci"),
     (r"update.*workflow|modify.*workflow", "ci"),
     (r"add.*automation|improve.*automation", "ci"),
-
     # Build patterns
     (r"update.*build|modify.*build|fix.*build", "build"),
     (r"add.*dependency|update.*dependency", "build"),
     (r"configure.*build|setup.*build", "build"),
 ]
 
+
 def get_git_changes() -> Tuple[List[str], List[str]]:
     """Get staged and unstaged changes from git."""
     try:
         # Get staged files
-        staged = subprocess.check_output(
-            ["git", "diff", "--cached", "--name-only"],
-            encoding="utf-8"
-        ).strip().split("\n")
+        staged = (
+            subprocess.check_output(["git", "diff", "--cached", "--name-only"], encoding="utf-8")
+            .strip()
+            .split("\n")
+        )
 
         # Get unstaged files
-        unstaged = subprocess.check_output(
-            ["git", "diff", "--name-only"],
-            encoding="utf-8"
-        ).strip().split("\n")
+        unstaged = (
+            subprocess.check_output(["git", "diff", "--name-only"], encoding="utf-8")
+            .strip()
+            .split("\n")
+        )
 
         # Filter out empty strings
         staged = [f for f in staged if f]
@@ -112,14 +106,10 @@ def get_git_changes() -> Tuple[List[str], List[str]]:
     except subprocess.CalledProcessError:
         return [], []
 
+
 def analyze_changes(files: List[str]) -> Dict[str, Any]:
     """Analyze file changes to determine commit type and scope."""
-    analysis = {
-        "types": [],
-        "scopes": [],
-        "breaking": False,
-        "files": files
-    }
+    analysis = {"types": [], "scopes": [], "breaking": False, "files": files}
 
     for file_path in files:
         path = Path(file_path)
@@ -153,7 +143,7 @@ def analyze_changes(files: List[str]) -> Dict[str, Any]:
 
         # Check for breaking changes in file content (simplified check)
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
                 if "BREAKING CHANGE" in content.upper() or "breaking change" in content.lower():
                     analysis["breaking"] = True
@@ -164,7 +154,7 @@ def analyze_changes(files: List[str]) -> Dict[str, Any]:
     for pattern, commit_type in COMMIT_PATTERNS:
         for file_path in files:
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
                     if re.search(pattern, content, re.IGNORECASE):
                         if commit_type not in analysis["types"]:
@@ -181,6 +171,7 @@ def analyze_changes(files: List[str]) -> Dict[str, Any]:
     analysis["scopes"] = sorted(list(set(analysis["scopes"])))
 
     return analysis
+
 
 def generate_commit_message(analysis: Dict[str, Any], custom_message: Optional[str] = None) -> str:
     """Generate a commit message with emojis based on analysis."""
@@ -220,6 +211,7 @@ def generate_commit_message(analysis: Dict[str, Any], custom_message: Optional[s
     commit_message = f"{prefix} {file_desc}"
 
     return commit_message
+
 
 def suggest_commit_message():
     """Interactive commit message suggestion."""
@@ -285,17 +277,30 @@ def suggest_commit_message():
     except subprocess.CalledProcessError as e:
         print(f"❌ Git commit failed: {e}")
 
+
 def show_commit_examples():
     """Show examples of auto-generated commit messages."""
     print("\n📋 Commit Message Examples:")
     print("=" * 40)
 
     examples = [
-        ("feat(api): add language detection endpoint", "✨🔌 feat(api): add language detection endpoint"),
-        ("fix(models): resolve tokenizer memory leak", "🐛🤖 fix(models): resolve tokenizer memory leak"),
+        (
+            "feat(api): add language detection endpoint",
+            "✨🔌 feat(api): add language detection endpoint",
+        ),
+        (
+            "fix(models): resolve tokenizer memory leak",
+            "🐛🤖 fix(models): resolve tokenizer memory leak",
+        ),
         ("docs: update API documentation", "📚📖 docs: update API documentation"),
-        ("refactor(evaluation): optimize BLEU calculation", "♻️📊 refactor(evaluation): optimize BLEU calculation"),
-        ("test: add unit tests for data augmentation", "🧪📁 test: add unit tests for data augmentation"),
+        (
+            "refactor(evaluation): optimize BLEU calculation",
+            "♻️📊 refactor(evaluation): optimize BLEU calculation",
+        ),
+        (
+            "test: add unit tests for data augmentation",
+            "🧪📁 test: add unit tests for data augmentation",
+        ),
         ("perf: improve model inference speed", "⚡🤖 perf: improve model inference speed"),
         ("ci: update GitHub Actions workflow", "🚀 ci: update GitHub Actions workflow"),
         ("chore: update dependencies", "🔧🏗️ chore: update dependencies"),
@@ -305,6 +310,7 @@ def show_commit_examples():
         print(f"Conventional: {conventional}")
         print(f"With emojis:  {with_emoji}")
         print()
+
 
 def main():
     """Main function for commit message generation."""
@@ -335,6 +341,7 @@ def main():
 
     # Run interactive suggestion
     suggest_commit_message()
+
 
 if __name__ == "__main__":
     main()

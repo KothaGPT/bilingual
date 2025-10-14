@@ -6,25 +6,29 @@ Provides centralized configuration using Pydantic settings with
 environment variable support and validation.
 """
 
-from pathlib import Path
-from typing import Optional, Dict, Any, List
 import warnings
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 try:
     from pydantic import BaseSettings, Field
+
     PYDANTIC_AVAILABLE = True
 except ImportError:
     print("Warning: pydantic not available. Install with: pip install pydantic")
     PYDANTIC_AVAILABLE = False
 
 if PYDANTIC_AVAILABLE:
+
     class ModelConfig(BaseSettings):
         """Configuration for language models."""
 
         # Model paths and settings
         default_model: str = Field(default="t5-small", description="Default model for generation")
         model_cache_dir: str = Field(default="models/cache", description="Model cache directory")
-        tokenizer_path: str = Field(default="models/tokenizer/bilingual_sp.model", description="Tokenizer path")
+        tokenizer_path: str = Field(
+            default="models/tokenizer/bilingual_sp.model", description="Tokenizer path"
+        )
 
         # Training settings
         training_batch_size: int = Field(default=8, description="Training batch size")
@@ -45,8 +49,12 @@ if PYDANTIC_AVAILABLE:
 
         # Data directories
         raw_data_dir: str = Field(default="data/raw", description="Raw data directory")
-        processed_data_dir: str = Field(default="datasets/processed", description="Processed data directory")
-        evaluations_dir: str = Field(default="data/evaluations", description="Evaluations directory")
+        processed_data_dir: str = Field(
+            default="datasets/processed", description="Processed data directory"
+        )
+        evaluations_dir: str = Field(
+            default="data/evaluations", description="Evaluations directory"
+        )
 
         # Data collection settings
         max_collection_items: int = Field(default=1000, description="Maximum items to collect")
@@ -55,7 +63,9 @@ if PYDANTIC_AVAILABLE:
         # Data quality settings
         min_text_length: int = Field(default=10, description="Minimum text length")
         max_text_length: int = Field(default=10000, description="Maximum text length")
-        language_detection_threshold: float = Field(default=0.7, description="Language detection confidence threshold")
+        language_detection_threshold: float = Field(
+            default=0.7, description="Language detection confidence threshold"
+        )
 
         class Config:
             env_prefix = "BILINGUAL_DATA_"
@@ -84,7 +94,9 @@ if PYDANTIC_AVAILABLE:
 
         # Evaluation settings
         bleu_ngram_order: int = Field(default=4, description="BLEU n-gram order")
-        rouge_types: List[str] = Field(default=["rouge-1", "rouge-2", "rouge-l"], description="ROUGE types")
+        rouge_types: List[str] = Field(
+            default=["rouge-1", "rouge-2", "rouge-l"], description="ROUGE types"
+        )
         meteor_alpha: float = Field(default=0.9, description="METEOR alpha parameter")
 
         # Benchmark settings
@@ -120,10 +132,10 @@ if PYDANTIC_AVAILABLE:
                 "model": self.model.dict(),
                 "data": self.data.dict(),
                 "api": self.api.dict(),
-                "evaluation": self.evaluation.dict()
+                "evaluation": self.evaluation.dict(),
             }
 
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, indent=2, ensure_ascii=False)
 
             print(f"✅ Configuration saved to: {file_path}")
@@ -132,7 +144,7 @@ if PYDANTIC_AVAILABLE:
         def load_from_file(cls, file_path: str = ".bilingual_config.json") -> "Settings":
             """Load settings from a JSON file."""
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     config_data = json.load(f)
 
                 return cls(
@@ -141,7 +153,7 @@ if PYDANTIC_AVAILABLE:
                     model=ModelConfig(**config_data.get("model", {})),
                     data=DataConfig(**config_data.get("data", {})),
                     api=APIConfig(**config_data.get("api", {})),
-                    evaluation=EvaluationConfig(**config_data.get("evaluation", {}))
+                    evaluation=EvaluationConfig(**config_data.get("evaluation", {})),
                 )
             except FileNotFoundError:
                 print(f"⚠️  Configuration file not found: {file_path}")
@@ -162,18 +174,10 @@ if PYDANTIC_AVAILABLE:
                 _settings = Settings()
         return _settings
 
-    def init_settings(
-        debug: bool = False,
-        log_level: str = "INFO",
-        **kwargs
-    ) -> Settings:
+    def init_settings(debug: bool = False, log_level: str = "INFO", **kwargs) -> Settings:
         """Initialize settings with custom values."""
         global _settings
-        _settings = Settings(
-            debug=debug,
-            log_level=log_level,
-            **kwargs
-        )
+        _settings = Settings(debug=debug, log_level=log_level, **kwargs)
         return _settings
 
 else:
@@ -184,22 +188,22 @@ else:
         def __init__(self):
             self.debug = False
             self.log_level = "INFO"
-            self.model = type('ModelConfig', (), {
-                'default_model': 't5-small',
-                'model_cache_dir': 'models/cache',
-                'tokenizer_path': 'models/tokenizer/bilingual_sp.model'
-            })()
-            self.data = type('DataConfig', (), {
-                'raw_data_dir': 'data/raw',
-                'processed_data_dir': 'datasets/processed'
-            })()
-            self.api = type('APIConfig', (), {
-                'host': 'localhost',
-                'port': 8000
-            })()
-            self.evaluation = type('EvaluationConfig', (), {
-                'bleu_ngram_order': 4
-            })()
+            self.model = type(
+                "ModelConfig",
+                (),
+                {
+                    "default_model": "t5-small",
+                    "model_cache_dir": "models/cache",
+                    "tokenizer_path": "models/tokenizer/bilingual_sp.model",
+                },
+            )()
+            self.data = type(
+                "DataConfig",
+                (),
+                {"raw_data_dir": "data/raw", "processed_data_dir": "datasets/processed"},
+            )()
+            self.api = type("APIConfig", (), {"host": "localhost", "port": 8000})()
+            self.evaluation = type("EvaluationConfig", (), {"bleu_ngram_order": 4})()
 
     def get_settings() -> Settings:
         """Get settings instance."""

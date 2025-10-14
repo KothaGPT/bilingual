@@ -13,26 +13,24 @@ Usage:
 """
 
 import argparse
+import json
 import subprocess
 import sys
-import json
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 
 def get_git_commits_since_last_tag(current_version: str) -> List[str]:
     """Get git commits since the last release tag."""
     try:
         # Get the last tag before current version
         result = subprocess.run(
-            ["git", "tag", "--sort=-version:refname"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "tag", "--sort=-version:refname"], capture_output=True, text=True, check=True
         )
 
-        tags = [tag.strip() for tag in result.stdout.strip().split('\n') if tag.strip()]
-        tags = [tag for tag in tags if tag.startswith('v')]
+        tags = [tag.strip() for tag in result.stdout.strip().split("\n") if tag.strip()]
+        tags = [tag for tag in tags if tag.startswith("v")]
 
         # Find the previous tag
         current_index = None
@@ -52,18 +50,19 @@ def get_git_commits_since_last_tag(current_version: str) -> List[str]:
             ["git", "log", "--oneline", "--no-merges", f"{previous_tag}..HEAD"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
-        commits = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
+        commits = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
         return commits
 
     except subprocess.CalledProcessError:
         return []
 
+
 def get_release_type(current_version: str) -> str:
     """Determine release type based on version."""
-    parts = current_version.split('.')
+    parts = current_version.split(".")
     if len(parts) >= 3:
         patch = int(parts[2])
         minor = int(parts[1])
@@ -78,6 +77,7 @@ def get_release_type(current_version: str) -> str:
 
     return "minor"
 
+
 def generate_release_notes(current_version: str, output_file: str = None) -> str:
     """Generate comprehensive release notes."""
 
@@ -88,10 +88,12 @@ def generate_release_notes(current_version: str, output_file: str = None) -> str
     release_info = {
         "major": ("🚀", "Major Release", "Breaking changes and new features"),
         "minor": ("✨", "Minor Release", "New features and enhancements"),
-        "patch": ("🐛", "Patch Release", "Bug fixes and small improvements")
+        "patch": ("🐛", "Patch Release", "Bug fixes and small improvements"),
     }
 
-    emoji, release_name, description = release_info.get(release_type, ("✨", "Release", "Features and improvements"))
+    emoji, release_name, description = release_info.get(
+        release_type, ("✨", "Release", "Features and improvements")
+    )
 
     # Get commits since last release
     commits = get_git_commits_since_last_tag(current_version)
@@ -141,19 +143,22 @@ def generate_release_notes(current_version: str, output_file: str = None) -> str
     other = []
 
     for commit in commits:
-        commit_msg = commit.split(' ', 1)[1] if len(commit.split(' ', 1)) > 1 else commit
+        commit_msg = commit.split(" ", 1)[1] if len(commit.split(" ", 1)) > 1 else commit
 
-        if any(keyword in commit_msg.lower() for keyword in ['feat', 'feature', 'add', 'new', 'implement']):
+        if any(
+            keyword in commit_msg.lower()
+            for keyword in ["feat", "feature", "add", "new", "implement"]
+        ):
             features.append(commit_msg)
-        elif any(keyword in commit_msg.lower() for keyword in ['fix', 'bug', 'error', 'resolve']):
+        elif any(keyword in commit_msg.lower() for keyword in ["fix", "bug", "error", "resolve"]):
             fixes.append(commit_msg)
-        elif any(keyword in commit_msg.lower() for keyword in ['doc', 'readme', 'guide']):
+        elif any(keyword in commit_msg.lower() for keyword in ["doc", "readme", "guide"]):
             docs.append(commit_msg)
-        elif any(keyword in commit_msg.lower() for keyword in ['refactor', 'improve', 'optimize']):
+        elif any(keyword in commit_msg.lower() for keyword in ["refactor", "improve", "optimize"]):
             refactoring.append(commit_msg)
-        elif any(keyword in commit_msg.lower() for keyword in ['test', 'spec']):
+        elif any(keyword in commit_msg.lower() for keyword in ["test", "spec"]):
             tests.append(commit_msg)
-        elif any(keyword in commit_msg.lower() for keyword in ['ci', 'cd', 'workflow', 'action']):
+        elif any(keyword in commit_msg.lower() for keyword in ["ci", "cd", "workflow", "action"]):
             ci_cd.append(commit_msg)
         else:
             other.append(commit_msg)
@@ -265,18 +270,21 @@ Thanks to all contributors who made this release possible!
 
     # Write to file if specified
     if output_file:
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"✅ Release notes generated: {output_file}")
 
     return content
+
 
 def main():
     """Main function for release notes generation."""
     parser = argparse.ArgumentParser(description="Generate release notes for Bilingual NLP Toolkit")
     parser.add_argument("--version", required=True, help="Version number (e.g., 1.0.0)")
     parser.add_argument("--output", help="Output file path")
-    parser.add_argument("--preview", action="store_true", help="Preview release notes without saving")
+    parser.add_argument(
+        "--preview", action="store_true", help="Preview release notes without saving"
+    )
 
     args = parser.parse_args()
 
@@ -290,6 +298,7 @@ def main():
     except Exception as e:
         print(f"❌ Error generating release notes: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

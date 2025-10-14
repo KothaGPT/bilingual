@@ -12,17 +12,18 @@ Provides easy access to all bilingual functionality including:
 import json
 import sys
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 try:
-    import typer
     import rich
+    import typer
+    from pydantic import BaseSettings
     from rich.console import Console
-    from rich.table import Table
     from rich.panel import Panel
     from rich.progress import Progress, SpinnerColumn, TextColumn
-    from rich.prompt import Prompt, Confirm
-    from pydantic import BaseSettings
+    from rich.prompt import Confirm, Prompt
+    from rich.table import Table
+
     TYPER_AVAILABLE = True
 except ImportError:
     print("Installing required packages for CLI...")
@@ -37,7 +38,7 @@ if TYPER_AVAILABLE:
     app = typer.Typer(
         name="bilingual-cli",
         help="Bilingual NLP Toolkit - Advanced Bangla-English processing",
-        add_completion=False
+        add_completion=False,
     )
 
     class Settings(BaseSettings):
@@ -92,7 +93,7 @@ if TYPER_AVAILABLE:
     @app.command()
     def config(
         show: bool = typer.Option(False, "--show", help="Show current configuration"),
-        reset: bool = typer.Option(False, "--reset", help="Reset to defaults")
+        reset: bool = typer.Option(False, "--reset", help="Reset to defaults"),
     ):
         """Manage CLI configuration."""
         if reset:
@@ -108,21 +109,16 @@ if TYPER_AVAILABLE:
     def process(
         text: str = typer.Argument(..., help="Text to process"),
         tasks: List[str] = typer.Option(
-            ["detect", "normalize"],
-            "--task", "-t",
-            help="Processing tasks to perform"
+            ["detect", "normalize"], "--task", "-t", help="Processing tasks to perform"
         ),
-        output_format: str = typer.Option("json", "--format", "-f", help="Output format")
+        output_format: str = typer.Option("json", "--format", "-f", help="Output format"),
     ):
         """Process text with multiple NLP tasks."""
         import bilingual as bb
 
         with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
         ) as progress:
-
             results = {}
             progress.add_task("Processing text...", total=len(tasks))
 
@@ -157,7 +153,7 @@ if TYPER_AVAILABLE:
         text: str = typer.Argument(..., help="Text to translate"),
         source_lang: str = typer.Option("auto", "--from", "-f", help="Source language"),
         target_lang: str = typer.Option("en", "--to", "-t", help="Target language"),
-        model: str = typer.Option("t5-small", "--model", "-m", help="Translation model")
+        model: str = typer.Option("t5-small", "--model", "-m", help="Translation model"),
     ):
         """Translate text between Bangla and English."""
         import bilingual as bb
@@ -186,7 +182,7 @@ if TYPER_AVAILABLE:
         prompt: str = typer.Argument(..., help="Generation prompt"),
         model: str = typer.Option("t5-small", "--model", "-m", help="Generation model"),
         max_length: int = typer.Option(50, "--max-length", help="Maximum generation length"),
-        temperature: float = typer.Option(1.0, "--temperature", help="Generation temperature")
+        temperature: float = typer.Option(1.0, "--temperature", help="Generation temperature"),
     ):
         """Generate text using language models."""
         import bilingual as bb
@@ -194,7 +190,9 @@ if TYPER_AVAILABLE:
         with console.status(f"[bold green]Generating text..."):
             try:
                 bb.load_model(model, "t5")
-                result = bb.generate_text(model, prompt, max_length=max_length, temperature=temperature)
+                result = bb.generate_text(
+                    model, prompt, max_length=max_length, temperature=temperature
+                )
 
                 console.print(f"\n[bold green]Generated Text:[/bold green]")
                 console.print(f"[dim]Prompt:[/dim] {prompt}")
@@ -207,17 +205,17 @@ if TYPER_AVAILABLE:
     def evaluate(
         task: str = typer.Argument(..., help="Evaluation task (translation, generation)"),
         reference_file: str = typer.Option(..., "--reference", "-r", help="Reference file"),
-        candidate_file: str = typer.Option(..., "--candidate", "-c", help="Candidate file")
+        candidate_file: str = typer.Option(..., "--candidate", "-c", help="Candidate file"),
     ):
         """Evaluate model outputs against references."""
         import bilingual as bb
 
         try:
             # Load data
-            with open(reference_file, 'r', encoding='utf-8') as f:
+            with open(reference_file, "r", encoding="utf-8") as f:
                 references = [line.strip() for line in f if line.strip()]
 
-            with open(candidate_file, 'r', encoding='utf-8') as f:
+            with open(candidate_file, "r", encoding="utf-8") as f:
                 candidates = [line.strip() for line in f if line.strip()]
 
             if len(references) != len(candidates):
@@ -243,7 +241,9 @@ if TYPER_AVAILABLE:
 
             for metric, score in results.items():
                 if metric == "diversity":
-                    table.add_row("Diversity", f"{score['entropy']:.3f}", f"Entropy: {score['entropy']:.3f}")
+                    table.add_row(
+                        "Diversity", f"{score['entropy']:.3f}", f"Entropy: {score['entropy']:.3f}"
+                    )
                 elif isinstance(score, dict):
                     table.add_row(metric, f"{score:.3f}", str(score))
                 else:
@@ -260,7 +260,7 @@ if TYPER_AVAILABLE:
     def collect(
         source: str = typer.Option("sample", "--source", "-s", help="Data source"),
         output: str = typer.Option("data/raw", "--output", "-o", help="Output directory"),
-        limit: int = typer.Option(100, "--limit", "-l", help="Number of items to collect")
+        limit: int = typer.Option(100, "--limit", "-l", help="Number of items to collect"),
     ):
         """Collect bilingual data from various sources."""
         from scripts.collect_data import main as collect_data_main
@@ -282,7 +282,9 @@ if TYPER_AVAILABLE:
     @app.command()
     def train(
         task: str = typer.Option("tokenizer", "--task", "-t", help="Training task"),
-        config: str = typer.Option("configs/default.json", "--config", "-c", help="Training config file")
+        config: str = typer.Option(
+            "configs/default.json", "--config", "-c", help="Training config file"
+        ),
     ):
         """Train models or tokenizers."""
         console.print(f"🏋️  Training {task}...")
@@ -296,7 +298,7 @@ if TYPER_AVAILABLE:
     def serve(
         host: str = typer.Option("localhost", "--host", help="Server host"),
         port: int = typer.Option(8000, "--port", help="Server port"),
-        model: str = typer.Option("t5-small", "--model", "-m", help="Model to serve")
+        model: str = typer.Option("t5-small", "--model", "-m", help="Model to serve"),
     ):
         """Start the bilingual API server."""
         console.print("🚀 Starting Bilingual API Server...")
@@ -322,8 +324,16 @@ if TYPER_AVAILABLE:
         components = [
             ("Transformers", "✅ Available" if TYPER_AVAILABLE else "❌ Missing", "4.21.0+"),
             ("PyTorch", "✅ Available" if "torch" in sys.modules else "❌ Missing", "2.0.0+"),
-            ("ONNX Runtime", "✅ Available" if "onnxruntime" in sys.modules else "❌ Missing", "1.15.0+"),
-            ("Tokenizers", "✅ Available" if "tokenizers" in sys.modules else "❌ Missing", "0.13.0+"),
+            (
+                "ONNX Runtime",
+                "✅ Available" if "onnxruntime" in sys.modules else "❌ Missing",
+                "1.15.0+",
+            ),
+            (
+                "Tokenizers",
+                "✅ Available" if "tokenizers" in sys.modules else "❌ Missing",
+                "0.13.0+",
+            ),
         ]
 
         for component, status, version in components:

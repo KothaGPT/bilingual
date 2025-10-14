@@ -1,0 +1,23 @@
+{
+  "task": "readability",
+  "labels": [
+    "6-8",
+    "9-10",
+    "11-12",
+    "general"
+  ],
+  "label_to_id": {
+    "6-8": 0,
+    "9-10": 1,
+    "11-12": 2,
+    "general": 3
+  },
+  "id_to_label": {
+    "0": "6-8",
+    "1": "9-10",
+    "2": "11-12",
+    "3": "general"
+  },
+  "description": "Age-appropriate readability classification",
+  "status": "placeholder"
+}

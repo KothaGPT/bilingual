@@ -40,7 +40,7 @@ class QualityFilter:
         min_length: int = 50,
         max_length: int = 5000,
         min_quality_score: float = 0.7,
-        check_duplicates: bool = True
+        check_duplicates: bool = True,
     ):
         """
         Initialize quality filter.
@@ -59,18 +59,48 @@ class QualityFilter:
 
         # Inappropriate content keywords (basic list)
         self.inappropriate_keywords = {
-            'en': [
-                'violence', 'weapon', 'gun', 'knife', 'kill', 'murder', 'death',
-                'blood', 'scary', 'horror', 'monster', 'ghost', 'demon',
-                'hate', 'racism', 'discrimination',
-                'drug', 'alcohol', 'beer', 'wine', 'drunk',
+            "en": [
+                "violence",
+                "weapon",
+                "gun",
+                "knife",
+                "kill",
+                "murder",
+                "death",
+                "blood",
+                "scary",
+                "horror",
+                "monster",
+                "ghost",
+                "demon",
+                "hate",
+                "racism",
+                "discrimination",
+                "drug",
+                "alcohol",
+                "beer",
+                "wine",
+                "drunk",
             ],
-            'bn': [
-                'সহিংসতা', 'অস্ত্র', 'বন্দুক', 'ছুরি', 'হত্যা', 'মারা', 'মৃত্যু',
-                'রক্ত', 'ভয়ানক', 'ভূত', 'প্রেত', 'দানব',
-                'ঘৃণা', 'বৈষম্য',
-                'মাদক', 'মদ', 'মাতাল',
-            ]
+            "bn": [
+                "সহিংসতা",
+                "অস্ত্র",
+                "বন্দুক",
+                "ছুরি",
+                "হত্যা",
+                "মারা",
+                "মৃত্যু",
+                "রক্ত",
+                "ভয়ানক",
+                "ভূত",
+                "প্রেত",
+                "দানব",
+                "ঘৃণা",
+                "বৈষম্য",
+                "মাদক",
+                "মদ",
+                "মাতাল",
+            ],
         }
 
     def check_length(self, text: str) -> Tuple[bool, float, str]:
@@ -117,7 +147,7 @@ class QualityFilter:
         alpha_chars = sum(c.isalpha() for c in text)
         digit_chars = sum(c.isdigit() for c in text)
         space_chars = sum(c.isspace() for c in text)
-        punct_chars = sum(c in '.,!?;:।' for c in text)
+        punct_chars = sum(c in ".,!?;:।" for c in text)
         total_chars = len(text)
 
         # Check minimum alphabetic content
@@ -130,13 +160,13 @@ class QualityFilter:
             return False, 0.0, "Excessive character repetition"
 
         # Language-specific checks
-        if lang == 'bn':
+        if lang == "bn":
             bn_chars = sum(1 for c in text if is_bangla_char(c))
             bn_ratio = bn_chars / alpha_chars if alpha_chars > 0 else 0
             if bn_ratio < 0.5:  # At least 50% Bangla for 'bn' labeled text
                 return False, 0.5, f"Insufficient Bangla characters ({bn_ratio:.1%})"
 
-        elif lang == 'en':
+        elif lang == "en":
             latin_chars = sum(1 for c in text if c.isascii() and c.isalpha())
             latin_ratio = latin_chars / alpha_chars if alpha_chars > 0 else 0
             if latin_ratio < 0.7:  # At least 70% Latin for 'en' labeled text
@@ -160,13 +190,13 @@ class QualityFilter:
         """
         detected_lang = detect_language(text)
 
-        if expected_lang == 'mixed':
+        if expected_lang == "mixed":
             # For mixed content, any detection is acceptable
             return True, 1.0, f"Mixed content (detected: {detected_lang})"
 
         if detected_lang == expected_lang:
             return True, 1.0, "Language matches"
-        elif detected_lang == 'mixed' and expected_lang in ['bn', 'en']:
+        elif detected_lang == "mixed" and expected_lang in ["bn", "en"]:
             return True, 0.8, f"Mixed content with {expected_lang}"
         else:
             return False, 0.3, f"Language mismatch (expected {expected_lang}, got {detected_lang})"
@@ -196,7 +226,7 @@ class QualityFilter:
             return False, 0.0, f"Inappropriate content: {', '.join(found_keywords[:3])}"
 
         # Check for excessive capitalization (shouting)
-        if lang == 'en':
+        if lang == "en":
             words = text.split()
             caps_words = sum(1 for w in words if w.isupper() and len(w) > 1)
             if len(words) > 0 and caps_words / len(words) > 0.3:
@@ -216,10 +246,10 @@ class QualityFilter:
             Tuple of (pass, score, reason)
         """
         # Split into sentences
-        if lang == 'bn':
-            sentences = re.split(r'[।!?]+', text)
+        if lang == "bn":
+            sentences = re.split(r"[।!?]+", text)
         else:
-            sentences = re.split(r'[.!?]+', text)
+            sentences = re.split(r"[.!?]+", text)
 
         sentences = [s.strip() for s in sentences if s.strip()]
 
@@ -255,8 +285,8 @@ class QualityFilter:
             return True, 1.0, "Duplicate check disabled"
 
         # Create hash of normalized text
-        normalized = ' '.join(text.lower().split())
-        text_hash = hashlib.md5(normalized.encode('utf-8')).hexdigest()
+        normalized = " ".join(text.lower().split())
+        text_hash = hashlib.md5(normalized.encode("utf-8")).hexdigest()
 
         if text_hash in self.seen_hashes:
             return False, 0.0, "Duplicate text"
@@ -293,9 +323,7 @@ class QualityFilter:
         return True, score, f"Readability OK (avg word len: {avg_word_length:.1f})"
 
     def calculate_overall_quality(
-        self,
-        text: str,
-        lang: str
+        self, text: str, lang: str
     ) -> Tuple[float, Dict[str, Tuple[bool, float, str]]]:
         """
         Calculate overall quality score.
@@ -308,31 +336,31 @@ class QualityFilter:
             Tuple of (overall_score, detailed_results)
         """
         checks = {
-            'length': self.check_length(text),
-            'characters': self.check_character_distribution(text, lang),
-            'language': self.check_language_consistency(text, lang),
-            'content': self.check_content_appropriateness(text, lang),
-            'sentences': self.check_sentence_structure(text, lang),
-            'duplication': self.check_duplication(text),
-            'readability': self.check_readability(text, lang),
+            "length": self.check_length(text),
+            "characters": self.check_character_distribution(text, lang),
+            "language": self.check_language_consistency(text, lang),
+            "content": self.check_content_appropriateness(text, lang),
+            "sentences": self.check_sentence_structure(text, lang),
+            "duplication": self.check_duplication(text),
+            "readability": self.check_readability(text, lang),
         }
 
         # Calculate weighted average
         weights = {
-            'length': 0.1,
-            'characters': 0.2,
-            'language': 0.15,
-            'content': 0.25,  # Most important
-            'sentences': 0.15,
-            'duplication': 0.1,
-            'readability': 0.05,
+            "length": 0.1,
+            "characters": 0.2,
+            "language": 0.15,
+            "content": 0.25,  # Most important
+            "sentences": 0.15,
+            "duplication": 0.1,
+            "readability": 0.05,
         }
 
         total_score = 0.0
         total_weight = 0.0
 
         for check_name, (passed, score, reason) in checks.items():
-            if not passed and check_name in ['content', 'duplication']:
+            if not passed and check_name in ["content", "duplication"]:
                 # Critical failures
                 return 0.0, checks
 
@@ -356,24 +384,21 @@ class QualityFilter:
         """
         # Check character repetition
         for i in range(len(text) - 4):
-            if text[i] == text[i+1] == text[i+2] == text[i+3] == text[i+4]:
+            if text[i] == text[i + 1] == text[i + 2] == text[i + 3] == text[i + 4]:
                 return True
 
         # Check word repetition
         words = text.split()
         if len(words) >= 4:
             for i in range(len(words) - 3):
-                if words[i] == words[i+1] == words[i+2] == words[i+3]:
+                if words[i] == words[i + 1] == words[i + 2] == words[i + 3]:
                     return True
 
         return False
 
 
 def process_file(
-    input_file: Path,
-    output_file: Path,
-    filter: QualityFilter,
-    report_file: Optional[Path] = None
+    input_file: Path, output_file: Path, filter: QualityFilter, report_file: Optional[Path] = None
 ) -> Dict:
     """
     Process a single file with quality filtering.
@@ -390,67 +415,67 @@ def process_file(
     print(f"Processing: {input_file}")
 
     stats = {
-        'total': 0,
-        'passed': 0,
-        'failed': 0,
-        'failure_reasons': Counter(),
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failure_reasons": Counter(),
     }
 
     passed_samples = []
     failed_samples = []
 
     # Read input file
-    with open(input_file, 'r', encoding='utf-8') as f:
-        if input_file.suffix == '.jsonl':
+    with open(input_file, "r", encoding="utf-8") as f:
+        if input_file.suffix == ".jsonl":
             samples = [json.loads(line) for line in f if line.strip()]
-        elif input_file.suffix == '.json':
+        elif input_file.suffix == ".json":
             data = json.load(f)
             samples = data if isinstance(data, list) else [data]
         else:
-            samples = [{'text': line.strip()} for line in f if line.strip()]
+            samples = [{"text": line.strip()} for line in f if line.strip()]
 
     # Process each sample
     for sample in samples:
-        stats['total'] += 1
+        stats["total"] += 1
 
-        text = sample.get('text', '')
-        lang = sample.get('language', 'mixed')
+        text = sample.get("text", "")
+        lang = sample.get("language", "mixed")
 
         if not text:
-            stats['failed'] += 1
-            stats['failure_reasons']['empty_text'] += 1
+            stats["failed"] += 1
+            stats["failure_reasons"]["empty_text"] += 1
             continue
 
         # Calculate quality score
         quality_score, check_results = filter.calculate_overall_quality(text, lang)
 
         # Add quality score to sample
-        sample['quality_score'] = quality_score
-        sample['quality_checks'] = {
-            name: {'passed': result[0], 'score': result[1], 'reason': result[2]}
+        sample["quality_score"] = quality_score
+        sample["quality_checks"] = {
+            name: {"passed": result[0], "score": result[1], "reason": result[2]}
             for name, result in check_results.items()
         }
 
         # Check if passes threshold
         if quality_score >= filter.min_quality_score:
-            stats['passed'] += 1
+            stats["passed"] += 1
             passed_samples.append(sample)
         else:
-            stats['failed'] += 1
+            stats["failed"] += 1
             # Find primary failure reason
             for name, (passed, score, reason) in check_results.items():
                 if not passed or score < 0.5:
-                    stats['failure_reasons'][f"{name}: {reason}"] += 1
+                    stats["failure_reasons"][f"{name}: {reason}"] += 1
                     break
             failed_samples.append(sample)
 
     # Write passed samples
     if passed_samples:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
-            if output_file.suffix == '.jsonl':
+        with open(output_file, "w", encoding="utf-8") as f:
+            if output_file.suffix == ".jsonl":
                 for sample in passed_samples:
-                    f.write(json.dumps(sample, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(sample, ensure_ascii=False) + "\n")
             else:
                 json.dump(passed_samples, f, ensure_ascii=False, indent=2)
         print(f"Saved {len(passed_samples)} passed samples to: {output_file}")
@@ -458,11 +483,16 @@ def process_file(
     # Write report if requested
     if report_file and failed_samples:
         report_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(report_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                'statistics': dict(stats),
-                'failed_samples': failed_samples[:100]  # First 100 failures
-            }, f, ensure_ascii=False, indent=2)
+        with open(report_file, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "statistics": dict(stats),
+                    "failed_samples": failed_samples[:100],  # First 100 failures
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
         print(f"Saved quality report to: {report_file}")
 
     return stats
@@ -470,50 +500,26 @@ def process_file(
 
 def main():
     """Main function."""
-    parser = argparse.ArgumentParser(
-        description='Filter bilingual corpus by quality criteria'
-    )
+    parser = argparse.ArgumentParser(description="Filter bilingual corpus by quality criteria")
 
+    parser.add_argument("--input", type=str, required=True, help="Input file or directory")
+    parser.add_argument("--output", type=str, required=True, help="Output file or directory")
     parser.add_argument(
-        '--input',
-        type=str,
-        required=True,
-        help='Input file or directory'
+        "--min-length", type=int, default=50, help="Minimum text length (default: 50)"
     )
     parser.add_argument(
-        '--output',
-        type=str,
-        required=True,
-        help='Output file or directory'
+        "--max-length", type=int, default=5000, help="Maximum text length (default: 5000)"
     )
     parser.add_argument(
-        '--min-length',
-        type=int,
-        default=50,
-        help='Minimum text length (default: 50)'
-    )
-    parser.add_argument(
-        '--max-length',
-        type=int,
-        default=5000,
-        help='Maximum text length (default: 5000)'
-    )
-    parser.add_argument(
-        '--min-quality',
+        "--min-quality",
         type=float,
         default=0.7,
-        help='Minimum quality score 0.0-1.0 (default: 0.7)'
+        help="Minimum quality score 0.0-1.0 (default: 0.7)",
     )
     parser.add_argument(
-        '--no-duplicate-check',
-        action='store_true',
-        help='Disable duplicate detection'
+        "--no-duplicate-check", action="store_true", help="Disable duplicate detection"
     )
-    parser.add_argument(
-        '--report',
-        type=str,
-        help='Output file for quality report'
-    )
+    parser.add_argument("--report", type=str, help="Output file for quality report")
 
     args = parser.parse_args()
 
@@ -522,7 +528,7 @@ def main():
         min_length=args.min_length,
         max_length=args.max_length,
         min_quality_score=args.min_quality,
-        check_duplicates=not args.no_duplicate_check
+        check_duplicates=not args.no_duplicate_check,
     )
 
     # Process input
@@ -542,7 +548,7 @@ def main():
         print(f"Passed: {stats['passed']} ({stats['passed']/max(stats['total'],1)*100:.1f}%)")
         print(f"Failed: {stats['failed']} ({stats['failed']/max(stats['total'],1)*100:.1f}%)")
         print("\nTop failure reasons:")
-        for reason, count in stats['failure_reasons'].most_common(10):
+        for reason, count in stats["failure_reasons"].most_common(10):
             print(f"  {reason}: {count}")
 
     elif input_path.is_dir():
@@ -550,14 +556,14 @@ def main():
         print(f"Processing directory: {input_path}")
 
         combined_stats = {
-            'total': 0,
-            'passed': 0,
-            'failed': 0,
-            'failure_reasons': Counter(),
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failure_reasons": Counter(),
         }
 
-        for file in input_path.rglob('*.json*'):
-            if file.suffix in ['.json', '.jsonl']:
+        for file in input_path.rglob("*.json*"):
+            if file.suffix in [".json", ".jsonl"]:
                 rel_path = file.relative_to(input_path)
                 output_file = output_path / rel_path
                 report_file = report_path / rel_path if report_path else None
@@ -565,20 +571,24 @@ def main():
                 stats = process_file(file, output_file, filter, report_file)
 
                 # Aggregate stats
-                combined_stats['total'] += stats['total']
-                combined_stats['passed'] += stats['passed']
-                combined_stats['failed'] += stats['failed']
-                combined_stats['failure_reasons'].update(stats['failure_reasons'])
+                combined_stats["total"] += stats["total"]
+                combined_stats["passed"] += stats["passed"]
+                combined_stats["failed"] += stats["failed"]
+                combined_stats["failure_reasons"].update(stats["failure_reasons"])
 
         # Print combined statistics
         print("\n" + "=" * 60)
         print("COMBINED QUALITY FILTERING STATISTICS")
         print("=" * 60)
         print(f"Total samples: {combined_stats['total']}")
-        print(f"Passed: {combined_stats['passed']} ({combined_stats['passed']/max(combined_stats['total'],1)*100:.1f}%)")
-        print(f"Failed: {combined_stats['failed']} ({combined_stats['failed']/max(combined_stats['total'],1)*100:.1f}%)")
+        print(
+            f"Passed: {combined_stats['passed']} ({combined_stats['passed']/max(combined_stats['total'],1)*100:.1f}%)"
+        )
+        print(
+            f"Failed: {combined_stats['failed']} ({combined_stats['failed']/max(combined_stats['total'],1)*100:.1f}%)"
+        )
         print("\nTop failure reasons:")
-        for reason, count in combined_stats['failure_reasons'].most_common(10):
+        for reason, count in combined_stats["failure_reasons"].most_common(10):
             print(f"  {reason}: {count}")
 
     else:
@@ -586,5 +596,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
