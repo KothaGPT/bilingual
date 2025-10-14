@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "bilingual"
 dynamic = ["version"]
 description = "High-quality Bangla and English NLP toolkit for production use"
-readme = "README.md"
+readme = "docs/README.md"
 requires-python = ">=3.8"
 license = {text = "Apache-2.0"}
 authors = [
@@ -25,7 +25,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -99,8 +98,8 @@ Changelog = "https://github.com/kothagpt/bilingual/releases"
 bilingual = "scripts.cli:run_cli"
 bilingual-server = "bilingual.server:run_server"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+license-files = ["LICENSE"]
 
 [tool.setuptools.package-data]
 bilingual = ["py.typed", "data/*", "models/*"]
