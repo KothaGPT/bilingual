@@ -126,9 +126,15 @@ class PlaceholderModel:
 
         # Simple rule-based generation
         if "hello" in prompt.lower() or "হ্যালো" in prompt.lower():
-            return f"{prompt} Nice to meet you! This is a placeholder response from the bilingual model."
+            return (
+                f"{prompt} Nice to meet you! This is a placeholder response "
+                "from the bilingual model."
+            )
         elif "story" in prompt.lower() or "গল্প" in prompt.lower():
-            return f"{prompt} Once upon a time, in a land far away, there lived a brave character who went on many adventures."
+            return (
+                f"{prompt} Once upon a time, in a land far away, there lived "
+                "a brave character who went on many adventures."
+            )
         elif "translate" in prompt.lower() or "অনুবাদ" in prompt.lower():
             return f"{prompt} This would be translated by a real translation model."
         else:

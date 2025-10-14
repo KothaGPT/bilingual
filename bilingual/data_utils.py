@@ -41,21 +41,21 @@ class BilingualDataset:
         Args:
             file_path: Path to data file (.jsonl, .json, .tsv, .txt)
         """
-        file_path = Path(file_path)
+        path = Path(file_path)
 
-        if not file_path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {path}")
 
-        if file_path.suffix == ".jsonl":
-            self.data = self._load_jsonl(file_path)
-        elif file_path.suffix == ".json":
-            self.data = self._load_json(file_path)
-        elif file_path.suffix == ".tsv":
-            self.data = self._load_tsv(file_path)
-        elif file_path.suffix == ".txt":
-            self.data = self._load_txt(file_path)
+        if path.suffix == ".jsonl":
+            self.data = self._load_jsonl(path)
+        elif path.suffix == ".json":
+            self.data = self._load_json(path)
+        elif path.suffix == ".tsv":
+            self.data = self._load_tsv(path)
+        elif path.suffix == ".txt":
+            self.data = self._load_txt(path)
         else:
-            raise ValueError(f"Unsupported file format: {file_path.suffix}")
+            raise ValueError(f"Unsupported file format: {path.suffix}")
 
     def _load_jsonl(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load JSONL file."""
@@ -74,9 +74,11 @@ class BilingualDataset:
 
         # Handle both list and dict formats
         if isinstance(data, dict):
-            data = [data]
-
-        return data
+            return [data]
+        elif isinstance(data, list):
+            return data
+        else:
+            return []
 
     def _load_tsv(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load TSV file."""
@@ -107,16 +109,16 @@ class BilingualDataset:
             file_path: Output file path
             format: Output format ('jsonl', 'json', 'tsv')
         """
-        file_path = Path(file_path)
-        file_path.parent.mkdir(parents=True, exist_ok=True)
+        path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         if format == "jsonl":
-            with open(file_path, "w", encoding="utf-8") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 for item in self.data:
                     f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
         elif format == "json":
-            with open(file_path, "w", encoding="utf-8") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
 
         elif format == "tsv":
@@ -124,7 +126,7 @@ class BilingualDataset:
                 return
 
             keys = list(self.data[0].keys())
-            with open(file_path, "w", encoding="utf-8") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write("\t".join(keys) + "\n")
                 for item in self.data:
                     values = [str(item.get(k, "")) for k in keys]
@@ -272,4 +274,254 @@ def combine_corpora(*datasets: BilingualDataset) -> BilingualDataset:
     for dataset in datasets:
         combined_data.extend(dataset.data)
 
-    return BilingualDataset(data=combined_data)
+"""
+Enhanced data collection utilities for bilingual corpus.
+
+This module provides advanced web scraping and data collection capabilities
+for educational content, news, and other sources.
+"""
+
+import json
+import re
+import time
+from pathlib import Path
+from typing import List, Optional, Dict, Any
+
+import requests
+from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
+
+
+class EnhancedDataCollector:
+    """
+    Enhanced data collector for web scraping and corpus building.
+    """
+
+    def __init__(self, output_dir: Path):
+        """
+        Initialize the data collector.
+
+        Args:
+            output_dir: Directory to save collected data
+        """
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.ua = UserAgent()
+
+        # Headers for requests
+        self.headers = {
+            'User-Agent': self.ua.random,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
+
+    def scrape_educational_content(self, url: str, limit: Optional[int] = None) -> List[str]:
+        """
+        Scrape educational content from a URL.
+
+        Args:
+            url: Target URL to scrape
+            limit: Maximum number of articles to collect
+
+        Returns:
+            List of scraped text content
+        """
+        try:
+            print(f"    🌐 Fetching content from: {url}")
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+
+            # Extract text content
+            text_content = []
+
+            # Try different content selectors for educational sites
+            content_selectors = [
+                'article', '.content', '.post-content', '.entry-content',
+                'main', '.main-content', 'div[class*="content"]',
+                'div[class*="article"]', 'div[class*="post"]'
+            ]
+
+            content_found = False
+            for selector in content_selectors:
+                content_divs = soup.select(selector)
+                if content_divs:
+                    for div in content_divs[:limit or 5]:  # Limit articles
+                        text = div.get_text(separator=' ', strip=True)
+                        if len(text) > 100:  # Only substantial content
+                            text_content.append(text)
+                            content_found = True
+                            if limit and len(text_content) >= limit:
+                                break
+                    if content_found:
+                        break
+
+            # Fallback: get all paragraph text
+            if not content_found:
+                paragraphs = soup.find_all('p')
+                for p in paragraphs[:limit or 10]:
+                    text = p.get_text(strip=True)
+                    if len(text) > 50:
+                        text_content.append(text)
+
+            # Save to file
+            if text_content:
+                domain = url.split('//')[1].split('/')[0].replace('.', '_')
+                filename = self.output_dir / f"educational_{domain}.txt"
+
+                with open(filename, 'a', encoding='utf-8') as f:
+                    for content in text_content:
+                        f.write(content + "\n\n")
+                        f.write("=" * 80 + "\n\n")
+
+                print(f"    💾 Saved {len(text_content)} articles to {filename}")
+
+            return text_content
+
+        except Exception as e:
+            print(f"    ❌ Error scraping {url}: {e}")
+            return []
+
+    def scrape_news_content(self, url: str, limit: Optional[int] = None) -> List[str]:
+        """
+        Scrape news content from a URL.
+
+        Args:
+            url: Target news URL to scrape
+            limit: Maximum number of articles to collect
+
+        Returns:
+            List of scraped news articles
+        """
+        try:
+            print(f"    📰 Fetching news from: {url}")
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+
+            articles = []
+
+            # Try different article selectors for news sites
+            article_selectors = [
+                'article', '.news-item', '.post', '.entry',
+                'div[class*="article"]', 'div[class*="news"]',
+                'div[class*="post"]', '.story', '.headline'
+            ]
+
+            for selector in article_selectors:
+                article_divs = soup.select(selector)
+                for div in article_divs[:limit or 10]:
+                    # Extract title and content
+                    title_elem = div.find(['h1', 'h2', 'h3', '.title', '.headline'])
+                    content_elem = div.find(['p', '.content', '.summary', '.excerpt'])
+
+                    title = title_elem.get_text(strip=True) if title_elem else ""
+                    content = content_elem.get_text(strip=True) if content_elem else ""
+
+                    if title or (content and len(content) > 100):
+                        article_text = f"{title}\n\n{content}" if title else content
+                        articles.append(article_text)
+
+                        if limit and len(articles) >= limit:
+                            break
+
+                if articles:
+                    break
+
+            # Save to file
+            if articles:
+                domain = url.split('//')[1].split('/')[0].replace('.', '_')
+                filename = self.output_dir / f"news_{domain}.txt"
+
+                with open(filename, 'a', encoding='utf-8') as f:
+                    for article in articles:
+                        f.write(article + "\n\n")
+                        f.write("=" * 80 + "\n\n")
+
+                print(f"    💾 Saved {len(articles)} articles to {filename}")
+
+            return articles
+
+        except Exception as e:
+            print(f"    ❌ Error scraping news from {url}: {e}")
+            return []
+
+    def clean_text(self, text: str) -> str:
+        """
+        Clean and normalize scraped text.
+
+        Args:
+            text: Raw scraped text
+
+        Returns:
+            Cleaned text
+        """
+        # Remove extra whitespace
+        text = re.sub(r'\s+', ' ', text)
+
+        # Remove special characters but keep Bengali and English
+        text = re.sub(r'[^\u0980-\u09FF\u0000-\u007F\s]', '', text)
+
+        # Remove URLs
+        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+
+        # Remove email addresses
+        text = re.sub(r'\S+@\S+', '', text)
+
+        return text.strip()
+
+    def collect_parallel_sentences(self, bn_file: str, en_file: str) -> List[Dict[str, str]]:
+        """
+        Create parallel corpus from separate Bangla and English files.
+
+        Args:
+            bn_file: Path to Bangla text file
+            en_file: Path to English text file
+
+        Returns:
+            List of parallel sentence pairs
+        """
+        parallel_data = []
+
+        try:
+            with open(bn_file, 'r', encoding='utf-8') as f:
+                bn_sentences = [line.strip() for line in f if line.strip()]
+
+            with open(en_file, 'r', encoding='utf-8') as f:
+                en_sentences = [line.strip() for line in f if line.strip()]
+
+            # Simple alignment (take min length and pair sequentially)
+            min_len = min(len(bn_sentences), len(en_sentences))
+
+            for i in range(min_len):
+                if len(bn_sentences[i]) > 10 and len(en_sentences[i]) > 10:
+                    parallel_data.append({
+                        "bn": self.clean_text(bn_sentences[i]),
+                        "en": self.clean_text(en_sentences[i])
+                    })
+
+            # Save parallel corpus
+            parallel_file = self.output_dir / "parallel_corpus.jsonl"
+            with open(parallel_file, 'w', encoding='utf-8') as f:
+                for pair in parallel_data:
+                    f.write(json.dumps(pair, ensure_ascii=False) + "\n")
+
+            print(f"    🔗 Created {len(parallel_data)} parallel pairs")
+
+        except Exception as e:
+            print(f"    ❌ Error creating parallel corpus: {e}")
+
+        return parallel_data

@@ -100,7 +100,11 @@ def tokenize(
     if isinstance(tokenizer, str):
         tokenizer = load_tokenizer(tokenizer)
 
-    return tokenizer.encode(text, as_ids=return_ids)
+    result = tokenizer.encode(text, as_ids=return_ids)
+    # Return appropriate type based on return_ids
+    if return_ids:
+        return result  # type: ignore[return-value]
+    return result  # type: ignore[return-value]
 
 
 def generate(
@@ -220,7 +224,6 @@ def _extract_readability_features(text: str, lang: str) -> Dict[str, float]:
         Dictionary of readability features
     """
     import re
-    from collections import Counter
 
     # Split into sentences and words
     if lang == "bn":
@@ -236,7 +239,6 @@ def _extract_readability_features(text: str, lang: str) -> Dict[str, float]:
 
     num_sentences = len(sentences)
     num_words = len(words)
-    num_chars = len(text)
 
     if num_words == 0:
         return {
@@ -292,7 +294,7 @@ def _calculate_readability_score(features: Dict[str, float], lang: str) -> Dict[
         Readability assessment dictionary
     """
     # Simple scoring model (can be replaced with trained model)
-    score = 0
+    score = 0.0
 
     # Weight different features
     score += features["avg_words_per_sentence"] * 0.3
@@ -437,7 +439,8 @@ def batch_process(texts: List[str], operation: str, **kwargs) -> List[Any]:
 
     Args:
         texts: List of input texts to process
-        operation: Type of operation ('tokenize', 'normalize', 'generate', 'translate', 'readability_check', 'safety_check', 'classify')
+        operation: Type of operation ('tokenize', 'normalize', 'generate',
+            'translate', 'readability_check', 'safety_check', 'classify')
         **kwargs: Additional arguments for the operation
 
     Returns:
@@ -520,12 +523,12 @@ def fine_tune_model(
         >>> model_path = fine_tune_model("bilingual-small-lm", train_data, "my_model/")
     """
     try:
-        import torch
         from torch.utils.data import Dataset
         from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
     except ImportError:
         raise ImportError(
-            "PyTorch and transformers are required for fine-tuning. Install with: pip install torch transformers"
+            "PyTorch and transformers are required for fine-tuning. "
+            "Install with: pip install torch transformers"
         )
 
     # Load base model and tokenizer

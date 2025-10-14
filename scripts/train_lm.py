@@ -16,8 +16,6 @@ Usage:
 import argparse
 import json
 import logging
-import os
-import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -32,7 +30,7 @@ from transformers import (
     set_seed,
 )
 
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 
 # Set up logging
 logging.basicConfig(
@@ -129,7 +127,8 @@ def train(
         learning_rate: Learning rate for the optimizer
         weight_decay: Weight decay for the optimizer
         warmup_steps: Number of warmup steps for learning rate scheduler
-        gradient_accumulation_steps: Number of updates steps to accumulate before performing a backward/update pass
+        gradient_accumulation_steps: Number of updates steps to accumulate
+            before performing a backward/update pass
         max_grad_norm: Maximum gradient norm (for gradient clipping)
         seed: Random seed for reproducibility
         max_train_samples: Maximum number of training samples to use (for testing)

@@ -26,16 +26,19 @@ def translate_text(
     """
     # Check if model is a placeholder
     if hasattr(model, "__class__") and model.__class__.__name__ == "PlaceholderModel":
-        return model.translate(text, src_lang, tgt_lang)
+        result: str = model.translate(text, src_lang, tgt_lang)
+        return result
 
     # Try to use transformers pipeline
     try:
         from transformers import pipeline
 
         translator = pipeline("translation", model=model, tokenizer=kwargs.get("tokenizer"))
-        result = translator(text, src_lang=src_lang, tgt_lang=tgt_lang, **kwargs)
+        translation_result = translator(text, src_lang=src_lang, tgt_lang=tgt_lang, **kwargs)
 
-        return result[0]["translation_text"]
+        if isinstance(translation_result, list) and len(translation_result) > 0:
+            return str(translation_result[0].get("translation_text", ""))
+        return ""
     except ImportError:
         raise ImportError(
             "transformers is required for translation. " "Install it with: pip install transformers"

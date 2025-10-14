@@ -18,7 +18,7 @@
 
 ### 1. Install
 ```bash
-cd /Users/KhulnaSoft/bilingual
+cd /Users/kothagpt/bilingual
 pip install -e .
 ```
 
@@ -37,7 +37,7 @@ print(result)  # {'level': 'intermediate', 'age_range': '9-12', ...}
 
 ### 3. Run Examples
 ```bash
-PYTHONPATH=/Users/KhulnaSoft/bilingual python examples/basic_usage.py
+PYTHONPATH=/Users/kothagpt/bilingual python examples/basic_usage.py
 ```
 
 ---

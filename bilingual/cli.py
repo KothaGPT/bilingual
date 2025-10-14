@@ -98,47 +98,47 @@ def main():
             print(result)
 
         elif args.command == "normalize":
-            result = bb.normalize_text(args.text, lang=args.lang)
-            print(result)
+            norm_result = bb.normalize_text(args.text, lang=args.lang)
+            print(norm_result)
 
         elif args.command == "generate":
-            result = bb.generate(
+            gen_result = bb.generate(
                 args.prompt,
                 model_name=args.model,
                 max_tokens=args.max_tokens,
                 temperature=args.temperature,
                 top_p=args.top_p,
             )
-            print(result)
+            print(gen_result)
 
         elif args.command == "translate":
-            result = bb.translate(
+            trans_result = bb.translate(
                 args.text,
                 src=args.src,
                 tgt=args.tgt,
                 model_name=args.model,
             )
-            print(result)
+            print(trans_result)
 
         elif args.command == "readability":
-            result = bb.readability_check(args.text, lang=args.lang)
-            print(f"Level: {result['level']}")
-            print(f"Age Range: {result['age_range']}")
-            print(f"Score: {result['score']:.2f}")
+            read_result = bb.readability_check(args.text, lang=args.lang)
+            print(f"Level: {read_result['level']}")
+            print(f"Age Range: {read_result['age_range']}")
+            print(f"Score: {read_result['score']:.2f}")
 
         elif args.command == "safety":
-            result = bb.safety_check(args.text, lang=args.lang)
-            print(f"Safe: {result['is_safe']}")
-            print(f"Confidence: {result['confidence']:.2f}")
-            if result["flags"]:
-                print(f"Flags: {', '.join(result['flags'])}")
-            print(f"Recommendation: {result['recommendation']}")
+            safety_result = bb.safety_check(args.text, lang=args.lang)
+            print(f"Safe: {safety_result['is_safe']}")
+            print(f"Confidence: {safety_result['confidence']:.2f}")
+            if safety_result["flags"]:
+                print(f"Flags: {', '.join(safety_result['flags'])}")
+            print(f"Recommendation: {safety_result['recommendation']}")
 
         elif args.command == "evaluate":
             from bilingual.evaluation import evaluate_model
 
-            result = evaluate_model(args.dataset, args.model, metric=args.metric)
-            print(result)
+            eval_result = evaluate_model(args.dataset, args.model, metric=args.metric)
+            print(eval_result)
 
         else:
             parser.print_help()

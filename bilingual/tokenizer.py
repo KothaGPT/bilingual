@@ -6,7 +6,7 @@ Provides a unified tokenizer that handles both languages efficiently.
 
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, cast
 
 try:
     import sentencepiece as spm
@@ -54,8 +54,12 @@ class BilingualTokenizer:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
-        self.sp = spm.SentencePieceProcessor()
-        self.sp.load(model_path)
+        if spm is None:
+            raise ImportError("sentencepiece is not available")
+
+        sp_processor = spm.SentencePieceProcessor()
+        sp_processor.load(model_path)
+        self.sp = sp_processor
         self.model_path = model_path
 
     def encode(
@@ -126,7 +130,9 @@ class BilingualTokenizer:
         Returns:
             List of token strings
         """
-        return self.encode(text, as_ids=False)
+        result = self.encode(text, as_ids=False)
+        # Return List[str] by casting the result
+        return cast(List[str], result)
 
     def get_vocab_size(self) -> int:
         """Get the vocabulary size."""

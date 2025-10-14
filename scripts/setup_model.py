@@ -3,8 +3,6 @@
 Script to download and set up a small bilingual language model.
 """
 
-import os
-import sys
 from pathlib import Path
 
 
@@ -12,6 +10,7 @@ def download_small_model():
     """Download a small multilingual model for bilingual use."""
 
     try:
+        import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
         # Use a small multilingual model that supports both Bangla and English

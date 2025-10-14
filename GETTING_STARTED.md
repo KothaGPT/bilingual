@@ -245,7 +245,7 @@ for expected_level, text in stories.items():
 ### Community
 - 💬 [GitHub Discussions](https://github.com/YOUR_ORG/bilingual/discussions)
 - 🐛 [Report Issues](https://github.com/YOUR_ORG/bilingual/issues)
-- 📧 Email: bilingual@example.com
+- 📧 Email: info@khulnasoft.com
 
 ### Resources
 - 🗺️ [Project Roadmap](ROADMAP.md)

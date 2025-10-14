@@ -4,12 +4,13 @@ Data collection script for bilingual corpus.
 
 This script provides utilities to collect data from various sources:
 - Public domain texts
-- Wikipedia dumps
+- Add `--web-scrape` source option for educational platforms
 - Parallel corpora
-- Web scraping (with proper licensing)
+- Web scraping (educational platforms, news, books)
 
 Usage:
     python scripts/collect_data.py --source wikipedia --lang bn --output data/raw/
+    python scripts/collect_data.py --source web-scrape --platforms educational --output data/raw/
 """
 
 import argparse
@@ -138,13 +139,79 @@ def collect_sample_data(output_dir: Path):
     print("  - parallel_corpus.jsonl")
 
 
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from bilingual.data_utils import EnhancedDataCollector
+
+
+def collect_web_data(output_dir: Path, platforms: list = None, limit: int = None):
+    """
+    Collect data from web sources using enhanced scraping.
+
+    Args:
+        output_dir: Output directory
+        platforms: List of platforms to scrape ['educational', 'news', 'books']
+        limit: Maximum items per platform
+    """
+    print("Enhanced web scraping for educational content...")
+    print("Note: This requires additional packages for web scraping.")
+    print("Install with: pip install requests beautifulsoup4 fake-useragent")
+    print()
+
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        from fake_useragent import UserAgent
+    except ImportError as e:
+        print(f"Error: Missing required packages: {e}")
+        print("Install with: pip install requests beautifulsoup4 fake-useragent")
+        return
+
+    if platforms is None:
+        platforms = ['educational', 'news']
+
+    collector = EnhancedDataCollector(output_dir)
+
+    for platform in platforms:
+        print(f"\n🔍 Scraping {platform} content...")
+        if platform == 'educational':
+            # Educational platforms
+            urls = [
+                'https://www.khanacademy.org/',  # Educational content
+                'https://www.bbc.com/bengali',   # Bengali news/educational
+                'https://bangla.zeitung.com/',   # Bengali content
+            ]
+        elif platform == 'news':
+            # News sources (respectful scraping)
+            urls = [
+                'https://www.prothomalo.com/',   # Major Bengali newspaper
+                'https://www.bbc.com/bengali',   # BBC Bengali
+            ]
+        elif platform == 'books':
+            # Public domain books
+            urls = [
+                'https://www.gutenberg.org/',    # Project Gutenberg
+            ]
+
+        for url in urls:
+            try:
+                print(f"  Processing: {url}")
+                collector.scrape_educational_content(url, limit)
+            except Exception as e:
+                print(f"  Error scraping {url}: {e}")
+
+    print(f"\n✅ Enhanced data collection complete!")
+    print(f"📁 Files saved in: {output_dir}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Collect bilingual corpus data from various sources"
     )
 
     parser.add_argument(
-        "--source", choices=["wikipedia", "sample"], default="sample", help="Data source"
+        "--source", choices=["wikipedia", "sample", "web-scrape"], default="sample", help="Data source"
     )
 
     parser.add_argument(
@@ -154,6 +221,8 @@ def main():
     parser.add_argument("--output", default="data/raw", help="Output directory")
 
     parser.add_argument("--limit", type=int, help="Maximum number of items to collect")
+
+    parser.add_argument("--platforms", nargs="+", help="Platforms for web scraping (educational, news, books)")
 
     args = parser.parse_args()
 
@@ -170,8 +239,8 @@ def main():
         else:
             collect_wikipedia(args.lang, output_dir, args.limit)
 
+    elif args.source == "web-scrape":
+        platforms = args.platforms if args.platforms else ['educational', 'news']
+        collect_web_data(output_dir, platforms, args.limit)
+
     print("\nData collection complete!")
-
-
-if __name__ == "__main__":
-    main()

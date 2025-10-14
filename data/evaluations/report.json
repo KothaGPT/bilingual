@@ -1,0 +1,42 @@
+{
+  "generated_at": "2025-10-14T20:26:09.575150",
+  "summary": {
+    "total_evaluations": 1,
+    "unique_contents": 1,
+    "unique_evaluators": 1,
+    "average_safety_score": 100.0
+  },
+  "content_safety": {
+    "safe_content": 1,
+    "moderate_content": 0,
+    "unsafe_content": 0,
+    "safety_score_distribution": {
+      "excellent": 1,
+      "good": 0,
+      "moderate": 0,
+      "poor": 0
+    }
+  },
+  "common_safety_flags": {
+    "violence": 0,
+    "hate_speech": 0,
+    "sexual_content": 0,
+    "profanity": 0,
+    "drugs_alcohol": 0,
+    "mental_health": 0,
+    "personal_info": 0,
+    "other": 0
+  },
+  "age_appropriateness": {
+    "6-8": 1,
+    "9-12": 1,
+    "13-15": 0,
+    "16+": 0
+  },
+  "recommendations": [
+    "Continue regular content evaluation to maintain safety standards",
+    "Focus additional review on content with safety flags",
+    "Consider age-specific content guidelines for better targeting",
+    "Encourage evaluator training for consistent ratings"
+  ]
+}

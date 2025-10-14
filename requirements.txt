@@ -1,0 +1,44 @@
+# Core dependencies
+numpy>=1.20.0
+sentencepiece>=0.1.96
+regex>=2021.0.0
+tqdm>=4.62.0
+requests>=2.26.0
+
+# API and web framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Machine learning and NLP
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+peft>=0.5.0
+bitsandbytes>=0.41.0
+
+# Model optimization and deployment
+onnx>=1.14.0
+onnxruntime>=1.15.0
+optimum>=1.12.0
+
+# Text processing and utilities
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+fake-useragent>=1.2.0
+
+# Monitoring and telemetry
+prometheus-client>=0.17.0
+
+# Development and testing (for production builds)
+pytest>=7.0.0
+pytest-cov>=3.0.0
+black>=22.0.0
+isort>=5.10.0
+flake8>=4.0.0
+mypy>=0.950
+
+# Optional: GPU support (uncomment for CUDA builds)
+# torch[cu118]>=2.0.0
+# transformers[torch]>=4.30.0

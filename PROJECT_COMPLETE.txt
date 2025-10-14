@@ -10,7 +10,7 @@
 📦 PACKAGE DELIVERED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Location:  /Users/KhulnaSoft/bilingual
+  Location:  /Users/kothagpt/bilingual
   Files:     40+ files created
   Code:      2,641+ lines of Python
   Docs:      20+ documentation files

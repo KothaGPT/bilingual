@@ -1,234 +1,207 @@
-# Bilingual Project Roadmap | Bilingual প্রকল্প রোডম্যাপ
+# 🚀 **Bilingual Project Roadmap (2025 Polished Edition)**
 
-## English Version
-
-### High-Level Product Goal
-
-Build **bilingual** — a polished Python package and ecosystem that:
-
-- Provides high-quality Bangla + English support (tokenization, normalization, bilingual pretrained/fine-tuned models, utilities)
-- Works equally well for English and Bangla content (creation, classification, translation-assist, reading material for children)
-- Is production-ready, easy-to-install (pip), well-documented (both languages), follows open-source best practices
-- Includes dataset/model cards and responsible-use guidance
-
-### Roadmap Phases
-
-#### Phase 0 — Project Setup & Governance ✅
-
-**Status**: In Progress
-
-**Deliverables**:
-- ✅ Repository skeleton
-- ✅ Code of Conduct (Bangla + English)
-- ✅ CONTRIBUTING.md (Bangla + English)
-- ✅ License (Apache-2.0)
-- ⏳ Project board / issue templates / PR templates (bilingual)
-- ⏳ High-level roadmap added to repo
-
-#### Phase 1 — Data Strategy & Dataset Creation
-
-**Status**: Pending
-
-**Goal**: Create a bilingual dataset suite focused on child-friendly content, conversational text, and educational documents.
-
-**Deliverables**:
-- Curated corpora for Bangla and English (child stories, dialogues, picture descriptions, nursery rhymes)
-- Bilingual parallel corpora and code-switched corpora
-- Annotation guidelines (BN & EN) and data cards
-- Scripts to ingest, normalize, split, and release datasets
-- Trained SentencePiece tokenizer with multilingual vocabulary
-
-**Key Tasks**:
-- Data source identification and collection
-- Unicode normalization and cleaning pipelines
-- Tokenizer training (SentencePiece BPE/Unigram)
-- PII removal and privacy protection
-- Dataset splits (train/validation/test)
-
-#### Phase 2 — Modeling: Selection & Training
-
-**Status**: Pending
-
-**Goal**: Build/assemble models best-suited to bilingual usage.
-
-**Deliverables**:
-- Tokenizer distribution (shared SentencePiece model)
-- Baseline bilingual language models (small & medium)
-- Translation/specialized fine-tunes
-- Classification models for safety/readability
-- Evaluation suite & benchmarks (BN/EN parity metrics)
-
-**Model Types**:
-- Lightweight encoder for classification & NER
-- Bilingual LM for generation (story generation, prompts)
-- Translation assist (Bangla ↔ English)
-- Conversational model for chat/suggestions
-- Readability & age-level classifier
-
-#### Phase 3 — Package Engineering & API Design
-
-**Status**: Pending
-
-**Goal**: Make bilingual easy to install and integrate into Python apps.
-
-**Deliverables**:
-- `bilingual` PyPI package with comprehensive API
-- CLI tool (`bilingual-cli`) for common tasks
-- Minimal runtime dependencies with optional extras
-- Docker images for deployment
-
-**API Surface**:
-```python
-from bilingual import bilingual_api as bb
-
-# Load tokenizer & models
-tok = bb.load_tokenizer("bilingual-tokenizer.model")
-model = bb.load_model("bilingual-small-lm")
-
-# Normalize text
-norm_bn = bb.normalize_text("আমি কেমন আছি?", lang="bn")
-
-# Generate
-out = bb.generate(prompt, model_name="bilingual-small-lm", max_tokens=120)
-
-# Translate
-en = bb.translate("আমি স্কুলে যাচ্ছি।", src="bn", tgt="en")
-```
-
-#### Phase 4 — Documentation, Localization & UX
-
-**Status**: Pending
-
-**Goal**: Full bilingual docs, examples, tutorials, and policy pages.
-
-**Deliverables**:
-- Docs site (Sphinx/MkDocs) with English and Bangla versions
-- Quickstart tutorials
-- API reference (auto-generated)
-- Security & safety pages (bilingual)
-- Code examples in both languages
-
-#### Phase 5 — Testing, QA & Evaluation
-
-**Status**: Pending
-
-**Goal**: Robust test coverage and evaluation metrics checking parity across languages.
-
-**Deliverables**:
-- Unit tests (tokenizer, normalization)
-- Integration tests (model inference)
-- End-to-end CLI tests
-- Benchmark tests for BN vs EN performance
-- Human evaluation protocol
-
-#### Phase 6 — Production Deployment & Serving
-
-**Status**: Pending
-
-**Goal**: Provide production inference service and packaged models for offline/local use.
-
-**Deliverables**:
-- FastAPI inference server (Dockerized)
-- Lightweight on-device models (quantized, ONNX)
-- Deployment templates (k8s, Helm, Docker Compose)
-- Telemetry & monitoring
-
-#### Phase 7 — Publication, Model Cards, Dataset Cards & Legal
-
-**Status**: Pending
-
-**Goal**: Transparently publish models, datasets, and usage guidelines.
-
-**Deliverables**:
-- Dataset cards and model cards (EN & BN)
-- License & acceptable-use policy
-- Ethical statement and child-safety mitigation plan
-- Release notes & migration guides
-
-#### Phase 8 — Community, Contributors & Sustainability
-
-**Status**: Pending
-
-**Goal**: Build community adoption and sustainable maintenance.
-
-**Deliverables**:
-- Contributor guide and issue templates
-- Community-sourced dataset annotation sprints
-- Governance structure
-- Funding options
-
-### Minimal MVP Deliverables
-
-For rapid initial release:
-
-1. ✅ Repository structure and governance files
-2. ⏳ Tokenizer + small bilingual LM adapter + generation API
-3. ⏳ Dataset: cleaned small bilingual corpus + parallel test set
-4. ⏳ Python package with core API and CLI
-5. ⏳ Docs: Quickstart in EN + BN
-6. ⏳ Model card & dataset card
-7. ⏳ GitHub repo with CI & tests
-
-### Evaluation & Parity Targets
-
-- **Perplexity**: BN vs EN on held-out corpora
-- **Translation**: BLEU / chrF / COMET on validation
-- **Generation**: Human rating for fluency & child-appropriateness
-- **Code-switch**: Language ID accuracy and semantic preservation
-- **Readability**: Correlation with human labels
-- **Safety**: Child-safety filters and content validation
-
-### Safety, Ethics & Child-Safety
-
-- **Child-safety policy**: Conservative filters for child-targeted content
-- **Human-in-the-loop**: Generated stories require review until validated
-- **PII removal**: Strict PII detection and redaction
-- **Bias & cultural respect**: Cultural reviewers for validation
-- **Reporting**: Clear process for harmful output reporting
+*A next-generation bilingual Bangla–English NLP ecosystem.*
 
 ---
 
-## বাংলা সংস্করণ
+## 🧩 Phase 0 — Project Setup & Governance ✅
 
-### উচ্চ-স্তরের পণ্য লক্ষ্য
+**Goal:** A reproducible, community-friendly, and research-grade base.
 
-**bilingual** তৈরি করুন — একটি পালিশড Python প্যাকেজ এবং ইকোসিস্টেম যা:
+**Enhancements (2025-standard):**
 
-- উচ্চমানের বাংলা + ইংরেজি সমর্থন প্রদান করে (টোকেনাইজেশন, নরমালাইজেশন, দ্বিভাষিক প্রিট্রেইনড/ফাইন-টিউনড মডেল, ইউটিলিটি)
-- ইংরেজি এবং বাংলা উভয় কন্টেন্টের জন্য সমানভাবে ভাল কাজ করে (সৃষ্টি, শ্রেণীবিভাগ, অনুবাদ-সহায়তা, শিশুদের জন্য পাঠ্য উপাদান)
-- প্রোডাকশন-রেডি, সহজে ইনস্টল করা যায় (pip), ভালভাবে ডকুমেন্টেড (উভয় ভাষায়), ওপেন-সোর্স সেরা অনুশীলন অনুসরণ করে
-- ডেটাসেট/মডেল কার্ড এবং দায়িত্বশীল-ব্যবহার নির্দেশিকা অন্তর্ভুক্ত করে
+* Add **semantic versioning & release automation** (via `semantic-release` or `bumpver`)
+* **GitHub Actions CI/CD** for:
 
-### রোডম্যাপ পর্যায়সমূহ
+  * Unit + integration tests
+  * Auto-publish to PyPI on tagged releases
+* **GitHub Discussions** + **Hugging Face Hub link**
+* `pre-commit` hooks for code style (Black, Ruff, MyPy)
+* **Dev container** support (`.devcontainer/` for VSCode + Codespaces)
 
-#### পর্যায় 0 — প্রকল্প সেটআপ এবং গভর্নেন্স ✅
+---
 
-**স্ট্যাটাস**: চলমান
+## 📊 Phase 1 — Data Strategy & Dataset Creation ✅
 
-**ডেলিভারেবল**:
-- ✅ রিপোজিটরি কাঠামো
-- ✅ আচরণবিধি (বাংলা + ইংরেজি)
-- ✅ CONTRIBUTING.md (বাংলা + ইংরেজি)
-- ✅ লাইসেন্স (Apache-2.0)
-- ⏳ প্রজেক্ট বোর্ড / ইস্যু টেমপ্লেট / PR টেমপ্লেট (দ্বিভাষিক)
-- ⏳ উচ্চ-স্তরের রোডম্যাপ রেপোতে যোগ করা হয়েছে
+**Goal:** Build a high-quality bilingual data suite with safety and educational focus.
 
-#### পর্যায় 1 — ডেটা কৌশল এবং ডেটাসেট তৈরি
+**New Additions:**
 
-**স্ট্যাটাস**: মুলতুবি
+* ✅ **Auto-ingest pipelines** using **Hugging Face Datasets** + **Apache Arrow** format
+* ✅ **Web crawlers** (Common Crawl, Bangla Wikipedia, educational sites)
+* ✅ **Prompt-based data synthesis** (using GPT-4/Claude/Sonnet for augmentation)
+* ✅ **Alignment with multilingual standards**: `OPUS`, `FLORES-200`
+* ✅ **Self-checking data validator** for:
 
-**লক্ষ্য**: শিশু-বান্ধব কন্টেন্ট, কথোপকথন টেক্সট এবং শিক্ষামূলক নথিতে ফোকাস করে একটি দ্বিভাষিক ডেটাসেট স্যুট তৈরি করা।
+  * PII redaction (regex + transformer-based)
+  * Toxicity & age-appropriateness
+  * Language ID consistency
+* ✅ **Embeddings-based deduplication** using FAISS or LlamaIndex vector search
+* ✅ **LLM-assisted labeling** (human-in-the-loop annotation refinement)
 
-[বাকি পর্যায়গুলি উপরের ইংরেজি সংস্করণের অনুরূপ...]
+**Tech Stack:**
+`datasets`, `pandas`, `langdetect`, `fasttext`, `pydantic`, `openai`, `huggingface_hub`
 
-### ন্যূনতম MVP ডেলিভারেবল
+---
 
-দ্রুত প্রাথমিক রিলিজের জন্য:
+## 🧠 Phase 2 — Modeling: Selection & Training 🚧
 
-1. ✅ রিপোজিটরি কাঠামো এবং গভর্নেন্স ফাইল
-2. ⏳ টোকেনাইজার + ছোট দ্বিভাষিক LM অ্যাডাপ্টার + জেনারেশন API
-3. ⏳ ডেটাসেট: পরিষ্কার ছোট দ্বিভাষিক কর্পাস + সমান্তরাল টেস্ট সেট
-4. ⏳ কোর API এবং CLI সহ Python প্যাকেজ
-5. ⏳ ডক্স: EN + BN-এ কুইকস্টার্ট
-6. ⏳ মডেল কার্ড এবং ডেটাসেট কার্ড
-7. ⏳ CI এবং টেস্ট সহ GitHub রেপো
+**Goal:** Develop bilingual foundation models optimized for Bangla–English parity.
+
+**Core Model Families:**
+
+| Type           | Model                                        | Description                                   |
+| -------------- | -------------------------------------------- | --------------------------------------------- |
+| Encoder        | **BERT-based bilingual encoder (Tiny–Base)** | For classification, NER, sentiment, etc.      |
+| Decoder        | **T5-small multilingual fine-tune**          | For generation + translation                  |
+| Seq2Seq        | **mT5/mBART bilingual fine-tune**            | High-quality translation and story generation |
+| Embeddings     | **bilingual-text2vec**                       | For semantic search and retrieval             |
+| Conversational | **distilled LLaMA-3 bilingual variant**      | Lightweight chat + reasoning                  |
+| Safety         | **content-filter-small**                     | Safety & child-suitability detection          |
+
+**Enhancements (2025-standard):**
+
+* Training on **LoRA + QLoRA** (memory-efficient fine-tuning)
+* **Mixed precision (FP16/BF16)** for efficiency
+* **Evaluation with Language Parity Scores (LPS)**
+* **Evaluation dashboard** (Gradio + Hugging Face Spaces)
+* Model hosting on **HF Hub + GitHub Release assets**
+
+**Training Tools:**
+`transformers`, `peft`, `bitsandbytes`, `accelerate`, `wandb`, `deepspeed`
+
+---
+
+## 🧰 Phase 3 — Package Engineering & API Design 🚧
+
+**Goal:** Provide a developer-first experience via modular APIs + CLI.
+
+**Deliverables:**
+
+* `bilingual` core package
+* CLI: `bilingual-cli`
+* Config system: `pyproject.toml` / `pydantic-settings`
+
+**New Features:**
+
+* Auto language detection (`bb.detect_lang(text)`)
+* Unified text utilities:
+
+  ```python
+  from bilingual import bb
+
+  result = bb.process("আমি school এ যাচ্ছি", tasks=["normalize", "tokenize", "translate"])
+  ```
+* Built-in pipelines for:
+
+  * **Translation**, **Summarization**
+  * **Readability classification**
+  * **Story generation**
+  * **Mixed-language normalization**
+
+**Tech Stack:**
+`typer`, `rich`, `fasttext`, `sentencepiece`, `transformers`, `torch`, `onnxruntime`
+
+---
+
+## 📖 Phase 4 — Documentation, Localization & UX 🚧
+
+**Goal:** Dual-language documentation that feels native in both EN + BN.
+
+**Enhancements:**
+
+* Docs built with **MkDocs Material + mkdocs-i18n**
+* **Interactive code examples** (via Jupyter + Gradio embeds)
+* **Dual-language glossary** for NLP terms
+* **Auto API doc generation** (`mkdocstrings[python]`)
+* **Voice-assisted docs (optional)** via text-to-speech
+
+---
+
+## 🧪 Phase 5 — Testing, QA & Evaluation 🚧
+
+**Goal:** Guarantee parity and robustness for bilingual models.
+
+**New Components:**
+
+* ✅ **pytest + hypothesis** for fuzz testing
+* ✅ **Cross-language consistency tests**
+* ✅ **Model bias detection pipeline** (FairEval)
+* ✅ **Benchmark suite** (BLEU, COMET, chrF, ROUGE)
+* ✅ **E2E integration test for CLI + API**
+* ✅ **Language parity regression dashboards**
+
+---
+
+## ☁️ Phase 6 — Production Deployment & Serving 🚧
+
+**Goal:** Make models deployable anywhere — from GPU servers to edge devices.
+
+**Deliverables:**
+
+* `bilingual-server` (FastAPI)
+* `bilingual-inference` (gRPC microservice)
+* **Streaming generation via SSE/WebSocket**
+* **ONNX + quantized model builds** (for CPU/mobile)
+* **Docker Compose + K8s Helm charts**
+* **Telemetry + Prometheus metrics**
+
+**Future Option:**
+Add **LangServe** or **Ollama backend** to serve models locally.
+
+---
+
+## 📜 Phase 7 — Publication, Model Cards, Legal & Ethics 🚧
+
+**Goal:** Ensure transparency, safety, and community trust.
+
+**Deliverables:**
+
+* Model cards (BN + EN)
+* Dataset cards (BN + EN)
+* **Responsible AI Policy**
+* **Child-safety and PII guidelines**
+* **Open-source compliance scan (FOSSA/SBOM)**
+
+---
+
+## 🌱 Phase 8 — Community, Contributors & Sustainability 🚧
+
+**Goal:** Build a healthy, long-term open bilingual AI ecosystem.
+
+**Deliverables:**
+
+* Contributor onboarding videos (EN + BN)
+* Hackathons & annotation sprints
+* Community leaderboard (HF Spaces)
+* **Funding:** Hugging Face Grants, GitHub Sponsors, AI4Bharat-style consortium
+
+---
+
+## ⚡ Minimal MVP 2025 Checklist
+
+| Component         | Status            | Stack                   |
+| ----------------- | ----------------- | ----------------------- |
+| Repository setup  | ✅                 | GitHub + CI/CD          |
+| Tokenizer         | 🧩 Ready          | SentencePiece           |
+| Mini bilingual LM | 🧩 Training-ready | LoRA on mT5             |
+| Dataset           | ✅                 | Hugging Face Dataset    |
+| API + CLI         | 🧩                | Typer + Transformers    |
+| Docs (EN + BN)    | 🧩                | MkDocs Material         |
+| Testing           | 🧩                | pytest + LPS metrics    |
+| Deployment        | 🧩                | FastAPI + ONNX + Docker |
+
+---
+
+## 🧭 Advanced Future Extensions
+
+| Theme             | Feature                        | Stack                  |
+| ----------------- | ------------------------------ | ---------------------- |
+| ✨ Multimodal      | Image Captioning (BN+EN)       | CLIP, BLIP-2           |
+| 🗣 Speech         | Speech-to-text + TTS           | Whisper + VITS         |
+| 📚 Education      | Reading Comprehension for kids | BERT-QA fine-tune      |
+| 💬 Conversational | Bilingual chat assistant       | LLaMA-3 + Adapter      |
+| 🧩 Integration    | LangChain / LlamaIndex support | RAG pipelines          |
+| 🧠 Knowledge      | Bilingual RAG datasets         | Vector DB + embeddings |
+| ☁️ Serving        | Ollama + LangServe bridge      | Local + cloud parity   |
+

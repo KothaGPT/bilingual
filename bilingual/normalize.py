@@ -6,7 +6,7 @@ Handles Unicode normalization, punctuation, numerals, and script-specific cleani
 
 import re
 import unicodedata
-from typing import List, Optional
+from typing import List, Literal, Optional, cast
 
 # Bangla Unicode ranges
 BANGLA_RANGE = (0x0980, 0x09FF)
@@ -40,7 +40,8 @@ def normalize_unicode(text: str, form: str = "NFC") -> str:
     Returns:
         Normalized text
     """
-    return unicodedata.normalize(form, text)
+    normalized_form = cast(Literal["NFC", "NFD", "NFKC", "NFKD"], form)
+    return unicodedata.normalize(normalized_form, text)
 
 
 def is_bangla_char(char: str) -> bool:

@@ -398,7 +398,7 @@ Running examples/basic_usage.py:
 ## 📞 Handoff Information
 
 ### Repository
-- **Location**: `/Users/KhulnaSoft/bilingual`
+- **Location**: `/Users/kothagpt/bilingual`
 - **Structure**: Complete and organized
 - **Status**: Ready for Git initialization and push
 

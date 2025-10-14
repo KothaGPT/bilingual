@@ -63,7 +63,7 @@ translation = bb.translate("আমি বই পড়ি।", src="bn", tgt="en
 
 ## Support
 
-- 📧 Email: bilingual@example.com
+- 📧 Email: info@khulnasoft.com
 - 💬 Discussions: [GitHub Discussions](https://github.com/YOUR_ORG/bilingual/discussions)
 - 🐛 Bug Reports: [Issue Tracker](https://github.com/YOUR_ORG/bilingual/issues)
 
