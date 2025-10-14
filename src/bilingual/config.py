@@ -6,6 +6,7 @@ Provides centralized configuration using Pydantic settings with
 environment variable support and validation.
 """
 
+import json
 import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional
