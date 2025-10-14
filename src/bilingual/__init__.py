@@ -21,6 +21,7 @@ from bilingual.human_evaluation import (
 )
 from bilingual.language_detection import is_bengali, is_english
 from bilingual.models.lm import generate_text
+from bilingual.models.loader import load_model_from_name as load_model
 from bilingual.models.translate import translate_text
 from bilingual.multi_input import detect_language_segments, process_mixed_text, split_mixed_text
 from bilingual.normalize import detect_language, normalize_text
@@ -31,7 +32,6 @@ from bilingual.testing import (
     run_unit_tests,
 )
 from bilingual.tokenizer import BilingualTokenizer, load_tokenizer
-from bilingual.models.loader import load_model_from_name as load_model
 
 from . import api as bilingual_api
 

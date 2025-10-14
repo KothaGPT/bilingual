@@ -222,10 +222,7 @@ class ONNXConverter:
         latencies = []
         throughputs = []
 
-        for _ in range(num_runs):
-            # Select random sample
-            sample_text = sample_inputs[len(sample_text) % len(sample_inputs)]
-
+        for sample_text in sample_inputs:
             # Tokenize
             inputs = tokenizer(sample_text, return_tensors="pt", padding=True, truncation=True)
             input_ids = inputs["input_ids"].numpy()

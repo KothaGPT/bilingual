@@ -334,10 +334,10 @@ class BilingualTestSuite:
             text = "Hello আমি John বলে ডাকি।"
 
             # Language detection
-            lang_result = bb.detect_language(text)
+            detected_lang = bb.detect_language(text)
 
             # Text processing
-            if lang_result["language"] == "mixed":
+            if detected_lang == "mixed":
                 segments = bb.detect_language_segments(text)
 
             # Evaluation
@@ -345,7 +345,7 @@ class BilingualTestSuite:
 
             # Basic checks
             passed = (
-                isinstance(lang_result, dict) and "language" in lang_result and 0.0 <= bleu <= 1.0
+                detected_lang in ["bn", "en", "mixed"] and 0.0 <= bleu <= 1.0
             )
 
             duration = time.time() - start_time

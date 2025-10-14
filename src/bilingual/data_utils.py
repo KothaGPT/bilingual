@@ -6,8 +6,20 @@ Handles various dataset formats and provides preprocessing pipelines.
 
 import json
 import random
+import re
+import time
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple
+
+try:
+    import requests
+    from bs4 import BeautifulSoup
+
+    WEB_SCRAPING_AVAILABLE = True
+except ImportError:
+    WEB_SCRAPING_AVAILABLE = False
+    requests = None
+    BeautifulSoup = None
 
 
 class BilingualDataset:
@@ -281,12 +293,6 @@ Enhanced data collection utilities for bilingual corpus.
 This module provides advanced web scraping and data collection capabilities
 for educational content, news, and other sources.
 """
-
-import json
-import re
-import time
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 try:
     from fake_useragent import UserAgent
