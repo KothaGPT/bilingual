@@ -7,14 +7,12 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 # Optional ML imports - only needed for PoeticMeterDetector class
 try:
     import torch
-    import torch.nn as nn
     from transformers import (
-        AutoConfig,
         AutoModelForSequenceClassification,
         AutoTokenizer,
     )
