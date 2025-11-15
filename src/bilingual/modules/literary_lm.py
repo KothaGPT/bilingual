@@ -6,8 +6,7 @@ for generating and working with Bangla literary text. It wraps the full
 implementation from bilingual.models.literary_lm.
 """
 
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 try:
     from bilingual.models.literary_lm import LiteraryLanguageModel as _LiteraryLanguageModel
