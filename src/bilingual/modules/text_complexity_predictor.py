@@ -5,7 +5,7 @@ This module provides functionality to predict the complexity and readability
 of Bangla text for educational and accessibility purposes.
 """
 
-from typing import Dict
+from typing import Dict, List
 
 
 def predict_complexity(text: str) -> float:
