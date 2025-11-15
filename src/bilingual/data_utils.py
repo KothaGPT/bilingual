@@ -285,6 +285,7 @@ def combine_corpora(*datasets: BilingualDataset) -> BilingualDataset:
     combined_data = []
     for dataset in datasets:
         combined_data.extend(dataset.data)
+    return BilingualDataset(data=combined_data)
 
 
 """
