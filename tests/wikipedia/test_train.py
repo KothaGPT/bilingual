@@ -164,7 +164,7 @@ class TestTrainingSetup:
                 per_device_eval_batch_size=2,
                 learning_rate=5e-5,
                 save_steps=100,
-                evaluation_strategy="steps",
+                eval_strategy="steps",
                 eval_steps=100,
             )
 
