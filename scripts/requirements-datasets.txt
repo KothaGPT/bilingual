@@ -1,0 +1,19 @@
+# Dataset Management Dependencies
+requests>=2.25.1
+datasets>=2.0.0
+tqdm>=4.60.0
+huggingface-hub>=0.4.0
+sentencepiece>=0.1.96
+sacremoses>=0.0.46
+
+# For Bangla text processing
+bnlp-toolkit>=3.0.0
+indic-nlp-library>=0.81
+
+# For parallel processing
+joblib>=1.1.0
+multiprocess>=0.70.12.2
+
+# For data manipulation
+pandas>=1.3.0
+numpy>=1.20.0
