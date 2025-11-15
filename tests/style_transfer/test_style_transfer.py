@@ -185,7 +185,7 @@ class TestStyleTransferBatchConvert:
         model = StyleTransferModel()
         model.load()
         texts = ["This is a test.", "Another test here.", "It's fine"]
-        results = model.batch_convert(texts=texts, source_style="informal", target_style="formal")
+        results = model.batch_convert(texts=texts, target_style="formal")
 
         assert len(results) == 3
         assert isinstance(results[0], str)
@@ -197,7 +197,7 @@ class TestStyleTransferBatchConvert:
         model = StyleTransferModel()
         model.load()
 
-        results = model.batch_convert(texts=[], source_style="informal", target_style="formal")
+        results = model.batch_convert(texts=[], target_style="formal")
         assert results == []
 
     def test_batch_convert_single_text(self):
@@ -206,7 +206,7 @@ class TestStyleTransferBatchConvert:
         model.load()
 
         texts = ["I can't do this"]
-        results = model.batch_convert(texts=texts, source_style="informal", target_style="formal")
+        results = model.batch_convert(texts=texts, target_style="formal")
 
         assert len(results) == 1
         assert isinstance(results[0], str)
@@ -217,7 +217,7 @@ class TestStyleTransferBatchConvert:
         model.load()
 
         texts = ["I can't do this", "তুমি কেমন আছো"]
-        results = model.batch_convert(texts=texts, source_style="informal", target_style="formal")
+        results = model.batch_convert(texts=texts, target_style="formal")
 
         assert len(results) == 2
         assert isinstance(results[0], str)
