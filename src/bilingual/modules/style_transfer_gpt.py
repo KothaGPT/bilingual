@@ -273,19 +273,7 @@ class StyleTransferGPT:
 
         return generated
 
-    def batch_convert(self, texts: List[str], target_style: str, **kwargs) -> List[str]:
-        """
-        Convert multiple texts to the target style.
 
-        Args:
-            texts: List of input texts
-            target_style: Target style
-            **kwargs: Additional arguments passed to convert()
-
-        Returns:
-            List of converted texts
-        """
-        return [self.convert(text, target_style, **kwargs) for text in texts]
 
     def available_styles(self) -> List[str]:
         """
