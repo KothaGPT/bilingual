@@ -66,7 +66,7 @@ class WikipediaLanguageModel:
             try:
                 self.model = AutoModelForMaskedLM.from_pretrained(self.model_path)
                 self.model_type = "mlm"
-            except:
+            except Exception:
                 self.model = AutoModelForCausalLM.from_pretrained(self.model_path)
                 self.model_type = "clm"
 
