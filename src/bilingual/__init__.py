@@ -6,11 +6,13 @@ natural language processing, including tokenization, normalization,
 translation, and generation.
 """
 
-__version__ = "0.1.0"
+from bilingual._version import __version__, __version_tuple__, version, version_tuple
+
 __author__ = "Bilingual Project Contributors"
 __license__ = "Apache-2.0"
 
 from bilingual.config import get_settings
+from bilingual.data_augmentation import augment_text
 from bilingual.data_utils import BilingualDataset
 from bilingual.evaluation import bleu_score, evaluate_generation, evaluate_translation, rouge_score
 from bilingual.human_evaluation import (
@@ -31,9 +33,6 @@ from bilingual.testing import (
     run_performance_benchmarks,
     run_unit_tests,
 )
-from bilingual.tokenizer import BilingualTokenizer, load_tokenizer
-
-from . import api as bilingual_api
 
 __all__ = [
     "bilingual_api",
@@ -64,4 +63,7 @@ __all__ = [
     "run_performance_benchmarks",
     "generate_test_report",
     "__version__",
+    "version",
+    "__version_tuple__",
+    "version_tuple",
 ]

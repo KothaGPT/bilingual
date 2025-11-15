@@ -344,9 +344,7 @@ class BilingualTestSuite:
             bleu = bb.bleu_score("Hello world", "Hello world")
 
             # Basic checks
-            passed = (
-                detected_lang in ["bn", "en", "mixed"] and 0.0 <= bleu <= 1.0
-            )
+            passed = detected_lang in ["bn", "en", "mixed"] and 0.0 <= bleu <= 1.0
 
             duration = time.time() - start_time
 
