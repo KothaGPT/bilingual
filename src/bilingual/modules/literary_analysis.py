@@ -174,6 +174,10 @@ def tone_classifier(text: str) -> Dict[str, float]:
         negative_score -= adjustment / 2
         neutral_score = 0.1
 
+    # Clip scores to be non-negative
+    positive_score = max(0, positive_score)
+    negative_score = max(0, negative_score)
+
     # Normalize to sum to 1.0
     total_score = positive_score + neutral_score + negative_score
 
