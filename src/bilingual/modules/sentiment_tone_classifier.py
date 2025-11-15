@@ -6,8 +6,7 @@ in Bangla literary and general text using both lexicon-based and ML approaches.
 """
 
 import logging
-import re
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 try:
     import torch
