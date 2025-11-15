@@ -121,7 +121,7 @@ class TextProcessor:
                     {"en_ids": en_ids, "bn_ids": bn_ids, "en_text": en_text, "bn_text": bn_text}
                 )
 
-            except Exception as e:
+            except Exception:
                 stats["skipped_examples"] += 1
                 continue
 
