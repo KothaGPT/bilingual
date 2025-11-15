@@ -102,3 +102,19 @@ evaluate-models:
 
 benchmark-models:
 	python3 scripts/benchmark_models.py --models models/bilingual-lm/ --tasks generation --output results/benchmark.json
+
+# PyPI Release Commands:
+pypi-build:
+	python3 -m build
+
+pypi-test:
+	python3 -m twine upload --repository testpypi dist/*
+
+pypi-release:
+	python3 -m twine upload dist/*
+
+pypi-install:
+	python3 -m pip install bilingual
+
+check-install:
+	python3 -c "import bilingual; print(bilingual.__version__)"
