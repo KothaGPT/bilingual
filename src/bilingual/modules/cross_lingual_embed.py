@@ -7,8 +7,6 @@ that can be used for semantic similarity, translation, and alignment tasks.
 
 from typing import List, Union
 
-import numpy as np
-
 
 def embed_text(
     texts: Union[str, List[str]], lang: str = "bn"
@@ -43,8 +41,8 @@ def compute_similarity(text1: str, text2: str, lang1: str = "bn", lang2: str = "
         Similarity score between 0 and 1
     """
     # TODO: Implement cosine similarity between embeddings
-    emb1 = embed_text(text1, lang1)
-    emb2 = embed_text(text2, lang2)
+    embed_text(text1, lang1)
+    embed_text(text2, lang2)
 
     # Placeholder: return dummy similarity
     return 0.5
