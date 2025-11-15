@@ -10,23 +10,16 @@ Provides REST API endpoints for all bilingual functionality including:
 - Health monitoring and telemetry
 """
 
-import asyncio
-import json
-
-# Import bilingual functionality
-import sys
-import time
-import traceback
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import uvicorn
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -144,7 +137,7 @@ async def lifespan(app: FastAPI):
 
             # Try to load tokenizer
             try:
-                tokenizer = bb.load_tokenizer("models/tokenizer/bilingual_sp.model")
+                bb.load_tokenizer("models/tokenizer/bilingual_sp.model")
                 print("✅ Tokenizer loaded successfully")
             except Exception as e:
                 print(f"⚠️  Could not load tokenizer: {e}")
@@ -267,7 +260,7 @@ async def root():
         <div class="endpoint">
             <div class="method">POST /detect-language</div>
             <p>Detect language of text</p>
-            <code>curl -X POST "http://localhost:8000/detect-language" -H "Content-Type: application/json" -d '{"text": "Hello world"}'</code>
+            <code>curl -X POST "http://localhost:8000/lang" -d '{"text": "Hello world"}'</code>
         </div>
 
         <div class="endpoint">
@@ -317,7 +310,7 @@ async def health_check():
         try:
             # This would need to be implemented in the transformer_models module
             loaded_models = ["t5-small"]  # Placeholder
-        except:
+        except Exception:
             pass
 
     # Memory usage (optional)
