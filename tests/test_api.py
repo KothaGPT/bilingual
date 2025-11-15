@@ -1,7 +1,7 @@
 """Tests for high-level API."""
 
+from bilingual.api import classify, readability_check, safety_check
 from bilingual.normalize import normalize_text
-from bilingual.api import readability_check, safety_check, classify
 
 
 class TestNormalizeAPI:

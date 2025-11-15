@@ -3,7 +3,10 @@
 Align Bangla and English Wikipedia articles for bilingual training.
 
 Usage:
-    python scripts/align_bilingual_wiki.py --bn datasets/wikipedia/raw/bnwiki-latest-pages-articles.xml.bz2 --en datasets/wikipedia/raw/enwiki-latest-pages-articles.xml.bz2 --output datasets/wikipedia/bilingual
+    python scripts/align_bilingual_wiki.py \
+        --bn datasets/wikipedia/raw/bnwiki-latest-pages-articles.xml.bz2 \
+        --en datasets/wikipedia/raw/enwiki-latest-pages-articles.xml.bz2 \
+        --output datasets/wikipedia/bilingual
 """
 
 import argparse
@@ -11,8 +14,7 @@ import json
 import logging
 import re
 import sys
-import xml.etree.ElementTree as ET
-from collections import defaultdict
+
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -115,7 +117,7 @@ class BilingualAligner:
 
                 # Limit for demo (remove in production)
                 if len(articles) >= 10000:
-                    logger.info(f"Reached limit of 10000 articles for demo")
+                    logger.info("Reached limit of 10000 articles for demo")
                     break
 
             file_handle.close()
@@ -193,9 +195,8 @@ class BilingualAligner:
         bn_path = output_dir / "bangla.txt"
         en_path = output_dir / "english.txt"
 
-        with open(bn_path, "w", encoding="utf-8") as bn_f, open(
-            en_path, "w", encoding="utf-8"
-        ) as en_f:
+        with open(bn_path, "w", encoding="utf-8") as bn_f, \
+             open(en_path, "w", encoding="utf-8") as en_f:
 
             for bn_title, bn_content, en_title, en_content in aligned_articles:
                 # Write titles and content
@@ -284,10 +285,14 @@ def align_using_extracted_files(
 def main():
     parser = argparse.ArgumentParser(description="Align Bangla and English Wikipedia articles")
     parser.add_argument(
-        "--bn", type=str, help="Path to Bangla Wikipedia dump or extracted directory"
+        "--bn",
+        type=str,
+        help="Path to Bangla Wikipedia dump or extracted directory",
     )
     parser.add_argument(
-        "--en", type=str, help="Path to English Wikipedia dump or extracted directory"
+        "--en",
+        type=str,
+        help="Path to English Wikipedia dump or extracted directory",
     )
     parser.add_argument(
         "--output",

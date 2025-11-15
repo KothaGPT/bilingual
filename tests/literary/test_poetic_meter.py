@@ -5,10 +5,10 @@ Tests for poetic meter detection and analysis.
 import pytest
 
 from bilingual.modules.poetic_meter import (
-    detect_meter,
-    _count_syllables_english,
-    _count_matra_bengali,
     PoeticMeterDetector,
+    _count_matra_bengali,
+    _count_syllables_english,
+    detect_meter,
 )
 
 

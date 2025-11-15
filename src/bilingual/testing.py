@@ -14,13 +14,13 @@ Provides testing utilities including:
 import json
 import random
 import string
+
+# Add parent directory to path for imports
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-# Add parent directory to path for imports
-import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

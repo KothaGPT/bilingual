@@ -273,8 +273,6 @@ class StyleTransferGPT:
 
         return generated
 
-
-
     def available_styles(self) -> List[str]:
         """
         Get list of available styles.

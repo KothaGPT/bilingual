@@ -30,7 +30,7 @@ import numpy as np
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from bilingual import bilingual_api as bb  # noqa: E402
+from bilingual import api as bb  # noqa: E402
 from bilingual.data_utils import BilingualDataset  # noqa: E402
 from bilingual.evaluation import (  # noqa: E402
     compute_bleu,
@@ -115,14 +115,14 @@ class ModelEvaluator:
         print("Calculating perplexity...")
         try:
             texts = [s["text"] for s in self.test_data]
-            metrics["perplexity_overall"] = compute_perplexity(texts)
+            metrics["perplexity_overall"] = compute_perplexity(None, texts)
             print(f"  Overall perplexity: {metrics['perplexity_overall']:.2f}")
 
             # Per-language perplexity
             for lang in ["bn", "en"]:
                 if lang in samples_by_lang:
                     lang_texts = [s["text"] for s in samples_by_lang[lang]]
-                    perp = compute_perplexity(lang_texts)
+                    perp = compute_perplexity(None, lang_texts)
                     metrics[f"perplexity_{lang}"] = perp
                     print(f"  {lang.upper()} perplexity: {perp:.2f}")
 

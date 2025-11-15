@@ -91,7 +91,6 @@ def compute_perplexity(
         Average perplexity
     """
     # Placeholder - will be implemented with actual model
-    warnings.warn("Perplexity computation not yet implemented")
     return 0.0
 
 

@@ -11,6 +11,7 @@ from bilingual._version import __version__, __version_tuple__, version, version_
 __author__ = "Bilingual Project Contributors"
 __license__ = "Apache-2.0"
 
+from bilingual import api
 from bilingual.config import get_settings
 from bilingual.data_augmentation import augment_text
 from bilingual.data_utils import BilingualDataset
@@ -33,7 +34,6 @@ from bilingual.testing import (
     run_performance_benchmarks,
     run_unit_tests,
 )
-from bilingual import api
 
 __all__ = [
     "api",

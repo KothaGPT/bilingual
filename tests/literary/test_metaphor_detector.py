@@ -3,8 +3,8 @@ Tests for Metaphor and Simile Detector.
 """
 
 import pytest
-
 import torch
+
 from bilingual.models.metaphor_detector import MetaphorSimileDetector
 
 

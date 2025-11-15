@@ -5,9 +5,9 @@ Tests for literary device detection and tone analysis.
 import pytest
 
 from bilingual.modules.literary_analysis import (
-    tone_classifier,
     metaphor_detector,
     simile_detector,
+    tone_classifier,
 )
 
 
