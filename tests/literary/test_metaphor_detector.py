@@ -4,6 +4,7 @@ Tests for Metaphor and Simile Detector.
 
 import pytest
 
+import torch
 from bilingual.models.metaphor_detector import MetaphorSimileDetector
 
 
@@ -83,7 +84,7 @@ class TestMetaphorSimileDetector:
             text="একটি সাধারণ বাক্য",
             tokens=["একটি", "সাধারণ", "বাক্য"],
             labels=["O", "O", "O"],
-            offset_mapping=[[0, 4], [5, 11], [12, 16]],
+            offset_mapping=torch.tensor([[0, 4], [5, 11], [12, 16]]),
             entity_type="METAPHOR",
         )
 
