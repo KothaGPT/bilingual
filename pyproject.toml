@@ -102,7 +102,11 @@ bilingual-server = "bilingual.server:run_server"
 license-files = ["LICENSE"]
 
 [tool.setuptools.package-data]
-bilingual = ["py.typed", "data/*", "models/*"]
+bilingual = ["py.typed", "models/bilingual-tokenizer.vocab"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 
 [tool.setuptools_scm]
 write_to = "src/bilingual/_version.py"
