@@ -1,0 +1,423 @@
+# Makefile for Wikipedia Language Model Training
+# Quick commands for common tasks
+
+.PHONY: help download preprocess analyze train evaluate clean monitor validate
+
+# Default target
+help:
+	@echo "Wikipedia Language Model Training - Available Commands:"
+	@echo ""
+	@echo "  make download-bn          Download Bangla Wikipedia"
+	@echo "  make download-bilingual   Download Bangla + English Wikipedia"
+	@echo "  make preprocess          Preprocess Wikipedia dump"
+	@echo "  make monitor             Monitor extraction progress"
+	@echo "  make monitor-watch       Watch extraction in real-time"
+	@echo "  make validate            Validate dataset quality"
+	@echo "  make prepare-hf          Prepare HuggingFace dataset"
+	@echo "  make analyze             Analyze dataset quality"
+	@echo "  make train               Train language model"
+	@echo "  make train-test          Quick test training (1 epoch)"
+	@echo "  make evaluate            Evaluate trained model"
+	@echo "  make interactive         Interactive model testing"
+	@echo "  make align-bilingual     Align Bangla-English articles"
+	@echo "  make clean               Clean temporary files"
+	@echo "  make clean-all           Clean all generated files"
+	@echo "  make pypi-build          Build package for PyPI"
+	@echo "  make pypi-test           Upload to TestPyPI"
+	@echo "  make pypi-release        Release to PyPI"
+	@echo "  make pypi-install        Install from PyPI"
+	@echo "  make check-install       Verify package installation"
+	@echo ""
+	@echo "Development:"
+	@echo "  make test                Run test suite"
+	@echo "  make format              Format code (black, isort)"
+	@echo "  make lint                Run linting (flake8, mypy)"
+	@echo "  make docs                Build documentation"
+	@echo ""
+
+# Download targets
+download-bn:
+	@echo "Downloading Bangla Wikipedia..."
+	python3 scripts/download_wiki.py --lang bn --output datasets/wikipedia/raw
+
+download-bilingual:
+	@echo "Downloading Bangla and English Wikipedia..."
+	python3 scripts/download_wiki.py --bilingual --output datasets/wikipedia/raw
+
+# Preprocessing
+preprocess:
+	@echo "Preprocessing Wikipedia dump..."
+	python3 scripts/preprocess_wiki.py \
+		--input datasets/wikipedia/raw/bnwiki-latest-pages-articles.xml.bz2 \
+		--output datasets/wikipedia/processed \
+		--lang bn
+
+preprocess-skip-extract:
+	@echo "Preprocessing (skipping extraction)..."
+	python3 scripts/preprocess_wiki.py \
+		--input datasets/wikipedia/raw/bn_extracted \
+		--output datasets/wikipedia/processed \
+		--lang bn \
+		--skip-extraction
+
+# Monitoring and Validation
+monitor:
+	@echo "Checking extraction status..."
+	python3 scripts/monitor_wiki_extraction.py
+
+monitor-watch:
+	@echo "Watching extraction progress (Ctrl+C to stop)..."
+	python3 scripts/monitor_wiki_extraction.py --watch --interval 30
+
+validate:
+	@echo "Validating dataset quality..."
+	python3 scripts/validate_wiki_dataset.py \
+		--data datasets/wikipedia/processed \
+		--sample 10
+
+validate-json:
+	@echo "Validating dataset (JSON output)..."
+	python3 scripts/validate_wiki_dataset.py \
+		--data datasets/wikipedia/processed \
+		--json
+
+# Dataset Preparation
+prepare-hf:
+	@echo "Preparing HuggingFace dataset..."
+	python3 scripts/prepare_hf_dataset.py \
+		--input datasets/wikipedia/processed \
+		--output datasets/wikipedia/hf_dataset \
+		--lang bn
+
+prepare-hf-test:
+	@echo "Preparing HuggingFace dataset (test with 1000 samples)..."
+	python3 scripts/prepare_hf_dataset.py \
+		--input datasets/wikipedia/processed \
+		--output datasets/wikipedia/hf_dataset_test \
+		--lang bn \
+		--max-samples 1000
+
+# Analysis
+analyze:
+	@echo "Analyzing dataset..."
+	python3 scripts/analyze_wiki_dataset.py \
+		--input datasets/wikipedia/processed \
+		--output datasets/wikipedia/analysis \
+		--all-splits
+
+analyze-train:
+	@echo "Analyzing training set..."
+	python3 scripts/analyze_wiki_dataset.py \
+		--input datasets/wikipedia/processed/train/bn_train.txt \
+		--output datasets/wikipedia/analysis
+
+# Training
+train:
+	@echo "Training language model..."
+	python3 scripts/train_wiki_lm.py \
+		--data datasets/wikipedia/processed \
+		--model ai4bharat/indic-bert \
+		--output models/wikipedia/base \
+		--epochs 3 \
+		--batch-size 8 \
+		--learning-rate 5e-5
+
+train-test:
+	@echo "Test training (1 epoch)..."
+	python3 scripts/train_wiki_lm.py \
+		--data datasets/wikipedia/processed \
+		--model ai4bharat/indic-bert \
+		--output models/wikipedia/test \
+		--epochs 1 \
+		--batch-size 8
+
+train-production:
+	@echo "Production training (optimized)..."
+	python3 scripts/train_wiki_lm.py \
+		--data datasets/wikipedia/processed \
+		--model ai4bharat/indic-bert \
+		--output models/wikipedia/base \
+		--epochs 5 \
+		--batch-size 16 \
+		--learning-rate 3e-5 \
+		--gradient-accumulation-steps 4 \
+		--save-steps 1000
+
+train-gpt2:
+	@echo "Training GPT-2 style model..."
+	python3 scripts/train_wiki_lm.py \
+		--data datasets/wikipedia/processed \
+		--model gpt2 \
+		--output models/wikipedia/gpt2-bn \
+		--model-type clm \
+		--epochs 3 \
+		--batch-size 8
+
+train-xlm:
+	@echo "Training XLM-RoBERTa bilingual model..."
+	python3 scripts/train_wiki_lm.py \
+		--data datasets/wikipedia/bilingual \
+		--model xlm-roberta-base \
+		--output models/wikipedia/xlm-bilingual \
+		--epochs 3 \
+		--batch-size 8
+
+# Evaluation
+evaluate:
+	@echo "Evaluating model..."
+	python3 scripts/evaluate_wiki_lm.py \
+		--model models/wikipedia/base \
+		--data datasets/wikipedia/processed/test/bn_test.txt \
+		--output results/wikipedia_eval.json
+
+interactive:
+	@echo "Starting interactive mode..."
+	python3 scripts/evaluate_wiki_lm.py \
+		--model models/wikipedia/base \
+		--interactive
+
+# Bilingual alignment
+align-bilingual:
+	@echo "Aligning Bangla-English articles..."
+	python3 scripts/align_bilingual_wiki.py \
+		--bn datasets/wikipedia/raw/bn_extracted \
+		--en datasets/wikipedia/raw/en_extracted \
+		--output datasets/wikipedia/bilingual \
+		--use-extracted
+
+# TensorBoard
+tensorboard:
+	@echo "Starting TensorBoard..."
+	tensorboard --logdir models/wikipedia/base/logs
+
+# Cleaning
+clean:
+	@echo "Cleaning temporary files..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
+	find . -type f -name "*.pyo" -delete
+	find . -type f -name ".DS_Store" -delete
+
+clean-extracted:
+	@echo "Cleaning extracted files..."
+	rm -rf datasets/wikipedia/raw/*_extracted
+
+clean-processed:
+	@echo "Cleaning processed files..."
+	rm -rf datasets/wikipedia/processed/*
+
+clean-models:
+	@echo "Cleaning trained models..."
+	rm -rf models/wikipedia/*
+
+clean-all: clean clean-extracted clean-processed clean-models
+	@echo "Cleaned all generated files"
+
+# ============================================================================
+# PR-7: Bilingual Extension
+# ============================================================================
+
+# Align bilingual articles
+align-bilingual:
+	@echo "Aligning Bangla and English Wikipedia articles..."
+	python scripts/align_bilingual_wiki.py \
+		--bn datasets/wikipedia/processed/bn_extracted \
+		--en datasets/wikipedia/processed/en_extracted \
+		--output datasets/wikipedia/bilingual \
+		--use-extracted
+
+# Train bilingual model
+train-bilingual:
+	@echo "Training bilingual model..."
+	python scripts/train_wiki_lm.py \
+		--data datasets/wikipedia/bilingual \
+		--model xlm-roberta-base \
+		--output models/wikipedia/bilingual \
+		--epochs 3
+
+# Evaluate bilingual model
+evaluate-bilingual:
+	@echo "Evaluating bilingual model..."
+	python scripts/evaluate_wiki_lm.py \
+		--model models/wikipedia/bilingual \
+		--data datasets/wikipedia/bilingual/test \
+		--output results/bilingual_eval.json
+
+# ============================================================================
+# PR-8: HuggingFace Publishing
+# ============================================================================
+
+# Prepare model for HuggingFace Hub
+prepare-hf-model:
+	@echo "Preparing model for HuggingFace Hub..."
+	python scripts/huggingface/prepare_model.py \
+		--model models/wikipedia/base \
+		--output models/huggingface_ready/bn-wikipedia-lm
+
+# Generate model card
+generate-model-card:
+	@echo "Generating model card..."
+	python scripts/huggingface/generate_model_card.py \
+		--model models/huggingface_ready/bn-wikipedia-lm \
+		--type base \
+		--repo KothaGPT/bn-wikipedia-lm
+
+# Upload to HuggingFace Hub (requires authentication)
+upload-hf:
+	@echo "Uploading to HuggingFace Hub..."
+	@echo "Note: You must be logged in (huggingface-cli login)"
+	python scripts/huggingface/upload_model.py \
+		--model models/huggingface_ready/bn-wikipedia-lm \
+		--repo KothaGPT/bn-wikipedia-lm \
+		--message "Upload Bangla Wikipedia LM"
+
+# Complete HuggingFace pipeline
+hf-pipeline: prepare-hf-model generate-model-card
+	@echo "HuggingFace preparation complete!"
+	@echo "Review the model at: models/huggingface_ready/bn-wikipedia-lm"
+	@echo "To upload: make upload-hf"
+
+# Installation
+install-deps:
+	@echo "Installing dependencies..."
+	pip install transformers datasets torch accelerate tensorboard
+	pip install wikiextractor indic-nlp-library
+	pip install matplotlib numpy scikit-learn
+
+install-hf-deps:
+	@echo "Installing HuggingFace dependencies..."
+	pip install huggingface_hub
+
+# Complete pipeline
+pipeline-full: download-bn preprocess analyze train evaluate
+	@echo "Complete pipeline finished!"
+
+pipeline-test: download-bn preprocess train-test
+	@echo "Test pipeline finished!"
+
+# Check status
+status:
+	@echo "Wikipedia Training Status:"
+	@echo ""
+	@echo "Raw dumps:"
+	@ls -lh datasets/wikipedia/raw/*.bz2 2>/dev/null || echo "  No dumps found"
+	@echo ""
+	@echo "Processed data:"
+	@ls -lh datasets/wikipedia/processed/*/*.txt 2>/dev/null || echo "  No processed data found"
+	@echo ""
+	@echo "Trained models:"
+	@ls -d models/wikipedia/*/ 2>/dev/null || echo "  No models found"
+	@echo ""
+
+# Quick info
+info:
+	@echo "Wikipedia Language Model Training"
+	@echo "=================================="
+	@echo ""
+	@echo "Quick Start:"
+	@echo "  1. make download-bn"
+	@echo "  2. make preprocess"
+	@echo "  3. make train"
+	@echo "  4. make evaluate"
+	@echo ""
+	@echo "For help: make help"
+	@echo "For full docs: see docs/WIKIPEDIA_TRAINING_ROADMAP.md"
+	@echo ""
+
+# ============================================================================
+# PyPI Release Management
+# ============================================================================
+
+# Install PyPI build tools
+install-pypi-tools:
+	@echo "Installing PyPI build tools..."
+	pip install build twine setuptools-scm
+
+# Build package
+pypi-build: install-pypi-tools
+	@echo "Building package..."
+	python3 -m build --wheel --sdist
+	@echo "Package built successfully!"
+	@echo "Files created:"
+	@ls -lh dist/
+	@echo ""
+	@echo "To check: twine check dist/*"
+
+# Upload to TestPyPI
+pypi-test: pypi-build
+	@echo "Uploading to TestPyPI..."
+	@echo "Note: Make sure you have TestPyPI credentials configured"
+	twine upload --repository testpypi dist/*
+	@echo ""
+	@echo "Test installation:"
+	@echo "  pip install --index-url https://test.pypi.org/simple/ bilingual"
+
+# Release to PyPI
+pypi-release: pypi-build
+	@echo "Uploading to PyPI..."
+	@echo "Note: Make sure you have PyPI credentials configured"
+	twine upload dist/*
+	@echo ""
+	@echo "Package released to PyPI!"
+	@echo "Installation: pip install bilingual"
+
+# Install from PyPI
+pypi-install:
+	@echo "Installing from PyPI..."
+	pip install bilingual
+
+# Check package installation
+check-install:
+	@echo "Checking package installation..."
+	python3 -c "
+	import bilingual
+	print(f'Package: bilingual')
+	print(f'Version: {bilingual.__version__}')
+	print(f'Location: {bilingual.__file__}')
+	print('✓ Installation successful!')
+	"
+	@echo ""
+	@echo "Testing basic functionality..."
+	python3 -c "
+	import bilingual as bb
+	print('Testing basic functions...')
+	print(f'Language detection: {bb.detect_language(\"Hello world\")}')
+	print(f'Text normalization: {bb.normalize_text(\"Hello world\")}')
+	print('✓ Basic functionality works!')
+	"
+
+# Complete PyPI workflow
+pypi-full: pypi-build pypi-test check-install
+	@echo "PyPI workflow complete!"
+	@echo ""
+	@echo "To release to production PyPI:"
+	@echo "  make pypi-release"
+
+# Development commands
+test:
+	@echo "Running tests..."
+	python3 -m pytest tests/ -v --tb=short
+
+format:
+	@echo "Formatting code..."
+	python3 -m black src/bilingual/ scripts/
+	python3 -m isort src/bilingual/ scripts/
+
+lint:
+	@echo "Running linting..."
+	python3 -m flake8 --max-line-length=100 src/bilingual/ scripts/
+	python3 -m mypy src/bilingual/
+
+docs:
+	@echo "Building documentation..."
+	python3 -m mkdocs build
+
+# Version management
+version:
+	@echo "Current version:"
+	@python3 -c "import bilingual; print(bilingual.__version__)" 2>/dev/null || echo "Package not installed"
+
+bump-version:
+	@echo "Bumping version..."
+	@echo "Current version: $$(python3 -c 'import bilingual; print(bilingual.__version__)' 2>/dev/null || echo 'unknown')"
+	@echo "Use: python3 -c 'import setuptools_scm; print(setuptools_scm.get_version())' to get SCM version"

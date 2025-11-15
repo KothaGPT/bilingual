@@ -1,0 +1,24 @@
+include MANIFEST.in
+include README.md
+include LICENSE
+include docs/README.md
+include scripts/*.py
+include scripts/huggingface/*.py
+include scripts/huggingface/*.sh
+recursive-include models *
+recursive-include datasets *
+recursive-include docs *
+recursive-include examples *
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * .git*
+recursive-exclude * .pytest_cache*
+recursive-exclude * .mypy_cache*
+recursive-exclude * .tox*
+recursive-exclude * .coverage*
+recursive-exclude * .DS_Store
+recursive-exclude * .vscode*
+recursive-exclude * .idea*
+recursive-exclude * build*
+recursive-exclude * dist*
+recursive-exclude * .env*

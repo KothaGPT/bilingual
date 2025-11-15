@@ -31,10 +31,10 @@ help:
 	@echo "benchmark-models  - Benchmark model performance"
 
 install:
-	pip install -e .
+	python3 -m pip install -e .
 
 install-dev:
-	pip install -e ".[dev]"
+	python3 -m pip install -e ".[dev]"
 
 test:
 	pytest tests/ -v
@@ -47,8 +47,8 @@ lint:
 	mypy src/bilingual/
 
 format:
-	black src/bilingual/ tests/ scripts/
-	isort src/bilingual/ tests/ scripts/
+	python3 -m black src/bilingual/ tests/ scripts/
+	python3 -m isort src/bilingual/ tests/ scripts/
 
 clean:
 	rm -rf build/

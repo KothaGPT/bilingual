@@ -1,8 +1,27 @@
-# mkdocs.yml
+# Project information
 site_name: Bilingual NLP Toolkit
-site_description: Next-generation bilingual Bangla–English NLP ecosystem for advanced text processing, translation, and generation.
+site_description: >-
+  Next-generation bilingual Bangla–English NLP ecosystem for advanced
+  text processing, translation, and generation.
 site_author: Bilingual Project Contributors
 site_url: https://bilingual-nlp.github.io/bilingual/
+
+# Analytics
+extra:
+  # analytics:
+  #   provider: google
+  #   property: G-XXXXXXXXXX  # Replace with your Google Analytics ID
+  # feedback:
+  #   title: Was this page helpful?
+  #   ratings:
+  #     - icon: material/emoticon-happy
+  #       name: This page was helpful
+  #       data: helpful
+  #       type: positive
+  #     - icon: material/emoticon-sad
+  #       name: This page could be improved
+  #       data: not-helpful
+  #       type: negative
 
 # Repository
 repo_url: https://github.com/bilingual-nlp/bilingual
@@ -20,6 +39,16 @@ strict: true
 theme:
   name: material
   language: en
+
+  # Language switcher
+  extra:
+    alternate:
+      - name: English
+        link: /en/
+        lang: en
+      - name: বাংলা
+        link: /bn/
+        lang: bn
 
   # Logo and favicon
   logo: assets/logo.png
@@ -57,26 +86,36 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - header.autohide
-    - navigation.expand
-    - navigation.footer
+    - navigation.tabs
+    - navigation.sections
     - navigation.indexes
     - navigation.instant
-    - navigation.instant.prefetch
-    - navigation.instant.progress
-    - navigation.prune
-    - navigation.sections
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.top
     - navigation.tracking
+    - navigation.top
+    - navigation.expand
+    - navigation.footer
+    - navigation.language
+    
+    # Search
     - search.highlight
-    - search.share
     - search.suggest
-    - toc.follow
-    - toc.integrate
-
-  # Custom icons
+    - search.share
+    - search.suggest.delay: 300
+    - search.suggest.length: 5
+    
+    # Code
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    
+    # Versioning
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    
+    # Analytics
+    - analyticscons
   icon:
     repo: fontawesome/brands/github
     edit: material/pencil
@@ -86,29 +125,11 @@ theme:
 
 # Plugins
 plugins:
-  - i18n:
-      default_language: en
-      languages:
-        en: English
-        bn: বাংলা
-      nav_translations:
-        bn:
-          Home: হোম
-          Getting Started: শুরু করুন
-          API Reference: API রেফারেন্স
-          Examples: উদাহরণ
-          Contributing: অবদান
-          License: লাইসেন্স
-  - search:
-      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lh]t;|&#?\w+;'
-  - minify:
-      minify_html: true
-  - git-committers:
-      repository: bilingual-nlp/bilingual
-      branch: main
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: timeago
+  # Core plugins
+  - search
+  - mike:
+      canonical_version: latest
+      version_selector: true
   - mkdocstrings:
       handlers:
         python:
@@ -139,10 +160,6 @@ plugins:
 
 # Customization
 extra:
-  version:
-    provider: mike
-    default: latest
-
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/bilingual-nlp/bilingual
@@ -156,29 +173,31 @@ extra:
 
   generator: false
 
-# Extensions
+# Markdown extensions
 markdown_extensions:
+  # Standard extensions
   - abbr
   - admonition
   - attr_list
   - def_list
   - footnotes
-  - md_in_html
   - meta
+  - md_in_html
   - tables
   - toc:
       permalink: true
-      permalink_title: Anchor link to this section for reference
+      toc_depth: 3
+
+  # PyMdown Extensions
   - pymdownx.arithmatex:
       generic: true
-  - pymdownx.betterost:
-      permalink: true
-      permalink_title: Anchor link to this section for reference
+  - pymdownx.betterem:
+      smart_enable: all
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.emoji:
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -239,14 +258,3 @@ nav:
     - contributing/data.md
     - contributing/models.md
   - License: license.md
-
-# Internationalization
-i18n:
-  languages:
-    - locale: en
-      name: English
-      default: true
-      build: true
-    - locale: bn
-      name: বাংলা
-      build: true
