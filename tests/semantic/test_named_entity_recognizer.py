@@ -4,6 +4,7 @@ Tests for Named Entity Recognizer.
 
 import pytest
 
+import torch
 from bilingual.models.named_entity_recognizer import BanglaNER
 
 
@@ -116,7 +117,7 @@ class TestBanglaNER:
             tokens=["একটি", "সাধারণ", "বাক্য"],
             labels=["O", "O", "O"],
             confidences=[0.9, 0.9, 0.9],
-            offset_mapping=[[0, 4], [5, 11], [12, 16]],
+            offset_mapping=torch.tensor([[0, 4], [5, 11], [12, 16]]),
             entity_type="PER",
         )
 
