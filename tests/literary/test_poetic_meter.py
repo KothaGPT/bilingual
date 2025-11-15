@@ -5,10 +5,10 @@ Tests for poetic meter detection and analysis.
 import pytest
 
 from bilingual.modules.poetic_meter import (
-    BANGLA_METERS,
-    count_syllables,
-    detect_bangla_meter,
     detect_meter,
+    _count_syllables_english,
+    _count_matra_bengali,
+    PoeticMeterDetector,
 )
 
 
@@ -17,22 +17,22 @@ class TestSyllableCounting:
 
     def test_english_syllable_counting(self):
         """Test counting syllables in English words."""
-        assert count_syllables("hello", "en") == 2
-        assert count_syllables("beautiful", "en") == 3
-        assert count_syllables("the", "en") == 1
-        assert count_syllables("banana", "en") == 3
+        assert _count_syllables_english("hello") == 2
+        assert _count_syllables_english("beautiful") == 3
+        assert _count_syllables_english("the") == 1
+        assert _count_syllables_english("banana") == 3
 
     def test_bangla_syllable_counting(self):
         """Test counting syllables in Bangla words."""
         # Each vowel or matra counts as a syllable
-        assert count_syllables("বাংলা", "bn") == 2  # বাং-লা
-        assert count_syllables("ভাষা", "bn") == 2  # ভাষা
-        assert count_syllables("আমি", "bn") == 2  # আ-মি
+        assert _count_matra_bengali("বাংলা") == 2  # বাং-লা
+        assert _count_matra_bengali("ভাষা") == 2  # ভাষা
+        assert _count_matra_bengali("আমি") == 2  # আ-মি
 
     def test_empty_word(self):
         """Test that empty string returns 0."""
-        assert count_syllables("", "en") == 0
-        assert count_syllables("", "bn") == 0
+        assert _count_syllables_english("") == 0
+        assert _count_matra_bengali("") == 0
 
 
 class TestDetectMeter:
@@ -46,17 +46,17 @@ class TestDetectMeter:
         A frog jumps into the pond
         Splash! Silence again.
         """
-        result = detect_meter(text, "en")
-        assert result["meter_type"] != ""  # Should have a meter type
-        assert result["line_count"] == 3
-        assert len(result["syllable_counts"]) == 3
+        result = detect_meter(text, "english")
+        assert result["pattern"] != "unknown"  # Should have a pattern
+        assert result["summary"]["total_lines"] == 3
+        assert len(result["lines"]) == 3
 
         # Test with a single line
         text = "Shall I compare thee to a summer's day?"
-        result = detect_meter(text, "en")
-        assert result["line_count"] == 1
-        assert len(result["syllable_counts"]) == 1
-        assert result["syllable_counts"][0] > 0
+        result = detect_meter(text, "english")
+        assert result["summary"]["total_lines"] == 1
+        assert len(result["lines"]) == 1
+        assert result["lines"][0]["total_syllables"] > 0
 
     def test_bengali_single_line(self):
         """Test meter detection on single Bengali line."""
@@ -178,22 +178,22 @@ class TestPoeticMeterIntegration:
         assert 8 <= syllables <= 12  # Allow some variance
 
     def test_known_bangla_meters(self):
-        """Test that all known Bangla meters are in the BANGLA_METERS dict."""
-        assert "পয়ার" in BANGLA_METERS
-        assert "ত্রিপদী" in BANGLA_METERS
-        assert "চৌপদী" in BANGLA_METERS
+        """Test that all known Bangla meters are in the PoeticMeterDetector.METER_TYPES list."""
+        assert "পয়ার" in PoeticMeterDetector.METER_TYPES
+        assert "অক্ষরবৃত্ত" in PoeticMeterDetector.METER_TYPES
+        assert "মাত্রাবৃত্ত" in PoeticMeterDetector.METER_TYPES
 
     def test_detect_meter_with_empty_text(self):
         """Test meter detection with empty text."""
-        result = detect_meter("", "en")
-        assert result["line_count"] == 0
-        assert result["avg_syllables"] == 0
+        result = detect_meter("", "english")
+        assert result["summary"]["total_lines"] == 0
+        assert result["summary"]["avg_units_per_line"] == 0
 
     def test_detect_meter_with_whitespace(self):
         """Test that whitespace-only text is handled correctly."""
-        result = detect_meter("   \n  \n ", "en")
-        assert result["line_count"] == 0
-        assert result["avg_syllables"] == 0
+        result = detect_meter("   \n  \n ", "english")
+        assert result["summary"]["total_lines"] == 0
+        assert result["summary"]["avg_units_per_line"] == 0
 
     def test_bengali_payar_approximation(self):
         """Test detection of Bengali পয়ার ছন্দ pattern."""
