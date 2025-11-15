@@ -1,15 +1,13 @@
 #!/bin/bash
-"""
-Production Release and Distribution Script for Bilingual NLP Toolkit
-
-This script handles the complete release process:
-1. Version bumping and tagging
-2. Package building and testing
-3. PyPI upload (Test and Production)
-4. Docker image building and pushing
-5. Documentation deployment
-6. Release notes generation
-"""
+# Production Release and Distribution Script for Bilingual NLP Toolkit
+#
+# This script handles the complete release process:
+# 1. Version bumping and tagging
+# 2. Package building and testing
+# 3. PyPI upload (Test and Production)
+# 4. Docker image building and pushing
+# 5. Documentation deployment
+# 6. Release notes generation
 
 set -e  # Exit on any error
 
@@ -130,15 +128,15 @@ manage_version() {
     sed -i.bak "s/dynamic = \[\"version\"\]/version = \"$new_version\"/" pyproject.toml
 
     # Update __init__.py
-    sed -i.bak "s/__version__ = \".*\"/__version__ = \"$new_version\"/" bilingual/__init__.py
+    sed -i.bak "s/__version__ = \".*\"/__version__ = \"$new_version\"/" src/bilingual/__init__.py
 
     # Update server.py
-    sed -i.bak "s/version=\"1\.0\.0\"/version=\"$new_version\"/" bilingual/server.py
+    sed -i.bak "s/version=\"1\.0\.0\"/version=\"$new_version\"/" src/bilingual/server.py
 
     log_success "Version updated to $new_version"
 
     # Commit version changes
-    git add pyproject.toml bilingual/__init__.py bilingual/server.py
+    git add pyproject.toml src/bilingual/__init__.py src/bilingual/server.py
     git commit -m "chore: bump version to $new_version"
     git tag -a "v$new_version" -m "Release version $new_version"
 

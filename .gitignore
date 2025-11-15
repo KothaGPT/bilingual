@@ -89,3 +89,4 @@ dmypy.json
 # Package manager
 poetry.lock
 Pipfile.lock
+*.bak
