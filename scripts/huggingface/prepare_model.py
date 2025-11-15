@@ -96,27 +96,14 @@ class ModelPreparer:
 
         self.output_path.mkdir(parents=True, exist_ok=True)
 
-        # Copy all files except excluded patterns
-        for file_path in self.model_path.rglob("*"):
-            if file_path.is_file():
-                # Check if file should be excluded
-                relative_path = file_path.relative_to(self.model_path)
+        ignore_patterns = shutil.ignore_patterns(*self.EXCLUDE_PATTERNS)
 
-                should_exclude = False
-                for pattern in self.EXCLUDE_PATTERNS:
-                    if file_path.match(pattern) or relative_path.match(pattern):
-                        should_exclude = True
-                        break
-
-                if should_exclude:
-                    logger.debug(f"Excluding: {relative_path}")
-                    continue
-
-                # Copy file
-                dest_path = self.output_path / relative_path
-                dest_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(file_path, dest_path)
-                logger.debug(f"Copied: {relative_path}")
+        shutil.copytree(
+            self.model_path,
+            self.output_path,
+            ignore=ignore_patterns,
+            dirs_exist_ok=True,
+        )
 
         logger.info("✓ Model files copied")
 
