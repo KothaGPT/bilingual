@@ -27,7 +27,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -35,7 +35,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     
     - name: Cache pip packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
@@ -57,7 +57,7 @@ jobs:
         pytest tests/wikipedia/ -v --cov=src/bilingual/modules/wikipedia_lm --cov=scripts --cov-report=xml --cov-report=term-missing --timeout=300
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         flags: wikipedia
@@ -72,7 +72,7 @@ jobs:
     
     - name: Upload coverage HTML
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-html-${{ matrix.python-version }}
         path: htmlcov/
@@ -83,7 +83,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
@@ -109,7 +109,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
@@ -143,7 +143,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
