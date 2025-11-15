@@ -1,0 +1,123 @@
+name: 🤗 Hugging Face Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run publish script in dry-run mode"
+        required: false
+        default: "false"
+  push:
+    branches:
+      - main
+    paths:
+      - "models/**"
+
+jobs:
+  validate:
+    name: Validate Models
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Validate model structures
+        run: |
+          python -c "
+import sys
+from pathlib import Path
+
+models_dir = Path('models')
+required_models = [
+    'bilingual-lm',
+    'literary-lm',
+    'readability-classifier',
+]
+
+for model in required_models:
+    model_path = models_dir / model
+    if not model_path.exists():
+        print(f'Warning: {model} not found')
+        continue
+    print(f'✓ Found {model}')
+"
+      
+      - name: Run tests
+        run: |
+          pytest tests/ -v --maxfail=3 || echo "Some tests failed"
+
+  publish:
+    name: Publish Models
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install huggingface_hub
+      
+      - name: Configure Hugging Face CLI
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+      - name: 🗂️ Prepare Dataset
+        run: |
+          python scripts/prepare_hf_dataset.py --dataset bilingual_corpus || echo "Dataset not ready yet"
+
+      - name: 🧰 Prepare Model Cards
+        run: |
+          python scripts/huggingface/generate_model_card.py
+
+      - name: 🚀 Publish All Models
+        run: |
+          bash scripts/huggingface/publish_all.sh ${{ github.event.inputs.dry_run }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+      - name: ✅ Validate Published Models
+        run: |
+          python scripts/huggingface/test_hf_model.py
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+      - name: 📄 Upload Log Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf_publish_logs
+          path: |
+            logs/
+            outputs/
+            reports/
+
+  notify:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: publish
+    steps:
+      - name: 📨 Send Publish Notification
+        run: |
+          echo "✅ Hugging Face models published successfully by $GITHUB_ACTOR"

@@ -75,6 +75,7 @@ logs/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+!examples/*.ipynb
 
 # mypy
 .mypy_cache/

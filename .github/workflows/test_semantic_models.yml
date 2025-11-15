@@ -1,0 +1,76 @@
+name: Test Semantic Models
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/bilingual/models/cross_lingual_embeddings.py'
+      - 'src/bilingual/models/named_entity_recognizer.py'
+      - 'tests/semantic/**'
+      - '.github/workflows/test_semantic_models.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/bilingual/models/cross_lingual_embeddings.py'
+      - 'src/bilingual/models/named_entity_recognizer.py'
+      - 'tests/semantic/**'
+
+jobs:
+  test-semantic-models:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov numpy
+
+    - name: Run semantic model tests
+      run: |
+        pytest tests/semantic/ -v --cov=src/bilingual/models --cov-report=xml --cov-report=term
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: semantic-models
+        name: semantic-models-coverage
+
+    - name: Test cross-lingual embeddings
+      run: |
+        python -c "from bilingual.models.cross_lingual_embeddings import CrossLingualEmbeddings; print('Cross-lingual embeddings module loaded successfully')"
+
+    - name: Test NER
+      run: |
+        python -c "from bilingual.models.named_entity_recognizer import BanglaNER; print('NER module loaded successfully')"
+
+    - name: Generate test report
+      if: always()
+      run: |
+        pytest tests/semantic/ --junitxml=test-results-semantic.xml
+
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: test-results-semantic.xml
+        check_name: Semantic Models Test Results
