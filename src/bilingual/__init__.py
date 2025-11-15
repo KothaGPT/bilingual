@@ -33,9 +33,10 @@ from bilingual.testing import (
     run_performance_benchmarks,
     run_unit_tests,
 )
+from bilingual import api
 
 __all__ = [
-    "bilingual_api",
+    "api",
     "normalize_text",
     "load_model",
     "BilingualTokenizer",

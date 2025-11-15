@@ -5,7 +5,7 @@ Basic usage examples for the bilingual package.
 This script demonstrates common use cases and API patterns.
 """
 
-from bilingual import bilingual_api as bb
+from bilingual import api as bb
 from bilingual.normalize import normalize_text, detect_language
 from bilingual.data_utils import BilingualDataset
 
