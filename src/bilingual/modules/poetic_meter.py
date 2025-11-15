@@ -14,9 +14,7 @@ from typing import Any, Dict, List, Optional
 # Optional ML imports - only needed for PoeticMeterDetector class
 try:
     import torch
-    import torch.nn as nn
     from transformers import (
-        AutoConfig,
         AutoModelForSequenceClassification,
         AutoTokenizer,
     )
@@ -82,6 +80,9 @@ def _count_matra_bengali(word: str) -> int:
     Returns:
         Estimated matra count
     """
+    if not word:
+        return 0
+
     # Bengali vowels and diacritics
     bengali_vowels = "অআইঈউঊঋএঐওঔ"
     bengali_consonants = "কখগঘঙচছজঝঞটঠডঢণতথদধনপফবভমযরলশষসহড়ঢ়য়ৎ"
