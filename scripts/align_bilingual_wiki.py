@@ -14,7 +14,6 @@ import json
 import logging
 import re
 import sys
-
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -195,8 +194,9 @@ class BilingualAligner:
         bn_path = output_dir / "bangla.txt"
         en_path = output_dir / "english.txt"
 
-        with open(bn_path, "w", encoding="utf-8") as bn_f, \
-             open(en_path, "w", encoding="utf-8") as en_f:
+        with open(bn_path, "w", encoding="utf-8") as bn_f, open(
+            en_path, "w", encoding="utf-8"
+        ) as en_f:
 
             for bn_title, bn_content, en_title, en_content in aligned_articles:
                 # Write titles and content
