@@ -7,7 +7,7 @@ from Bangla literary text using both pattern-based and ML-based approaches.
 
 import logging
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 try:
     import torch
