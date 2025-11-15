@@ -6,10 +6,9 @@ This module provides utilities to convert Transformer models to ONNX format
 for faster inference in production environments.
 """
 
-import os
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 try:
     import onnx
@@ -232,7 +231,7 @@ class ONNXConverter:
             start_time = time.time()
 
             # Run inference
-            outputs = session.run(None, {"input_ids": input_ids, "attention_mask": attention_mask})
+            session.run(None, {"input_ids": input_ids, "attention_mask": attention_mask})
 
             end_time = time.time()
 
