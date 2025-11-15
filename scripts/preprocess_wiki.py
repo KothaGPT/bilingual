@@ -56,8 +56,13 @@ class WikiTextCleaner:
         # Remove citations like [1], [2], etc.
         text = re.sub(r"\[\d+\]", "", text)
 
-        # Remove templates {{...}}
-        text = re.sub(r"\{\{[^}]+\}\}", "", text)
+        # Iteratively remove nested templates and links
+        # Process from inside out to handle nesting
+        for _ in range(5):  # Limit iterations to prevent infinite loops
+            # Remove templates {{...}}
+            text = re.sub(r"\{\{[^\{\}]*\}\}", "", text)
+            # Clean wiki links [[link|text]] -> text
+            text = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]\[]+)\]\]", r"\1", text)
 
         # Remove file/image references
         text = re.sub(r"\[\[File:.*?\]\]", "", text, flags=re.IGNORECASE)
@@ -65,9 +70,6 @@ class WikiTextCleaner:
 
         # Remove category links
         text = re.sub(r"\[\[Category:.*?\]\]", "", text, flags=re.IGNORECASE)
-
-        # Clean wiki links [[link|text]] -> text
-        text = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]+)\]\]", r"\1", text)
 
         # Remove external links
         text = re.sub(r"\[http[^\]]+\]", "", text)
