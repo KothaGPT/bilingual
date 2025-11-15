@@ -17,18 +17,7 @@ import string
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
-
-try:
-    import hypothesis
-    import pytest
-    from hypothesis import strategies as st
-    from hypothesis.extra import numpy as np_st
-
-    PYTEST_AVAILABLE = True
-except ImportError:
-    PYTEST_AVAILABLE = False
-    print("Warning: pytest/hypothesis not available. Install with: pip install pytest hypothesis")
+from typing import Any, Dict, List, Optional
 
 # Add parent directory to path for imports
 import sys
@@ -338,7 +327,7 @@ class BilingualTestSuite:
 
             # Text processing
             if detected_lang == "mixed":
-                segments = bb.detect_language_segments(text)
+                bb.detect_language_segments(text)
 
             # Evaluation
             bleu = bb.bleu_score("Hello world", "Hello world")
@@ -364,14 +353,14 @@ class BilingualTestSuite:
             try:
                 bb.load_model("t5-small", "t5")
                 model_loaded = True
-            except:
+            except Exception:
                 model_loaded = False
 
             # Test tokenizer loading
             try:
                 tokenizer = bb.load_tokenizer("models/tokenizer/bilingual_sp.model")
                 tokenizer_loaded = True
-            except:
+            except Exception:
                 tokenizer_loaded = False
 
             # Basic checks
