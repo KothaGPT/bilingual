@@ -188,6 +188,21 @@ class ComplexityAnalyzer:
 
     def _rule_based_analyze(self, text: str) -> Dict[str, Any]:
         """Rule-based complexity analysis using traditional formulas."""
+        if not text.strip():
+            return {
+                "text": text,
+                "metrics": {metric: 0.0 for metric in self.METRICS},
+                "overall_complexity": 0.0,
+                "complexity_level": "very_easy",
+                "text_statistics": {
+                    "total_words": 0,
+                    "total_sentences": 0,
+                    "avg_word_length": 0.0,
+                    "avg_sentence_length": 0.0,
+                },
+                "method": "rule-based",
+            }
+
         # Basic text statistics
         words = text.split()
         sentences = text.count("।") + text.count(".") + text.count("?") + text.count("!")
