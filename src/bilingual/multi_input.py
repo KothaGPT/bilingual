@@ -7,8 +7,7 @@ where Bangla and English text appear together in the same input.
 """
 
 import re
-from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 
 class MultiInputProcessor:
