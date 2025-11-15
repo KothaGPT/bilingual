@@ -1,0 +1,22 @@
+{
+  "task_name": "poetic_meter_detection",
+  "model_type": "classification",
+  "num_labels": 8,
+  "label_names": [
+    "অক্ষরবৃত্ত",
+    "মাত্রাবৃত্ত",
+    "স্বরবৃত্ত",
+    "পয়ার",
+    "মুক্তক",
+    "গদ্যছন্দ",
+    "অমিত্রাক্ষর",
+    "other"
+  ],
+  "max_length": 256,
+  "training": {
+    "num_epochs": 20,
+    "batch_size": 16,
+    "learning_rate": 2e-5,
+    "warmup_ratio": 0.1
+  }
+}

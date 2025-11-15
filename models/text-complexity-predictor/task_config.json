@@ -1,0 +1,23 @@
+{
+  "task_name": "text_complexity_prediction",
+  "model_type": "regression",
+  "output_mode": "multi_output",
+  "metrics": [
+    "flesch_reading_ease",
+    "gunning_fog_index",
+    "smog_index",
+    "coleman_liau_index",
+    "automated_readability_index",
+    "literary_complexity_score"
+  ],
+  "num_outputs": 6,
+  "max_length": 512,
+  "training": {
+    "num_epochs": 15,
+    "batch_size": 16,
+    "learning_rate": 2e-5,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "loss_function": "mse"
+  }
+}

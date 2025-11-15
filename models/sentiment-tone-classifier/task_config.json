@@ -1,0 +1,25 @@
+{
+  "task_name": "sentiment_tone_classification",
+  "model_type": "multi_label_classification",
+  "sentiment_labels": ["positive", "neutral", "negative"],
+  "tone_labels": [
+    "formal",
+    "informal",
+    "poetic",
+    "dramatic",
+    "melancholic",
+    "joyful",
+    "satirical",
+    "romantic"
+  ],
+  "num_sentiment_labels": 3,
+  "num_tone_labels": 8,
+  "max_length": 512,
+  "training": {
+    "num_epochs": 15,
+    "batch_size": 16,
+    "learning_rate": 2e-5,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01
+  }
+}

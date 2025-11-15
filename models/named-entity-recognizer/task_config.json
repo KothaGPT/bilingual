@@ -1,0 +1,34 @@
+{
+  "task_name": "named_entity_recognition",
+  "model_type": "token_classification",
+  "num_labels": 19,
+  "label_names": [
+    "O",
+    "B-PER",
+    "I-PER",
+    "B-ORG",
+    "I-ORG",
+    "B-LOC",
+    "I-LOC",
+    "B-DATE",
+    "I-DATE",
+    "B-TIME",
+    "I-TIME",
+    "B-WORK",
+    "I-WORK",
+    "B-EVENT",
+    "I-EVENT",
+    "B-LANG",
+    "I-LANG",
+    "B-MISC",
+    "I-MISC"
+  ],
+  "max_length": 256,
+  "training": {
+    "num_epochs": 20,
+    "batch_size": 16,
+    "learning_rate": 3e-5,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "task_name": "metaphor_simile_detection",
+  "model_type": "token_classification",
+  "num_labels": 5,
+  "label_names": [
+    "O",
+    "B-METAPHOR",
+    "I-METAPHOR",
+    "B-SIMILE",
+    "I-SIMILE"
+  ],
+  "max_length": 256,
+  "training": {
+    "num_epochs": 15,
+    "batch_size": 16,
+    "learning_rate": 3e-5,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01
+  }
+}
