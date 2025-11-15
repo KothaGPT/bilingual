@@ -1,0 +1,47 @@
+# Training configuration
+
+# Model configuration
+model:
+  src_vocab_size: 32000  # Will be updated during training
+  tgt_vocab_size: 32000  # Will be updated during training
+  d_model: 512
+  nhead: 8
+  num_encoder_layers: 6
+  num_decoder_layers: 6
+  dim_feedforward: 2048
+  dropout: 0.1
+  max_seq_length: 128
+
+# Data configuration
+data:
+  train_data: "data/processed/samanantar/opus100_en_bn_train.parquet"
+  val_data: "data/processed/samanantar/opus100_en_bn_validation.parquet"
+  test_data: "data/processed/samanantar/opus100_en_bn_test.parquet"
+  
+# Training configuration
+training:
+  batch_size: 64
+  val_batch_size: 32
+  num_epochs: 20
+  learning_rate: 0.0001
+  lr_step_size: 1
+  lr_gamma: 0.95
+  weight_decay: 0.0001
+  clip_grad_norm: 1.0
+  log_interval: 100
+  save_interval: 1
+  num_workers: 4
+  seed: 42
+  output_dir: "models/transformer"
+  
+  # Set to a checkpoint path to resume training
+  # resume: "models/transformer/checkpoint_latest.pt"
+  resume: null
+
+# Evaluation configuration
+evaluation:
+  max_length: 128
+  num_beams: 5
+  length_penalty: 1.0
+  no_repeat_ngram_size: 3
+  early_stopping: true

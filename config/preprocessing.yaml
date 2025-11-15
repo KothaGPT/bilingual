@@ -1,0 +1,23 @@
+# Preprocessing configuration
+preprocessing:
+  # Vocabulary settings
+  vocab_size: 32000
+  max_seq_length: 128
+  
+  # Text cleaning
+  lowercase: true
+  remove_punctuation: false
+  normalize_unicode: true
+  
+  # Dataset splits
+  train_size: 0.9
+  val_size: 0.05
+  test_size: 0.05
+  
+  # Output directories
+  output_dir: "data/processed"
+  vocab_dir: "data/vocab"
+  
+  # Batch processing
+  batch_size: 1024
+  num_workers: 4
