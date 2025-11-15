@@ -1,0 +1,80 @@
+name: Test Literary Models
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/bilingual/models/literary_lm.py'
+      - 'src/bilingual/models/metaphor_detector.py'
+      - 'src/bilingual/models/sentiment_tone_classifier.py'
+      - 'src/bilingual/models/text_complexity_predictor.py'
+      - 'src/bilingual/modules/poetic_meter.py'
+      - 'src/bilingual/modules/style_transfer_gan.py'
+      - 'tests/literary/**'
+      - '.github/workflows/test_literary_models.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/bilingual/models/**'
+      - 'src/bilingual/modules/**'
+      - 'tests/literary/**'
+
+jobs:
+  test-literary-models:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run literary model tests
+      run: |
+        pytest tests/literary/ -v --cov=src/bilingual/models --cov=src/bilingual/modules --cov-report=xml --cov-report=term
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: literary-models
+        name: literary-models-coverage
+
+    - name: Test poetic meter detection
+      run: |
+        python -c "from bilingual.modules.poetic_meter import detect_meter, PoeticMeterDetector; print('Poetic meter module loaded successfully')"
+
+    - name: Test style transfer
+      run: |
+        python -c "from bilingual.modules.style_transfer_gan import StyleTransferModel, StyleTransferGPT; print('Style transfer module loaded successfully')"
+
+    - name: Generate test report
+      if: always()
+      run: |
+        pytest tests/literary/ --junitxml=test-results-literary.xml
+
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: test-results-literary.xml
+        check_name: Literary Models Test Results
