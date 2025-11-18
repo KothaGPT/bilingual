@@ -215,7 +215,8 @@ def load_tokenizer(model_name_or_path: str) -> BilingualTokenizer:
     # Model not found
     raise FileNotFoundError(
         f"Tokenizer model '{model_name_or_path}' not found. "
-        f"Checked: {model_name_or_path}, {model_path}"
+        f"Checked: {model_name_or_path}, {model_path}. "
+        "Use bilingual.api.list_available_models() to inspect local models."
     )
 
 
