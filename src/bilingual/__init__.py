@@ -12,6 +12,7 @@ __author__ = "Bilingual Project Contributors"
 __license__ = "Apache-2.0"
 
 from bilingual import api
+from bilingual.api import list_available_models
 from bilingual.config import get_settings
 from bilingual.data_augmentation import augment_text
 from bilingual.data_utils import BilingualDataset
@@ -34,9 +35,14 @@ from bilingual.testing import (
     run_performance_benchmarks,
     run_unit_tests,
 )
+from bilingual.tokenizer import BilingualTokenizer, load_tokenizer
+
+# Legacy alias for the high-level API used by scripts (e.g., benchmark_models.py)
+bilingual_api = api
 
 __all__ = [
     "api",
+    "bilingual_api",
     "normalize_text",
     "load_model",
     "BilingualTokenizer",
@@ -63,6 +69,7 @@ __all__ = [
     "run_integration_tests",
     "run_performance_benchmarks",
     "generate_test_report",
+    "list_available_models",
     "__version__",
     "version",
     "__version_tuple__",

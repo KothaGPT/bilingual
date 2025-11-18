@@ -158,7 +158,7 @@ def evaluate_model(
     Returns:
         Dictionary of evaluation results
     """
-    from bilingual import bilingual_api as bb
+    from bilingual import api as bb
     from bilingual.data_utils import BilingualDataset
 
     # Load dataset

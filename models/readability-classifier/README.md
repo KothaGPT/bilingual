@@ -18,7 +18,7 @@ python scripts/train_classifier.py --task readability --data datasets/processed/
 
 ### Usage
 ```python
-from bilingual import bilingual_api as bb
+from bilingual import api as bb
 
 # Use the classifier
 result = bb.readability_check("Your text here")

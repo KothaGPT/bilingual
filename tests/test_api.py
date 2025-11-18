@@ -1,6 +1,11 @@
 """Tests for high-level API."""
 
-from bilingual.api import classify, readability_check, safety_check
+import os
+
+import pytest
+
+from bilingual.api import classify, list_available_models, readability_check, safety_check
+from bilingual.config import get_settings
 from bilingual.normalize import normalize_text
 
 
@@ -52,3 +57,30 @@ class TestClassifyAPI:
         for label in labels:
             assert label in result
             assert isinstance(result[label], (int, float))
+
+
+class TestModelIntrospection:
+    def test_list_available_models_structure(self):
+        summary = list_available_models()
+
+        assert isinstance(summary, dict)
+        assert "root" in summary
+        assert "exists" in summary
+        assert "tokenizer" in summary
+        assert "subdirs" in summary
+
+        # If models directory exists, ensure it is actually on disk
+        if summary["exists"]:
+            assert os.path.isdir(summary["root"])
+
+    def test_configured_tokenizer_path_if_present(self):
+        settings = get_settings()
+        tokenizer_path = settings.model.tokenizer_path
+
+        # Only assert existence if the path is present in this environment
+        if os.path.exists(tokenizer_path):
+            assert os.path.isfile(tokenizer_path)
+        else:
+            pytest.skip(
+                f"Tokenizer model not present at {tokenizer_path}; skipping existence check"
+            )

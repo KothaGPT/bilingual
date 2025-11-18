@@ -5,6 +5,7 @@ Provides simple functions for common NLP tasks in Bangla and English.
 """
 
 import warnings
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from bilingual.normalize import detect_language
@@ -30,6 +31,9 @@ def load_tokenizer(
     Returns:
         BilingualTokenizer instance
     """
+    if not model_name:
+        raise ValueError("model_name must be a non-empty string")
+
     if model_name not in _TOKENIZER_CACHE or force_reload:
         _TOKENIZER_CACHE[model_name] = _load_tokenizer(model_name)
     return _TOKENIZER_CACHE[model_name]
@@ -47,6 +51,9 @@ def load_model(model_name: str, force_reload: bool = False, **kwargs) -> Any:
     Returns:
         Loaded model instance
     """
+    if not model_name:
+        raise ValueError("model_name must be a non-empty string")
+
     if model_name not in _MODEL_CACHE or force_reload:
         # Import here to avoid circular dependencies
         from bilingual.models.loader import load_model_from_name
@@ -71,6 +78,12 @@ def normalize_text(text: str, lang: Optional[str] = None, **kwargs) -> str:
         >>> normalize_text("আমি   স্কুলে যাচ্ছি।", lang="bn")
         'আমি স্কুলে যাচ্ছি.'
     """
+    if lang is not None and lang not in {"bn", "en"}:
+        warnings.warn(
+            f"Unsupported language code '{lang}' in normalize_text; falling back to auto-detection."
+        )
+        lang = None
+
     return _normalize_text(text, lang=lang, **kwargs)
 
 
@@ -100,10 +113,11 @@ def tokenize(
     if isinstance(tokenizer, str):
         tokenizer = load_tokenizer(tokenizer)
 
+    if not isinstance(tokenizer, BilingualTokenizer):
+        raise TypeError("tokenizer must be a BilingualTokenizer instance or a valid model name")
+
     result = tokenizer.encode(text, as_ids=return_ids)
     # Return appropriate type based on return_ids
-    if return_ids:
-        return result  # type: ignore[return-value]
     return result  # type: ignore[return-value]
 
 
@@ -168,6 +182,12 @@ def translate(
         >>> translate("আমি বই পড়তে ভালোবাসি।", src="bn", tgt="en")
         'I love to read books.'
     """
+    supported_langs = {"bn", "en"}
+    if src not in supported_langs:
+        raise ValueError(f"Unsupported source language code: {src}")
+    if tgt not in supported_langs:
+        raise ValueError(f"Unsupported target language code: {tgt}")
+
     if src == tgt:
         warnings.warn(f"Source and target languages are the same ({src}). Returning original text.")
         return text
@@ -203,6 +223,12 @@ def readability_check(
         >>> readability_check("আমি স্কুলে যাই।", lang="bn")
         {'level': 'elementary', 'age_range': '6-8', 'score': 2.5}
     """
+    if lang is not None and lang not in {"bn", "en"}:
+        warnings.warn(
+            f"Unsupported language code '{lang}' in readability_check; falling back to auto-detection."
+        )
+        lang = None
+
     if lang is None:
         lang = detect_language(text)
 
@@ -348,6 +374,12 @@ def safety_check(
         >>> safety_check("This is a nice story about rabbits.")
         {'is_safe': True, 'confidence': 0.95, 'flags': [], 'recommendation': 'approved'}
     """
+    if lang is not None and lang not in {"bn", "en"}:
+        warnings.warn(
+            f"Unsupported language code '{lang}' in safety_check; falling back to auto-detection."
+        )
+        lang = None
+
     if lang is None:
         lang = detect_language(text)
 
@@ -401,6 +433,9 @@ def classify(
     """
     # Implement actual text classification using simple heuristics
     # Simple rule-based classification for common categories
+    if not labels:
+        raise ValueError("labels must be a non-empty list")
+
     text_lower = text.lower()
     scores = {}
 
@@ -452,6 +487,9 @@ def batch_process(texts: List[str], operation: str, **kwargs) -> List[Any]:
         >>> len(results)
         2
     """
+    if not isinstance(texts, list):
+        raise TypeError("texts must be a list of strings")
+
     if operation == "tokenize":
         tokenizer = kwargs.get("tokenizer", "bilingual-tokenizer")
         return_ids = kwargs.get("return_ids", False)
@@ -464,28 +502,32 @@ def batch_process(texts: List[str], operation: str, **kwargs) -> List[Any]:
     elif operation == "generate":
         model_name = kwargs.get("model_name", "bilingual-small-lm")
         max_tokens = kwargs.get("max_tokens", 100)
-        return [generate(text, model_name, max_tokens, **kwargs) for text in texts]
+        gen_kwargs = {k: v for k, v in kwargs.items() if k not in {"model_name", "max_tokens"}}
+        return [
+            generate(text, model_name=model_name, max_tokens=max_tokens, **gen_kwargs)
+            for text in texts
+        ]
 
     elif operation == "translate":
         src = kwargs.get("src", "bn")
         tgt = kwargs.get("tgt", "en")
         model_name = kwargs.get("model_name", "bilingual-translate")
-        return [translate(text, src, tgt, model_name) for text in texts]
+        return [translate(text, src=src, tgt=tgt, model_name=model_name) for text in texts]
 
     elif operation == "readability_check":
         lang = kwargs.get("lang")
         model_name = kwargs.get("model_name", "bilingual-readability")
-        return [readability_check(text, lang, model_name) for text in texts]
+        return [readability_check(text, lang=lang, model_name=model_name) for text in texts]
 
     elif operation == "safety_check":
         lang = kwargs.get("lang")
         model_name = kwargs.get("model_name", "bilingual-safety")
-        return [safety_check(text, lang, model_name) for text in texts]
+        return [safety_check(text, lang=lang, model_name=model_name) for text in texts]
 
     elif operation == "classify":
         labels = kwargs.get("labels", [])
         model_name = kwargs.get("model_name", "bilingual-classifier")
-        return [classify(text, labels, model_name) for text in texts]
+        return [classify(text, labels=labels, model_name=model_name) for text in texts]
 
     else:
         raise ValueError(f"Unsupported operation: {operation}")
@@ -600,6 +642,86 @@ def fine_tune_model(
     tokenizer.save_pretrained(output_dir)
 
     return output_dir
+
+
+def list_available_models(base_dir: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
+    """List available local models and related artifacts.
+
+    This inspects the package's ``models/`` directory and returns a
+    structured summary that can be used for debugging or tooling.
+
+    Args:
+        base_dir: Optional base directory to inspect. Defaults to the
+            project root inferred from this file.
+
+    Returns:
+        Dictionary describing available models, tokenizers, and
+        classifier/checkpoint subdirectories.
+    """
+    # Resolve base models directory
+    if base_dir is None:
+        package_root = Path(__file__).resolve().parent.parent
+        models_dir = package_root / "models"
+    else:
+        models_dir = Path(base_dir)
+
+    summary: Dict[str, Any] = {
+        "root": str(models_dir),
+        "exists": models_dir.exists(),
+        "tokenizer": {},
+        "subdirs": {},
+    }
+
+    if not models_dir.exists():
+        return summary
+
+    # Tokenizer info
+    tokenizer_info: Dict[str, Any] = {}
+    tokenizer_dir = models_dir / "tokenizer"
+    if tokenizer_dir.exists():
+        tokenizer_files = sorted(p.name for p in tokenizer_dir.iterdir() if p.is_file())
+        tokenizer_info["path"] = str(tokenizer_dir)
+        tokenizer_info["files"] = tokenizer_files
+
+        # Try to infer model file name
+        model_files = [f for f in tokenizer_files if f.endswith(".model")]
+        vocab_files = [f for f in tokenizer_files if f.endswith(".vocab")]
+        if model_files:
+            tokenizer_info["model_file"] = model_files[0]
+        if vocab_files:
+            tokenizer_info["vocab_file"] = vocab_files[0]
+
+    # Also check for legacy top-level tokenizer vocab
+    legacy_vocab = models_dir / "bilingual-tokenizer.vocab"
+    if legacy_vocab.exists():
+        tokenizer_info.setdefault("legacy", {})["vocab"] = str(legacy_vocab)
+
+    summary["tokenizer"] = tokenizer_info
+
+    # Subdirectory-based models (classifiers, LMs, etc.)
+    for entry in sorted(models_dir.iterdir()):
+        if not entry.is_dir() or entry.name in {"tokenizer"}:
+            continue
+
+        sub_summary: Dict[str, Any] = {
+            "path": str(entry),
+            "files": [],
+            "has_training_args": False,
+            "has_task_config": False,
+        }
+
+        for child in entry.iterdir():
+            if child.is_file():
+                name = child.name
+                sub_summary["files"].append(name)
+                if name == "training_args.json":
+                    sub_summary["has_training_args"] = True
+                if name == "task_config.json":
+                    sub_summary["has_task_config"] = True
+
+        summary["subdirs"][entry.name] = sub_summary
+
+    return summary
 
 
 # Convenience aliases

@@ -10,6 +10,8 @@ Provides REST API endpoints for all bilingual functionality including:
 - Health monitoring and telemetry
 """
 
+import sys
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -260,7 +262,7 @@ async def root():
         <div class="endpoint">
             <div class="method">POST /detect-language</div>
             <p>Detect language of text</p>
-            <code>curl -X POST "http://localhost:8000/lang" -d '{"text": "Hello world"}'</code>
+            <code>curl -X POST "http://localhost:8000/detect-language" -H "Content-Type: application/json" -d '{"text": "Hello world"}'</code>
         </div>
 
         <div class="endpoint">
@@ -481,6 +483,19 @@ def create_app() -> FastAPI:
 
 def run_server(host: str = "localhost", port: int = 8000, workers: int = 1, reload: bool = False):
     """Run the FastAPI server."""
+    # Use configuration defaults when available and arguments are not explicitly overridden
+    if BILINGUAL_AVAILABLE:
+        try:
+            settings = get_settings()
+            if host == "localhost":
+                host = settings.api.host
+            if port == 8000:
+                port = settings.api.port
+            if workers == 1:
+                workers = settings.api.workers
+        except Exception:
+            pass
+
     print(f"🚀 Starting server on {host}:{port}")
     print(f"📚 API docs available at: http://{host}:{port}/docs")
     print(f"🔍 Health check: http://{host}:{port}/health")
