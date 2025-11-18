@@ -47,7 +47,8 @@ def load_model_from_name(
     # Model not found - return placeholder
     warnings.warn(
         f"Model '{model_name}' not found. Returning placeholder model. "
-        "Train and save a model first, or specify a valid model path."
+        "Train and save a model first, or specify a valid model path. "
+        "Use bilingual.api.list_available_models() to inspect local models."
     )
     return PlaceholderModel(model_name)
 
