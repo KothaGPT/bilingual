@@ -18,7 +18,6 @@ help:
 	@echo "  make train               Train language model"
 	@echo "  make train-test          Quick test training (1 epoch)"
 	@echo "  make evaluate            Evaluate trained model"
-	@echo "  make interactive         Interactive model testing"
 	@echo "  make align-bilingual     Align Bangla-English articles"
 	@echo "  make clean               Clean temporary files"
 	@echo "  make clean-all           Clean all generated files"
@@ -169,12 +168,6 @@ evaluate:
 		--model models/wikipedia/base \
 		--data datasets/wikipedia/processed/test/bn_test.txt \
 		--output results/wikipedia_eval.json
-
-interactive:
-	@echo "Starting interactive mode..."
-	python3 scripts/evaluate_wiki_lm.py \
-		--model models/wikipedia/base \
-		--interactive
 
 # Bilingual alignment
 align-bilingual:

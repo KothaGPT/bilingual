@@ -28,9 +28,9 @@ import numpy as np
 import psutil
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import bilingual.api as bb
 
-from bilingual import bilingual_api as bb  # noqa: E402
+
 
 
 class ModelBenchmark:
@@ -668,7 +668,7 @@ def main():
 
     # Run benchmarks
     try:
-        results = benchmarker.run_benchmarks(args.models, args.tasks, test_data)
+        benchmarker.run_benchmarks(args.models, args.tasks, test_data)
         print("\nBenchmarking completed successfully!")
 
     except Exception as e:

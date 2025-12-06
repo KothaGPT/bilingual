@@ -249,3 +249,7 @@ def main():
         collect_web_data(output_dir, platforms, args.limit)
 
     print("\nData collection complete!")
+
+
+if __name__ == "__main__":
+    main()

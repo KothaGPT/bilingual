@@ -6,16 +6,17 @@ Provides simple functions for common NLP tasks in Bangla and English.
 
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
+from cachetools import TTLCache
 from bilingual.normalize import detect_language
 from bilingual.normalize import normalize_text as _normalize_text
 from bilingual.tokenizer import BilingualTokenizer
 from bilingual.tokenizer import load_tokenizer as _load_tokenizer
 
 # Global cache for loaded models and tokenizers
-_TOKENIZER_CACHE: Dict[str, BilingualTokenizer] = {}
-_MODEL_CACHE: Dict[str, Any] = {}
+_TOKENIZER_CACHE: TTLCache = TTLCache(maxsize=128, ttl=3600)
+_MODEL_CACHE: TTLCache = TTLCache(maxsize=32, ttl=3600)
 
 
 def load_tokenizer(
@@ -122,18 +123,18 @@ def tokenize(
 
 
 def generate(
-    prompt: str,
+    prompt: Union[str, List[str]],
     model_name: str = "bilingual-small-lm",
     max_tokens: int = 100,
     temperature: float = 0.7,
     top_p: float = 0.9,
     **kwargs,
-) -> str:
+) -> Union[str, List[str]]:
     """
     Generate text continuation from a prompt.
 
     Args:
-        prompt: Input prompt text
+        prompt: Input prompt text or a list of prompts
         model_name: Name of the generation model
         max_tokens: Maximum number of tokens to generate
         temperature: Sampling temperature (higher = more random)
@@ -141,7 +142,7 @@ def generate(
         **kwargs: Additional generation parameters
 
     Returns:
-        Generated text
+        Generated text or a list of generated texts
 
     Examples:
         >>> generate("Once upon a time, there was a brave rabbit")
@@ -163,20 +164,24 @@ def generate(
 
 
 def translate(
-    text: str, src: str = "bn", tgt: str = "en", model_name: str = "bilingual-translate", **kwargs
-) -> str:
+    text: Union[str, List[str]],
+    src: str = "bn",
+    tgt: str = "en",
+    model_name: str = "bilingual-translate",
+    **kwargs,
+) -> Union[str, List[str]]:
     """
     Translate text between Bangla and English.
 
     Args:
-        text: Input text to translate
+        text: Input text to translate or a list of texts
         src: Source language code ('bn' or 'en')
         tgt: Target language code ('bn' or 'en')
         model_name: Name of the translation model
         **kwargs: Additional translation parameters
 
     Returns:
-        Translated text
+        Translated text or a list of translated texts
 
     Examples:
         >>> translate("আমি বই পড়তে ভালোবাসি।", src="bn", tgt="en")
@@ -201,28 +206,28 @@ def translate(
 
 
 def readability_check(
-    text: str,
+    text: Union[str, List[str]],
     lang: Optional[str] = None,
     model_name: str = "bilingual-readability",
-) -> Dict[str, Any]:
+) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Check readability level of text.
 
     Args:
-        text: Input text
+        text: Input text or a list of texts
         lang: Language code ('bn' or 'en'), auto-detected if None
         model_name: Name of the readability model
 
     Returns:
-        Dictionary with readability metrics:
-            - level: Reading level (e.g., "elementary", "intermediate", "advanced")
-            - age_range: Suggested age range
-            - score: Numerical readability score
+        Dictionary with readability metrics or a list of dictionaries
 
     Examples:
         >>> readability_check("আমি স্কুলে যাই।", lang="bn")
         {'level': 'elementary', 'age_range': '6-8', 'score': 2.5}
     """
+    warnings.warn("The 'readability_check' function is using a simple heuristic and not a trained model.")
+    if isinstance(text, list):
+        return [readability_check(t, lang, model_name) for t in text]
     if lang is not None and lang not in {"bn", "en"}:
         warnings.warn(
             f"Unsupported language code '{lang}' in readability_check; falling back to auto-detection."
@@ -351,29 +356,28 @@ def _calculate_readability_score(features: Dict[str, float], lang: str) -> Dict[
 
 
 def safety_check(
-    text: str,
+    text: Union[str, List[str]],
     lang: Optional[str] = None,
     model_name: str = "bilingual-safety",
-) -> Dict[str, Any]:
+) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Check if text is safe and appropriate for children.
 
     Args:
-        text: Input text
+        text: Input text or a list of texts
         lang: Language code ('bn' or 'en'), auto-detected if None
         model_name: Name of the safety model
 
     Returns:
-        Dictionary with safety assessment:
-            - is_safe: Boolean indicating if content is safe
-            - confidence: Confidence score (0-1)
-            - flags: List of any safety concerns
-            - recommendation: Action recommendation
+        Dictionary with safety assessment or a list of dictionaries
 
     Examples:
         >>> safety_check("This is a nice story about rabbits.")
         {'is_safe': True, 'confidence': 0.95, 'flags': [], 'recommendation': 'approved'}
     """
+    warnings.warn("The 'safety_check' function is using a simple heuristic and not a trained model.")
+    if isinstance(text, list):
+        return [safety_check(t, lang, model_name) for t in text]
     if lang is not None and lang not in {"bn", "en"}:
         warnings.warn(
             f"Unsupported language code '{lang}' in safety_check; falling back to auto-detection."
@@ -413,24 +417,30 @@ def safety_check(
 
 
 def classify(
-    text: str, labels: List[str], model_name: str = "bilingual-classifier", **kwargs
-) -> Dict[str, float]:
+    text: Union[str, List[str]],
+    labels: List[str],
+    model_name: str = "bilingual-classifier",
+    **kwargs,
+) -> Union[Dict[str, float], List[Dict[str, float]]]:
     """
     Classify text into one or more categories.
 
     Args:
-        text: Input text
+        text: Input text or a list of texts
         labels: List of possible labels
         model_name: Name of the classification model
         **kwargs: Additional classification parameters
 
     Returns:
-        Dictionary mapping labels to confidence scores
+        Dictionary mapping labels to confidence scores or a list of dictionaries
 
     Examples:
         >>> classify("This is a story about animals.", labels=["story", "news", "dialogue"])
         {'story': 0.85, 'news': 0.05, 'dialogue': 0.10}
     """
+    warnings.warn("The 'classify' function is using a simple heuristic and not a trained model.")
+    if isinstance(text, list):
+        return [classify(t, labels, model_name, **kwargs) for t in text]
     # Implement actual text classification using simple heuristics
     # Simple rule-based classification for common categories
     if not labels:
@@ -491,44 +501,19 @@ def batch_process(texts: List[str], operation: str, **kwargs) -> List[Any]:
         raise TypeError("texts must be a list of strings")
 
     if operation == "tokenize":
-        tokenizer = kwargs.get("tokenizer", "bilingual-tokenizer")
-        return_ids = kwargs.get("return_ids", False)
-        return [tokenize(text, tokenizer, return_ids) for text in texts]
-
+        return tokenize(texts, **kwargs)
     elif operation == "normalize":
-        lang = kwargs.get("lang")
-        return [normalize_text(text, lang) for text in texts]
-
+        return normalize_text(texts, **kwargs)
     elif operation == "generate":
-        model_name = kwargs.get("model_name", "bilingual-small-lm")
-        max_tokens = kwargs.get("max_tokens", 100)
-        gen_kwargs = {k: v for k, v in kwargs.items() if k not in {"model_name", "max_tokens"}}
-        return [
-            generate(text, model_name=model_name, max_tokens=max_tokens, **gen_kwargs)
-            for text in texts
-        ]
-
+        return generate(texts, **kwargs)
     elif operation == "translate":
-        src = kwargs.get("src", "bn")
-        tgt = kwargs.get("tgt", "en")
-        model_name = kwargs.get("model_name", "bilingual-translate")
-        return [translate(text, src=src, tgt=tgt, model_name=model_name) for text in texts]
-
+        return translate(texts, **kwargs)
     elif operation == "readability_check":
-        lang = kwargs.get("lang")
-        model_name = kwargs.get("model_name", "bilingual-readability")
-        return [readability_check(text, lang=lang, model_name=model_name) for text in texts]
-
+        return readability_check(texts, **kwargs)
     elif operation == "safety_check":
-        lang = kwargs.get("lang")
-        model_name = kwargs.get("model_name", "bilingual-safety")
-        return [safety_check(text, lang=lang, model_name=model_name) for text in texts]
-
+        return safety_check(texts, **kwargs)
     elif operation == "classify":
-        labels = kwargs.get("labels", [])
-        model_name = kwargs.get("model_name", "bilingual-classifier")
-        return [classify(text, labels=labels, model_name=model_name) for text in texts]
-
+        return classify(texts, **kwargs)
     else:
         raise ValueError(f"Unsupported operation: {operation}")
 
@@ -564,84 +549,7 @@ def fine_tune_model(
         ... ]
         >>> model_path = fine_tune_model("bilingual-small-lm", train_data, "my_model/")
     """
-    try:
-        from torch.utils.data import Dataset
-        from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
-    except ImportError:
-        raise ImportError(
-            "PyTorch and transformers are required for fine-tuning. "
-            "Install with: pip install torch transformers"
-        )
-
-    # Load base model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-
-    # Prepare dataset
-    class CustomDataset(Dataset):
-        def __init__(self, data, tokenizer, max_length=512):
-            self.data = data
-            self.tokenizer = tokenizer
-            self.max_length = max_length
-
-        def __len__(self):
-            return len(self.data)
-
-        def __getitem__(self, idx):
-            item = self.data[idx]
-            input_text = item["input"]
-            target_text = item["output"]
-
-            # Combine input and output for language modeling
-            full_text = f"{input_text} {target_text}"
-
-            encodings = self.tokenizer(
-                full_text,
-                truncation=True,
-                padding="max_length",
-                max_length=self.max_length,
-                return_tensors="pt",
-            )
-
-            return {
-                "input_ids": encodings["input_ids"].flatten(),
-                "attention_mask": encodings["attention_mask"].flatten(),
-                "labels": encodings["input_ids"].flatten(),
-            }
-
-    dataset = CustomDataset(train_data, tokenizer)
-
-    # Training arguments
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        num_train_epochs=epochs,
-        per_device_train_batch_size=batch_size,
-        learning_rate=learning_rate,
-        save_steps=500,
-        save_total_limit=2,
-        logging_dir=f"{output_dir}/logs",
-        logging_steps=100,
-        **kwargs,
-    )
-
-    # Initialize trainer
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=dataset,
-    )
-
-    # Train the model
-    trainer.train()
-
-    # Save the fine-tuned model
-    model.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)
-
-    return output_dir
+    raise NotImplementedError("Fine-tuning is not yet implemented.")
 
 
 def list_available_models(base_dir: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
@@ -724,8 +632,3 @@ def list_available_models(base_dir: Optional[Union[str, Path]] = None) -> Dict[s
     return summary
 
 
-# Convenience aliases
-normalize = normalize_text
-tok = tokenize
-gen = generate
-trans = translate

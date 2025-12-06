@@ -37,13 +37,13 @@ install-dev:
 	python3 -m pip install -e ".[dev]"
 
 test:
-	pytest tests/ -v
+	python3 -m pytest tests/ -v
 
 test-cov:
-	pytest tests/ --cov=src/bilingual --cov-report=html --cov-report=term
+	python3 -m pytest tests/ --cov=src/bilingual --cov-report=html --cov-report=term
 
 lint:
-	flake8 src/bilingual/ tests/ scripts/
+	python3 -m flake8 src/bilingual/ tests/ scripts/
 	mypy src/bilingual/
 
 format:

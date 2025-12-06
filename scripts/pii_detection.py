@@ -373,29 +373,52 @@ def process_file(
 
     # Process each sample
     for sample in samples:
-        text = sample.get("text", "")
-        if not text:
+        # Determine fields to process
+        fields_to_process = []
+        if "text" in sample:
+            fields_to_process.append("text")
+        if "bn" in sample:
+            fields_to_process.append("bn")
+        if "en" in sample:
+            fields_to_process.append("en")
+            
+        if not fields_to_process:
             continue
 
         total_stats["samples_processed"] += 1
+        output_sample = sample.copy()
+        sample_pii_found = False
+        sample_pii_stats = {}
 
-        # Redact PII
-        redacted_text, pii_stats = detector.redact_text(text, mode=mode)
+        for field in fields_to_process:
+            text = sample.get(field, "")
+            if not text:
+                continue
 
-        # Update statistics
-        pii_found = sum(pii_stats.values())
-        if pii_found > 0:
+            # Redact PII
+            redacted_text, pii_stats = detector.redact_text(text, mode=mode)
+            
+            # Update output sample
+            output_sample[field] = redacted_text
+
+            # Update statistics
+            field_pii_found = sum(pii_stats.values())
+            if field_pii_found > 0:
+                sample_pii_found = True
+                
+                # Merge stats
+                for key, value in pii_stats.items():
+                    total_stats[key] += value
+                    sample_pii_stats[key] = sample_pii_stats.get(key, 0) + value
+
+        if sample_pii_found:
             total_stats["samples_with_pii"] += 1
-            total_stats["total_pii_found"] += pii_found
-            for key, value in pii_stats.items():
-                total_stats[key] += value
+            total_stats["total_pii_found"] += sum(sample_pii_stats.values())
 
         # Prepare output
         if not report_only:
-            output_sample = sample.copy()
-            output_sample["text"] = redacted_text
-            if pii_found > 0:
-                output_sample["pii_removed"] = pii_stats
+            if sample_pii_found:
+                output_sample["pii_removed"] = sample_pii_stats
             output_data.append(output_sample)
 
     # Write output
