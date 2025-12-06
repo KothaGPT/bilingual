@@ -6,8 +6,7 @@ Provides simple functions for common NLP tasks in Bangla and English.
 
 import warnings
 from pathlib import Path
-from typing import Any, Dict
-
+from typing import Any, Dict, List, Optional, Union
 from cachetools import TTLCache
 from bilingual.normalize import detect_language
 from bilingual.normalize import normalize_text as _normalize_text
