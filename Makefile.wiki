@@ -243,7 +243,7 @@ evaluate-bilingual:
 # Prepare model for HuggingFace Hub
 prepare-hf-model:
 	@echo "Preparing model for HuggingFace Hub..."
-	python scripts/huggingface/prepare_model.py \
+	python3 scripts/huggingface/prepare_model.py \
 		--model models/wikipedia/base \
 		--output models/huggingface_ready/bn-wikipedia-lm
 

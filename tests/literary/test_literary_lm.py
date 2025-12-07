@@ -3,7 +3,7 @@ Tests for Literary Language Model.
 """
 
 import pytest
-import torch
+torch = pytest.importorskip("torch")
 
 from bilingual.models.literary_lm import LiteraryLanguageModel
 

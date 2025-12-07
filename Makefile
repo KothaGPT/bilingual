@@ -84,15 +84,17 @@ filter-quality:
 data-workflow:
 	python3 scripts/data_workflow.py --source sample --output datasets/processed/ --dataset-name "Bilingual Corpus"
 
+train: train-translation
+
 # Model training and evaluation commands
 train-tokenizer:
 	python3 scripts/train_tokenizer.py --input datasets/processed/final/train.jsonl datasets/processed/final/val.jsonl datasets/processed/final/test.jsonl --output models/tokenizer/ --vocab-size 1000
 
 train-lm:
-	python3 scripts/train_lm.py --train_data datasets/processed/final/train.jsonl --val_data datasets/processed/final/val.jsonl --output_dir models/bilingual-lm/ --model_name_or_path microsoft/DialoGPT-small
+	python3 scripts/train-lm.py --input datasets/processed/final/train.jsonl datasets/processed/final/val.jsonl datasets/processed/final/test.jsonl --output models/lm/ --vocab-size 1000
 
 train-translation:
-	python3 scripts/train_translation.py --data datasets/processed/final/ --output models/translation/
+	python3 scripts/train.py --config config/train.yaml
 
 train-classifier:
 	python3 scripts/train_classifier.py --task readability --data datasets/processed/final/ --output models/readability-classifier/ --synthetic-labels

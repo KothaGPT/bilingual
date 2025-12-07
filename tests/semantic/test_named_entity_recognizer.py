@@ -3,7 +3,7 @@ Tests for Named Entity Recognizer.
 """
 
 import pytest
-import torch
+torch = pytest.importorskip("torch")
 
 from bilingual.models.named_entity_recognizer import BanglaNER
 
