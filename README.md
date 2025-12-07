@@ -94,8 +94,8 @@ print(result[0]['generated_text'])
 # Translate text
 bilingual translate --model kothagpt/bilingual-lm --text "Hello world!" --target_lang bn
 
-# Start interactive shell
-bilingual interactive --model kothagpt/bilingual-lm
+# Start the API server
+bilingual serve
 ```
 
 ### Wikipedia LM Pipeline

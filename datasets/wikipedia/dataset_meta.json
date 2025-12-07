@@ -1,0 +1,55 @@
+{
+  "name": "wikipedia_bn_lm",
+  "display_name": "Bangla Wikipedia Language Modeling Dataset",
+  "description": "Cleaned and sentence-level tokenized Bangla Wikipedia text for language model training.",
+  "task": "language_modeling",
+  "languages": ["bn"],
+  "source": {
+    "provider": "Wikimedia Dumps",
+    "url": "https://dumps.wikimedia.org/",
+    "dump_file": "datasets/wikipedia/raw/bnwiki-latest-pages-articles.xml.bz2",
+    "license": "CC BY-SA 3.0"
+  },
+  "paths": {
+    "root": "datasets/wikipedia",
+    "raw": "datasets/wikipedia/raw",
+    "processed": "datasets/wikipedia/processed",
+    "hf_dataset": "datasets/wikipedia/hf_dataset"
+  },
+  "splits": {
+    "train": {
+      "path": "datasets/wikipedia/processed/train/bn_train.txt",
+      "expected_ratio": 0.8,
+      "approx_num_sentences": null
+    },
+    "validation": {
+      "path": "datasets/wikipedia/processed/val/bn_val.txt",
+      "expected_ratio": 0.1,
+      "approx_num_sentences": null
+    },
+    "test": {
+      "path": "datasets/wikipedia/processed/test/bn_test.txt",
+      "expected_ratio": 0.1,
+      "approx_num_sentences": null
+    }
+  },
+  "format": {
+    "type": "text_lines",
+    "encoding": "utf-8",
+    "schema": {
+      "text": "string"
+    },
+    "notes": "One sentence per line; cleaned and normalized as described in datasets/wikipedia/README.md."
+  },
+  "generation": {
+    "scripts": [
+      "scripts/download_wiki.py",
+      "scripts/preprocess_wiki.py",
+      "scripts/validate_wiki_dataset.py",
+      "scripts/prepare_hf_dataset.py"
+    ],
+    "makefile": "Makefile.wiki"
+  },
+  "version": "0.1.0",
+  "last_updated": null
+}

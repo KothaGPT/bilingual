@@ -12,6 +12,7 @@ import hashlib
 import logging
 import os
 import sys
+import ssl
 import urllib.request
 from pathlib import Path
 from typing import List
@@ -39,7 +40,7 @@ def download_file(url: str, output_path: Path, chunk_size: int = 8192) -> None:
     logger.info(f"Saving to {output_path}")
 
     try:
-        with urllib.request.urlopen(url) as response:
+        with urllib.request.urlopen(url, context=ssl._create_unverified_context()) as response:
             total_size = int(response.headers.get("Content-Length", 0))
             downloaded = 0
 

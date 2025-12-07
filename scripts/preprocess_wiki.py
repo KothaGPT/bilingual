@@ -7,6 +7,8 @@ Usage:
     python scripts/preprocess_wiki.py --bilingual --align --input datasets/wikipedia/raw --output datasets/wikipedia/processed
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging

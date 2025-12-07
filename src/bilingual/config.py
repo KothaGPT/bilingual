@@ -12,11 +12,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
-    from pydantic import BaseSettings, Field
+    from pydantic import Field
+    from pydantic_settings import BaseSettings
 
     PYDANTIC_AVAILABLE = True
 except ImportError:
-    print("Warning: pydantic not available. Install with: pip install pydantic")
+    print("Warning: pydantic or pydantic-settings not available. Install with: pip install pydantic pydantic-settings")
     PYDANTIC_AVAILABLE = False
 
 if PYDANTIC_AVAILABLE:

@@ -250,3 +250,6 @@ def main():
 
     print("\nData collection complete!")
 
+
+if __name__ == "__main__":
+    main()

@@ -23,7 +23,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -134,7 +134,7 @@ class DataWorkflow:
                 return False
 
         # Count collected samples
-        count = self._count_samples(self.raw_dir)
+        count = self.__count_samples(self.raw_dir)
         self.stats["data_counts"]["raw"] = count
         self.log(f"Collected {count} samples")
 
@@ -163,7 +163,7 @@ class DataWorkflow:
         success = self.run_step("normalize", command)
 
         if success:
-            count = self._count_samples(self.cleaned_dir)
+            count = self.__count_samples(self.cleaned_dir)
             self.stats["data_counts"]["cleaned"] = count
             self.log(f"Cleaned {count} samples")
 
@@ -225,7 +225,7 @@ class DataWorkflow:
         success = self.run_step("quality_filter", command)
 
         if success:
-            count = self._count_samples(self.filtered_dir)
+            count = self.__count_samples(self.filtered_dir)
             self.stats["data_counts"]["filtered"] = count
             self.log(f"Filtered to {count} high-quality samples")
 
@@ -316,8 +316,25 @@ class DataWorkflow:
 
         card_path = self.final_dir / "DATASET_CARD.md"
 
-        # Generate card content
-        card_content = f"""# Dataset Card: {dataset_name}
+        train_pct = (
+            self.stats['data_counts'].get('train', 0)
+            / max(sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test']), 1)
+            * 100
+        )
+        val_pct = (
+            self.stats['data_counts'].get('val', 0)
+            / max(sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test']), 1)
+            * 100
+        )
+        test_pct = (
+            self.stats['data_counts'].get('test', 0)
+            / max(sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test']), 1)
+            * 100
+        )
+        total = sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test'])
+
+        card_content = (
+            f"""# Dataset Card: {dataset_name}
 
 ## Dataset Description
 
@@ -344,10 +361,10 @@ Generated on {datetime.now().strftime('%Y-%m-%d')} using the bilingual data proc
 
 | Split | Size | Percentage |
 |-------|------|------------|
-| Train | {self.stats['data_counts'].get('train', 0)} | {self.stats['data_counts'].get('train', 0) / max(sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test']), 1) * 100:.1f}% |
-| Validation | {self.stats['data_counts'].get('val', 0)} | {self.stats['data_counts'].get('val', 0) / max(sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test']), 1) * 100:.1f}% |
-| Test | {self.stats['data_counts'].get('test', 0)} | {self.stats['data_counts'].get('test', 0) / max(sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test']), 1) * 100:.1f}% |
-| **Total** | **{sum(self.stats['data_counts'].get(s, 0) for s in ['train', 'val', 'test'])}** | **100%** |
+| Train | {self.stats['data_counts'].get('train', 0)} | {train_pct:.1f}% |
+| Validation | {self.stats['data_counts'].get('val', 0)} | {val_pct:.1f}% |
+| Test | {self.stats['data_counts'].get('test', 0)} | {test_pct:.1f}% |
+| **Total** | **{total}** | **100%** |
 
 ## Processing Pipeline
 
@@ -395,6 +412,10 @@ for sample in train_data:
 **Version**: 1.0.0
 **Last Updated**: {datetime.now().strftime('%Y-%m-%d')}
 """
+        )
+
+        with open(card_path, "w", encoding="utf-8") as f:
+            f.write(card_content)
 
         with open(card_path, "w", encoding="utf-8") as f:
             f.write(card_content)
@@ -455,7 +476,7 @@ for sample in train_data:
 
         return True
 
-    def _count_samples(self, directory: Path) -> int:
+    def __count_samples(self, directory: Path) -> int:
         """Count total samples in directory."""
         count = 0
         for file in directory.rglob("*.json*"):

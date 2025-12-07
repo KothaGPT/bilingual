@@ -4,6 +4,7 @@ Tests for Sentiment and Tone Classifier.
 
 import pytest
 
+pytest.importorskip("torch")
 from bilingual.models.sentiment_tone_classifier import SentimentToneAnalyzer
 
 

@@ -13,7 +13,7 @@ import logging
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,7 +48,6 @@ class DatasetAnalyzer:
         total_words = sum(len(s.split()) for s in self.sentences)
 
         sentence_lengths = [len(s) for s in self.sentences]
-        word_counts = [len(s.split()) for s in self.sentences]
 
         stats = {
             "total_sentences": total_sentences,

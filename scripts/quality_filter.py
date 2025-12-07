@@ -441,13 +441,35 @@ def process_file(
         text = sample.get("text", "")
         lang = sample.get("language", "mixed")
 
-        if not text:
+        # Handle parallel corpus (bn/en)
+        if not text and "bn" in sample and "en" in sample:
+            bn_text = sample.get("bn", "")
+            en_text = sample.get("en", "")
+            
+            # Check Bangla quality
+            bn_score, bn_checks = filter.calculate_overall_quality(bn_text, "bn")
+            
+            # Check English quality
+            en_score, en_checks = filter.calculate_overall_quality(en_text, "en")
+            
+            # Combine results (conservative approach: min score)
+            quality_score = min(bn_score, en_score)
+            
+            # Merge check results
+            check_results = {}
+            for k, v in bn_checks.items():
+                check_results[f"bn_{k}"] = v
+            for k, v in en_checks.items():
+                check_results[f"en_{k}"] = v
+                
+        elif text:
+            # Single text processing
+            quality_score, check_results = filter.calculate_overall_quality(text, lang)
+            
+        else:
             stats["failed"] += 1
             stats["failure_reasons"]["empty_text"] += 1
             continue
-
-        # Calculate quality score
-        quality_score, check_results = filter.calculate_overall_quality(text, lang)
 
         # Add quality score to sample
         sample["quality_score"] = quality_score
@@ -466,6 +488,9 @@ def process_file(
             for name, (passed, score, reason) in check_results.items():
                 if not passed or score < 0.5:
                     stats["failure_reasons"][f"{name}: {reason}"] += 1
+                    # Don't break here to collect all failure reasons if needed, 
+                    # but for stats we usually just want one or multiple? 
+                    # Original code broke after first failure. Let's keep that behavior but just picking one.
                     break
             failed_samples.append(sample)
 

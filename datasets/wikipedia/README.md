@@ -4,6 +4,11 @@ This directory contains Wikipedia data for training Bangla language models.
 
 ## 📁 Directory Structure
 
+> Note: Some subdirectories shown below (for example `processed/bn_extracted/`, the split
+> folders under `processed/`, `hf_dataset/`, and `checkpoints/`) are created automatically
+> by the setup and preprocessing scripts. They may not exist immediately after cloning the
+> repository and will appear after you run the workflow (see the Quick Start section).
+
 ```
 datasets/wikipedia/
 ├── raw/                           # Raw Wikipedia dumps
