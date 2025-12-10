@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import torch
+from peft import LoraConfig, get_peft_model
 from transformers import (
     AutoConfig,
     AutoModelForSeq2SeqLM,
@@ -33,7 +34,6 @@ from transformers import (
     Seq2SeqTrainingArguments,
     set_seed,
 )
-from peft import get_peft_model, LoraConfig
 
 from datasets import Dataset, load_dataset
 
@@ -207,12 +207,9 @@ def train(
         model = get_peft_model(model, lora_config)
         model.print_trainable_parameters()
 
-
     # Load and preprocess data
     logger.info("Loading and preprocessing data")
-    train_dataset, val_dataset = load_data(
-        train_data, val_data, max_samples=max_train_samples
-    )
+    train_dataset, val_dataset = load_data(train_data, val_data, max_samples=max_train_samples)
 
     # Preprocess the data
     def preprocess_fn(examples):

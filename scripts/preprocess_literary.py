@@ -27,6 +27,7 @@ from typing import List
 try:
     from indic_nlp.normalize import indic_normalize
     from indic_nlp.tokenize import sentence_tokenize
+
     INDIC_NLP_AVAILABLE = True
 except ImportError:
     INDIC_NLP_AVAILABLE = False
@@ -61,7 +62,7 @@ class TextCleaner:
         Clean text by removing extra whitespace and other artifacts.
         """
         # Replace multiple whitespace characters with a single space
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"\s+", " ", text)
         # Remove leading/trailing whitespace from each line
         text = "\n".join([line.strip() for line in text.splitlines() if line.strip()])
         return text.strip()
@@ -83,7 +84,7 @@ class TextCleaner:
             sentences = sentence_tokenize.sentence_split(text, lang=self.language)
         else:
             # Fallback for English or if Indic NLP is not available
-            text = re.sub(r'([.!?])\s*', r'\1\n', text)
+            text = re.sub(r"([.!?])\s*", r"\1\n", text)
             sentences = text.splitlines()
 
         return [s.strip() for s in sentences if s.strip()]
@@ -96,11 +97,7 @@ class TextCleaner:
 
 
 def preprocess_literary_dataset(
-    input_dir: Path,
-    output_file: Path,
-    lang: str,
-    min_length: int,
-    max_length: int
+    input_dir: Path, output_file: Path, lang: str, min_length: int, max_length: int
 ):
     """
     Preprocess all .txt files in a directory and save to a single output file.
@@ -111,7 +108,7 @@ def preprocess_literary_dataset(
 
     cleaner = TextCleaner(language=lang)
     all_sentences = []
-    
+
     logger.info(f"Scanning for .txt files in: {input_dir}")
     text_files = list(input_dir.rglob("*.txt"))
     if not text_files:
@@ -128,7 +125,7 @@ def preprocess_literary_dataset(
         text = cleaner.clean_text(text)
         text = cleaner.normalize_text(text)
         sentences = cleaner.tokenize_sentences(text)
-        
+
         filtered_sentences = [
             s for s in sentences if cleaner.filter_sentence(s, min_length, max_length)
         ]
@@ -147,17 +144,31 @@ def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Preprocess Literary and General Text Datasets")
     parser.add_argument(
-        "--input-dir", type=str, required=True, help="Path to the directory containing raw .txt files."
+        "--input-dir",
+        type=str,
+        required=True,
+        help="Path to the directory containing raw .txt files.",
     )
     parser.add_argument(
-        "--output-file", type=str, required=True, help="Path to save the single preprocessed corpus file."
+        "--output-file",
+        type=str,
+        required=True,
+        help="Path to save the single preprocessed corpus file.",
     )
     parser.add_argument(
-        "--lang", type=str, default="bn", choices=["bn", "en"], help="Language of the text ('bn' or 'en')."
+        "--lang",
+        type=str,
+        default="bn",
+        choices=["bn", "en"],
+        help="Language of the text ('bn' or 'en').",
     )
-    parser.add_argument("--min-length", type=int, default=10, help="Minimum sentence length to keep.")
-    parser.add_argument("--max-length", type=int, default=1024, help="Maximum sentence length to keep.")
-    
+    parser.add_argument(
+        "--min-length", type=int, default=10, help="Minimum sentence length to keep."
+    )
+    parser.add_argument(
+        "--max-length", type=int, default=1024, help="Maximum sentence length to keep."
+    )
+
     args = parser.parse_args()
 
     preprocess_literary_dataset(

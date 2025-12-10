@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import torch
+from peft import LoraConfig, get_peft_model
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
@@ -33,7 +34,6 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
-from peft import get_peft_model, LoraConfig
 
 from datasets import Dataset
 
@@ -118,7 +118,7 @@ def train(
     max_length: int = 128,
     batch_size: int = 8,
     num_epochs: int = 3,
-    learning_rate: float = 2e-4, # Higher LR for LoRA
+    learning_rate: float = 2e-4,  # Higher LR for LoRA
     weight_decay: float = 0.01,
     warmup_steps: int = 500,
     gradient_accumulation_steps: int = 1,
@@ -189,7 +189,7 @@ def train(
     special_tokens = ["<|bn|>", "<|en|>"]
     tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
     model.resize_token_embeddings(len(tokenizer))
-    
+
     if use_qlora:
         logger.info("Applying LoRA adapter to the model.")
         lora_config = LoraConfig(

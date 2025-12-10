@@ -15,6 +15,9 @@ Usage:
 
 import argparse
 import json
+
+# Set up logging
+import logging
 import os
 import sys
 from pathlib import Path
@@ -22,7 +25,6 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-from datasets import Dataset, load_metric
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -34,8 +36,7 @@ from transformers import (
 )
 from transformers.trainer_utils import get_last_checkpoint
 
-# Set up logging
-import logging
+from datasets import Dataset, load_metric
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,13 +50,13 @@ def load_config(config_path: str) -> Dict:
     """Load and validate configuration."""
     with open(config_path) as f:
         config = json.load(f)
-    
+
     # Validate required fields
     required_fields = ["task_name", "model_type", "num_labels", "label_names", "training"]
     for field in required_fields:
         if field not in config:
             raise ValueError(f"Missing required config field: {field}")
-    
+
     return config
 
 
@@ -85,7 +86,7 @@ def tokenize_and_align_labels(
         word_ids = tokenized_inputs.word_ids(batch_index=i)
         previous_word_idx = None
         label_ids = []
-        
+
         for word_idx in word_ids:
             if word_idx is None:
                 # Special tokens get -100
@@ -95,7 +96,9 @@ def tokenize_and_align_labels(
                 label_ids.append(label_to_id.get(label[word_idx], -100))
             else:
                 # For other tokens, use -100 or the current label
-                label_ids.append(label_to_id.get(label[word_idx], -100) if label_all_tokens else -100)
+                label_ids.append(
+                    label_to_id.get(label[word_idx], -100) if label_all_tokens else -100
+                )
             previous_word_idx = word_idx
 
         labels.append(label_ids)
@@ -127,9 +130,9 @@ def compute_metrics(p):
     precision_metric = load_metric("precision")
     recall_metric = load_metric("recall")
     f1_metric = load_metric("f1")
-    
+
     results = {}
-    
+
     # Overall metrics
     results["overall_precision"] = precision_metric.compute(
         predictions=flat_predictions, references=flat_labels, average="weighted"
@@ -140,7 +143,7 @@ def compute_metrics(p):
     results["overall_f1"] = f1_metric.compute(
         predictions=flat_predictions, references=flat_labels, average="weighted"
     )["f1"]
-    
+
     # Per-class metrics
     precision = precision_metric.compute(
         predictions=flat_predictions, references=flat_labels, average=None
@@ -148,16 +151,14 @@ def compute_metrics(p):
     recall = recall_metric.compute(
         predictions=flat_predictions, references=flat_labels, average=None
     )["recall"]
-    f1 = f1_metric.compute(
-        predictions=flat_predictions, references=flat_labels, average=None
-    )["f1"]
-    
+    f1 = f1_metric.compute(predictions=flat_predictions, references=flat_labels, average=None)["f1"]
+
     # Add per-class metrics
     for i, (p, r, f) in enumerate(zip(precision, recall, f1)):
         results[f"class_{i}_precision"] = p
         results[f"class_{i}_recall"] = r
         results[f"class_{i}_f1"] = f
-    
+
     return results
 
 
@@ -214,48 +215,48 @@ def main():
         action="store_true",
         help="Whether to run eval on the dev set.",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Load configuration
     config = load_config(args.config)
     training_args = config["training"]
-    
+
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    
+
     # Set the verbosity to info of the Transformers logger
     logger.setLevel(logging.INFO)
-    
+
     # Create output directory if needed
     os.makedirs(args.output_dir, exist_ok=True)
-    
+
     # Save the configuration
     with open(os.path.join(args.output_dir, "training_config.json"), "w") as f:
         json.dump(config, f, indent=2)
-    
+
     # Load datasets
     logger.info("Loading datasets")
     train_dataset = load_data(args.train_data)
     val_dataset = load_data(args.val_data)
-    
+
     # Prepare label mappings
     label_list = config["label_names"]
     label_to_id = {label: i for i, label in enumerate(label_list)}
     id_to_label = {i: label for i, label in enumerate(label_list)}
-    
+
     # Save label mappings
     with open(os.path.join(args.output_dir, "label_mapping.json"), "w") as f:
         json.dump({"label2id": label_to_id, "id2label": id_to_label}, f, indent=2)
-    
+
     # Load tokenizer and model
     logger.info("Loading tokenizer and model")
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
-    
+
     # Tokenize datasets
     logger.info("Tokenizing datasets")
     train_dataset = train_dataset.map(
@@ -264,14 +265,14 @@ def main():
         ),
         batched=True,
     )
-    
+
     val_dataset = val_dataset.map(
         lambda examples: tokenize_and_align_labels(
             examples, tokenizer, label_to_id, config["max_length"]
         ),
         batched=True,
     )
-    
+
     # Load model
     model = AutoModelForTokenClassification.from_pretrained(
         args.model_name_or_path,
@@ -279,10 +280,10 @@ def main():
         id2label=id_to_label,
         label2id=label_to_id,
     )
-    
+
     # Set up data collator
     data_collator = DataCollatorForTokenClassification(tokenizer)
-    
+
     # Set up training arguments
     training_args = TrainingArguments(
         output_dir=args.output_dir,
@@ -305,17 +306,19 @@ def main():
         report_to=["tensorboard"],
         push_to_hub=False,
     )
-    
+
     # Set up early stopping
     callbacks = []
     if "optimization" in config and "early_stopping_patience" in config["optimization"]:
         callbacks.append(
             EarlyStoppingCallback(
                 early_stopping_patience=config["optimization"]["early_stopping_patience"],
-                early_stopping_threshold=config["optimization"].get("early_stopping_threshold", 0.0),
+                early_stopping_threshold=config["optimization"].get(
+                    "early_stopping_threshold", 0.0
+                ),
             )
         )
-    
+
     # Initialize Trainer
     trainer = Trainer(
         model=model,
@@ -327,7 +330,7 @@ def main():
         compute_metrics=compute_metrics,
         callbacks=callbacks,
     )
-    
+
     # Training
     if args.do_train:
         logger.info("*** Train ***")
@@ -336,27 +339,27 @@ def main():
             checkpoint = args.resume_from_checkpoint
         elif os.path.isdir(args.model_name_or_path):
             checkpoint = args.model_name_or_path
-        
+
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         trainer.save_model()  # Saves the tokenizer too for easy upload
-        
+
         metrics = train_result.metrics
         metrics["train_samples"] = len(train_dataset)
-        
+
         trainer.log_metrics("train", metrics)
         trainer.save_metrics("train", metrics)
         trainer.save_state()
-    
+
     # Evaluation
     if args.do_eval:
         logger.info("*** Evaluate ***")
         metrics = trainer.evaluate()
-        
+
         metrics["eval_samples"] = len(val_dataset)
-        
+
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
-    
+
     logger.info("Training complete!")
 
 

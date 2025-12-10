@@ -9,6 +9,10 @@ This guide covers deployment options for the Bilingual AI models, including loca
   - [Loading QLoRA Fine-tuned Models](#loading-qlora-fine-tuned-models)
   - [Merging Adapters for Production](#merging-adapters-for-production)
   - [Model Quantization](#model-quantization)
+- [Enhanced Dataset Deployment](#enhanced-dataset-deployment)
+  - [Code-Switched Data](#code-switched-data)
+  - [Regional Dialects](#regional-dialects)
+  - [Conversational Data](#conversational-data)
 - [Local Deployment](#local-deployment)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -111,6 +115,63 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=quantization_config,
     device_map="auto"
 )
+```
+
+## Enhanced Dataset Deployment
+
+The enhanced dataset includes code-switched examples, regional dialects, and conversational data. When deploying with these datasets, consider the following:
+
+### Code-Switched Data
+
+Code-switched data contains mixed Bangla-English text. Ensure your tokenizer is properly configured:
+
+```python
+from transformers import AutoTokenizer
+
+# Load tokenizer with additional tokens for code-switching
+tokenizer = AutoTokenizer.from_pretrained(
+    "path/to/your/model",
+    additional_special_tokens=["<bn>", "</bn>", "<en>", "</en>"]
+)
+```
+
+### Regional Dialects
+
+When working with regional dialects, use the `dialect` field to handle variations:
+
+```python
+# Example of processing dialect-specific text
+def process_dialect_text(text, dialect=None):
+    if dialect:
+        # Apply dialect-specific preprocessing
+        if dialect == "sylheti":
+            # Sylheti-specific processing
+            pass
+        elif dialect == "chittagonian":
+            # Chittagonian-specific processing
+            pass
+    return text
+```
+
+### Conversational Data
+
+For handling conversational data, use the following format:
+
+```json
+{
+    "conversation": [
+        {"role": "user", "content": "Hello!", "lang": "en"},
+        {"role": "assistant", "content": "হ্যালো!", "lang": "bn"}
+    ]
+}
+```
+
+When deploying with Docker, ensure your container has access to the enhanced datasets:
+
+```dockerfile
+# In your Dockerfile
+COPY --chown=1000:1000 datasets/enhanced /app/datasets/enhanced
+COPY --chown=1000:1000 datasets/regional /app/datasets/regional
 ```
 
 ## Local Deployment

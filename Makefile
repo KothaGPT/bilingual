@@ -118,3 +118,26 @@ pypi-install:
 
 check-install:
 	python3 -c "import bilingual; print(bilingual.__version__)"
+
+# Hugging Face Release Commands:
+# ======================================
+hf-login:
+	@echo "Logging in to Hugging Face Hub..."
+	huggingface-cli login
+
+hf-upload-model:
+	@echo "Uploading model to Hugging Face Hub..."
+	python3 scripts/huggingface/upload_model.py \
+		--model-dir models/bilingual-lm/ \
+		--repo-id "your-username/bilingual-lm" \
+		--commit-message "Initial model release"
+
+hf-upload-dataset:
+	@echo "Uploading dataset to Hugging Face Hub..."
+	python3 scripts/huggingface/upload_dataset.py \
+		--dataset-dir datasets/processed/final/ \
+		--repo-id "your-username/bilingual-dataset" \
+		--commit-message "Initial dataset release"
+
+hf-release: hf-login hf-upload-model hf-upload-dataset
+	@echo "Hugging Face release completed successfully!"

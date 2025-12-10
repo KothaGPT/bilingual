@@ -1,6 +1,6 @@
 {
   "benchmark_info": {
-    "timestamp": "2025-12-10 09:58:47",
+    "timestamp": "2025-12-10 16:34:09",
     "system_info": {
       "cpu_count": 4,
       "memory_gb": 24.0,
@@ -20,40 +20,40 @@
           "max_tokens": 50,
           "batch_performance": {
             "1": {
-              "avg_latency_ms": 0.024080276489257812,
-              "tokens_per_second": 2076388.1188118812,
-              "throughput_requests_per_second": 41527.762376237624,
+              "avg_latency_ms": 0.02384185791015625,
+              "tokens_per_second": 2097152.0,
+              "throughput_requests_per_second": 41943.04,
               "successful_generations": 1,
               "memory_used_mb": 0.0
             },
             "4": {
-              "avg_latency_ms": 0.006079673767089844,
-              "tokens_per_second": 8224125.490196078,
-              "throughput_requests_per_second": 657930.0392156863,
+              "avg_latency_ms": 0.005662441253662109,
+              "tokens_per_second": 8830113.684210526,
+              "throughput_requests_per_second": 706409.0947368421,
               "successful_generations": 4,
               "memory_used_mb": 0.0
             },
             "8": {
-              "avg_latency_ms": 0.009387731552124023,
-              "tokens_per_second": 5326100.317460317,
-              "throughput_requests_per_second": 852176.0507936508,
+              "avg_latency_ms": 0.006735324859619141,
+              "tokens_per_second": 7423546.902654868,
+              "throughput_requests_per_second": 1187767.5044247787,
               "successful_generations": 8,
               "memory_used_mb": 0.0
             }
           },
           "latency_stats": {
-            "mean_latency_ms": 0.013182560602823893,
-            "median_latency_ms": 0.009387731552124023,
-            "p95_latency_ms": 0.02261102199554443,
-            "p99_latency_ms": 0.023786425590515137
+            "mean_latency_ms": 0.012079874674479166,
+            "median_latency_ms": 0.006735324859619141,
+            "p95_latency_ms": 0.022131204605102536,
+            "p99_latency_ms": 0.023499727249145508
           },
           "memory_usage": {},
           "error_rate": 0.0
         }
       },
       "summary": {
-        "avg_latency_ms": 0.013182560602823893,
-        "total_throughput": 17178247.77885385,
+        "avg_latency_ms": 0.012079874674479166,
+        "total_throughput": 20286932.22602702,
         "avg_memory_usage_mb": 0.0,
         "overall_error_rate": 0.0,
         "tasks_completed": 1

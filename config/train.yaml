@@ -14,9 +14,27 @@ model:
 
 # Data configuration
 data:
+  # Base datasets
   train_data: "data/processed/samanantar/opus100_en_bn_train.parquet"
   val_data: "data/processed/samanantar/opus100_en_bn_validation.parquet"
   test_data: "data/processed/samanantar/opus100_en_bn_test.parquet"
+  
+  # Enhanced datasets
+  enhanced_data:
+    # Code-switched and conversational data
+    - path: "datasets/enhanced/enhanced_data.jsonl"
+      type: "jsonl"
+      weight: 0.5  # Sampling weight
+    
+    # Regional dialect data
+    - path: "datasets/regional/bangla_dialects.jsonl"
+      type: "jsonl"
+      weight: 0.3  # Sampling weight
+    
+    # Original training data (for balancing)
+    - path: "data/processed/samanantar/opus100_en_bn_train.parquet"
+      type: "parquet"
+      weight: 0.2  # Sampling weight
   
 # Training configuration
 training:
