@@ -6,8 +6,8 @@
     "perplexity_overall": 0.0,
     "perplexity_bn": 0.0,
     "perplexity_en": 0.0,
-    "avg_generation_time": 7.486343383789062e-05,
-    "tokens_per_second": 667882.8025477707
+    "avg_generation_time": 0.005418141682942708,
+    "tokens_per_second": 9228.256277869044
   },
   "per_language_metrics": {},
   "examples": [
@@ -17,7 +17,7 @@
     },
     {
       "prompt": "Once upon a time",
-      "generated": "Once upon a time This is a sample generated continuation of the text."
+      "generated": "Once upon a time Here's what a trained model might generate for this prompt."
     }
   ],
   "inference_stats": {}

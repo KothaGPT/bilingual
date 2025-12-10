@@ -91,3 +91,4 @@ poetry.lock
 Pipfile.lock
 *.bak
 monitoring/
+=0.26.0

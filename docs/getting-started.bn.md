@@ -27,7 +27,7 @@ pip install bilingual[dev]
 বা সোর্স থেকে ইনস্টল করুন:
 
 ```bash
-git clone https://github.com/bilingual-nlp/bilingual.git
+git clone https://github.com/kothagpt/bilingual.git
 cd bilingual
 pip install -e .
 ```
@@ -153,8 +153,8 @@ bb.load_model("t5-small")  # t5-base এর পরিবর্তে
 
 ### সাহায্য পাওয়া
 
-- পরিচিত সমস্যাগুলির জন্য [GitHub Issues](https://github.com/bilingual-nlp/bilingual/issues) চেক করুন
-- কমিউনিটি সমর্থনের জন্য আমাদের [GitHub Discussions](https://github.com/bilingual-nlp/bilingual/discussions) এ যোগ দিন
+- পরিচিত সমস্যাগুলির জন্য [GitHub Issues](https://github.com/kothagpt/bilingual/issues) চেক করুন
+- কমিউনিটি সমর্থনের জন্য আমাদের [GitHub Discussions](https://github.com/kothagpt/bilingual/discussions) এ যোগ দিন
 - GitHub-এ বাগ রিপোর্ট বা ফিচার রিকোয়েস্ট ফাইল করুন
 
 ---

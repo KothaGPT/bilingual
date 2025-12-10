@@ -6,11 +6,10 @@ Sentence-level embeddings for semantic similarity across languages.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 from transformers import (
     AutoModel,
     AutoTokenizer,

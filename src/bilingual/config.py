@@ -7,9 +7,8 @@ environment variable support and validation.
 """
 
 import json
-import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List
 
 try:
     from pydantic import BaseSettings, Field

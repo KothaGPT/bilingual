@@ -27,27 +27,126 @@ from bilingual.preprocessing.text_processor import TextProcessor
 
 
 class TranslationDataset(Dataset):
-    """Dataset for translation tasks."""
+    """Dataset for translation tasks with support for multiple data formats."""
 
-    def __init__(self, data_path: Path, max_length: int = 128):
-        """Initialize the dataset."""
+    def __init__(self, data_sources: list, max_length: int = 128, is_training: bool = True):
+        """Initialize the dataset.
+
+        Args:
+            data_sources: List of dicts containing 'path', 'type', and 'weight' for each data source
+            max_length: Maximum sequence length
+            is_training: Whether this is for training (enables data augmentation)
+        """
         self.data = []
         self.max_length = max_length
+        self.is_training = is_training
 
-        # Load data from parquet file
-        if data_path.exists():
-            df = pd.read_parquet(data_path)
-            self.data = df.to_dict("records")
+        for source in data_sources:
+            path = Path(source["path"])
+            if not path.exists():
+                print(f"Warning: Data file not found: {path}")
+                continue
+
+            if source["type"] == "parquet":
+                df = pd.read_parquet(path)
+                source_data = [
+                    {"source": row["en"], "target": row["bn"], "type": "parallel"}
+                    for _, row in df.iterrows()
+                ]
+            elif source["type"] == "jsonl":
+                source_data = []
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        try:
+                            item = json.loads(line)
+                            if "conversation" in item:  # Handle conversational data
+                                for turn in item["conversation"]:
+                                    if turn["role"] == "user":
+                                        source_data.append(
+                                            {
+                                                "source": turn["content"],
+                                                "target": "",
+                                                "type": "conversation",
+                                                "lang": turn.get("lang", "en"),
+                                            }
+                                        )
+                            elif "text" in item:  # Handle single text examples
+                                source_data.append(
+                                    {
+                                        "source": item["text"],
+                                        "target": "",
+                                        "type": item.get("type", "text"),
+                                        "lang": item.get("lang", "en"),
+                                    }
+                                )
+                        except json.JSONDecodeError:
+                            continue
+
+            # Apply sampling weight
+            if "weight" in source and source["weight"] < 1.0 and self.is_training:
+                sample_size = int(len(source_data) * source["weight"])
+                source_data = random.sample(source_data, min(sample_size, len(source_data)))
+
+            self.data.extend(source_data)
 
     def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
-        """Get a single example from the dataset."""
+        """Get a single example from the dataset with support for multiple data types."""
         item = self.data[idx]
 
-        # Convert to tensors
-        src = torch.tensor(item["en_ids"], dtype=torch.long)
+        # Handle different data types
+        if item["type"] == "parallel":
+            # Standard parallel data
+            src_text = item["source"]
+            tgt_text = item["target"]
+
+        elif item["type"] == "conversation":
+            # For conversation data, use the user's message as source
+            # and the assistant's response as target (if available)
+            src_text = item["source"]
+            tgt_text = item.get("target", "")  # May be empty for single-turn
+
+        elif item["type"] == "code-switched":
+            # For code-switched data, we might want to translate to one language
+            src_text = item["source"]
+            tgt_text = item.get("target", "")  # Could be empty for inference
+
+            # Data augmentation: randomly translate to one language
+            if self.is_training and random.random() > 0.5:
+                if item.get("lang") == "en":
+                    tgt_text = src_text  # Self-reconstruction for monolingual data
+                # Add more augmentation strategies here
+
+        elif item["type"] == "dialect":
+            # For dialect data, we might want to normalize to standard Bangla
+            src_text = item["source"]
+            tgt_text = item.get("standard_bangla", item["source"])
+
+        # Tokenize the source and target texts
+        src_tokens = self.tokenizer.encode(
+            src_text,
+            max_length=self.max_length,
+            truncation=True,
+            padding="max_length",
+            return_tensors="pt",
+        )
+
+        tgt_tokens = self.tokenizer.encode(
+            tgt_text,
+            max_length=self.max_length,
+            truncation=True,
+            padding="max_length",
+            return_tensors="pt",
+        )
+
+        return {
+            "input_ids": src_tokens.squeeze(0),
+            "labels": tgt_tokens.squeeze(0),
+            "attention_mask": (src_tokens != self.tokenizer.pad_token_id).long().squeeze(0),
+            "data_type": item.get("type", "parallel"),
+        }
         tgt = torch.tensor(item["bn_ids"], dtype=torch.long)
 
         # Add BOS and EOS tokens
@@ -115,24 +214,40 @@ def collate_fn(batch: List[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
 
 
 class Trainer:
-    """Trainer class for the translation model."""
+    """Trainer class for the translation model with enhanced dataset support."""
 
-    def __init__(self, config: dict):
-        """Initialize the trainer."""
+    def __init__(self, config: dict, tokenizer=None):
+        """Initialize the trainer.
+
+        Args:
+            config: Configuration dictionary
+            tokenizer: Pre-initialized tokenizer (optional)
+        """
         self.config = config
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.tokenizer = tokenizer
 
         # Set random seeds for reproducibility
-        torch.manual_seed(config.get("seed", 42))
-        np.random.seed(config.get("seed", 42))
+        seed = config.get("seed", 42)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
         # Initialize model, optimizer, and loss function
         self._init_model()
-        self.optimizer = optim.Adam(
+
+        # Get training parameters from config with defaults
+        training_config = config.get("training", {})
+
+        # Initialize optimizer
+        self.optimizer = optim.AdamW(
             self.model.parameters(),
-            lr=config["training"].get("learning_rate", 0.0001),
-            betas=(0.9, 0.98),
-            eps=1e-9,
+            lr=training_config.get("learning_rate", 2e-5),
+            betas=training_config.get("betas", (0.9, 0.999)),
+            eps=training_config.get("eps", 1e-8),
+            weight_decay=training_config.get("weight_decay", 0.01),
         )
 
         # Learning rate scheduler
@@ -158,21 +273,42 @@ class Trainer:
         self.step = 0
 
     def _init_model(self):
-        """Initialize the model."""
+        """Initialize the model with support for enhanced configurations."""
         model_config = self.config["model"]
 
-        self.model = TransformerModel(
-            src_vocab_size=model_config["src_vocab_size"],
-            tgt_vocab_size=model_config["tgt_vocab_size"],
-            d_model=model_config.get("d_model", 512),
-            nhead=model_config.get("nhead", 8),
-            num_encoder_layers=model_config.get("num_encoder_layers", 6),
-            num_decoder_layers=model_config.get("num_decoder_layers", 6),
-            dim_feedforward=model_config.get("dim_feedforward", 2048),
-            dropout=model_config.get("dropout", 0.1),
-            max_seq_length=model_config.get("max_seq_length", 128),
-            pad_idx=0,  # Assuming 0 is the padding index
-        ).to(self.device)
+        # Initialize model with configurable architecture
+        model_args = {
+            "src_vocab_size": model_config.get("src_vocab_size", 50000),
+            "tgt_vocab_size": model_config.get("tgt_vocab_size", 50000),
+            "d_model": model_config.get("d_model", 512),
+            "nhead": model_config.get("nhead", 8),
+            "num_encoder_layers": model_config.get("num_encoder_layers", 6),
+            "num_decoder_layers": model_config.get("num_decoder_layers", 6),
+            "dim_feedforward": model_config.get("dim_feedforward", 2048),
+            "dropout": model_config.get("dropout", 0.1),
+            "max_seq_length": model_config.get("max_seq_length", 128),
+            "pad_token_id": self.tokenizer.pad_token_id if self.tokenizer else 0,
+            "bos_token_id": self.tokenizer.bos_token_id if self.tokenizer else 1,
+            "eos_token_id": self.tokenizer.eos_token_id if self.tokenizer else 2,
+        }
+
+        # Initialize the model
+        self.model = TransformerModel(**model_args).to(self.device)
+
+        # Resize token embeddings if using a pretrained tokenizer
+        if self.tokenizer and hasattr(self.model, "resize_token_embeddings"):
+            self.model.resize_token_embeddings(len(self.tokenizer))
+
+        # Print model info
+        total_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        print(f"Model initialized with {total_params:,} trainable parameters")
+        print(f"Model architecture: {self.model.__class__.__name__}")
+        print(f"Using device: {self.device}")
+
+        # Enable gradient checkpointing if specified
+        if self.config["training"].get("gradient_checkpointing", False):
+            self.model.gradient_checkpointing_enable()
+            print("Gradient checkpointing enabled")
 
     def train_epoch(self, train_loader: DataLoader) -> float:
         """Train for one epoch."""
@@ -360,10 +496,13 @@ def load_config(config_path: str) -> dict:
 
 
 def main():
-    """Main training function."""
+    """Main training function with support for enhanced datasets."""
     parser = argparse.ArgumentParser(description="Train Bangla-English translation model")
     parser.add_argument(
         "--config", type=str, default="config/train.yaml", help="Path to configuration file"
+    )
+    parser.add_argument(
+        "--resume", type=str, default=None, help="Path to checkpoint to resume training from"
     )
     args = parser.parse_args()
 
@@ -374,14 +513,57 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
+    # Initialize tokenizer
+    print("Initializing tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(
+        config["model"].get("tokenizer_name", "sagorsarker/bangla-bert-base"),
+        use_fast=True,
+        add_special_tokens=True,
+        max_length=config["model"].get("max_seq_length", 128),
+        truncation=True,
+        padding="max_length",
+        return_tensors="pt",
+    )
+
+    # Add special tokens for code-switching if not already present
+    special_tokens_dict = {"additional_special_tokens": ["<bn>", "</bn>", "<en>", "</en>"]}
+    tokenizer.add_special_tokens(special_tokens_dict)
+
     # Create datasets
     data_config = config["data"]
+    max_length = config["model"].get("max_seq_length", 128)
+
+    # Training dataset with enhanced data sources
+    train_sources = []
+    if "enhanced_data" in data_config:
+        train_sources.extend(data_config["enhanced_data"])
+    if "train_data" in data_config:  # For backward compatibility
+        train_sources.append({"path": data_config["train_data"], "type": "parquet", "weight": 1.0})
+
+    print("Loading training dataset...")
     train_dataset = TranslationDataset(
-        Path(data_config["train_data"]), max_length=config["model"].get("max_seq_length", 128)
+        data_sources=train_sources, max_length=max_length, is_training=True
     )
+
+    # Validation dataset (use standard validation data)
+    val_sources = [
+        {
+            "path": data_config.get("val_data", data_config["train_data"]),
+            "type": "parquet",
+            "weight": 1.0,
+        }
+    ]
+
+    print("Loading validation dataset...")
     val_dataset = TranslationDataset(
-        Path(data_config["val_data"]), max_length=config["model"].get("max_seq_length", 128)
+        data_sources=val_sources,
+        max_length=max_length,
+        is_training=False,  # No augmentation for validation
     )
+
+    # Set tokenizer for datasets
+    train_dataset.tokenizer = tokenizer
+    val_dataset.tokenizer = tokenizer
 
     # Create data loaders
     train_loader = DataLoader(
@@ -402,11 +584,35 @@ def main():
         pin_memory=True,
     )
 
-    # Initialize trainer
-    trainer = Trainer(config)
+    # Initialize trainer with tokenizer
+    trainer = Trainer(config, tokenizer=tokenizer)
+
+    # Log dataset statistics
+    print("\n=== Dataset Statistics ===")
+    print(f"Training samples: {len(train_dataset):,}")
+    print(f"Validation samples: {len(val_dataset):,}")
+    print(f"Batch size: {config['training']['batch_size']}")
+    print(f"Number of batches per epoch: {len(train_loader)}")
+    print(f"Number of epochs: {config['training'].get('num_epochs', 10)}")
+    print("=" * 25 + "\n")
 
     # Start training
-    trainer.train(train_loader, val_loader)
+    print("Starting training...")
+    try:
+        trainer.train(train_loader, val_loader)
+    except KeyboardInterrupt:
+        print("\nTraining interrupted. Saving model...")
+    except Exception as e:
+        print(f"\nError during training: {str(e)}")
+        raise
+    finally:
+        # Always save the final model
+        print("Saving final model...")
+        trainer.save_checkpoint()
+
+        # Close the TensorBoard writer
+        if hasattr(trainer, "writer"):
+            trainer.writer.close()
 
 
 if __name__ == "__main__":

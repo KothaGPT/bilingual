@@ -8,7 +8,7 @@ import argparse
 import sys
 
 from bilingual import __version__
-from bilingual import bilingual_api as bb
+from bilingual import api as bb
 
 
 def main():

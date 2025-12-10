@@ -2,28 +2,33 @@
 """
 Fine-tune a bilingual language model.
 
-This script fine-tunes a pre-trained language model (e.g., mT5, mBART, or mGPT)
+This script fine-tunes a pre-trained language model (e.g., mGPT)
 for Bangla and English text generation using the Hugging Face Transformers library.
+It uses a custom, pre-trained SentencePiece tokenizer.
 
 Usage:
     python scripts/train_lm.py \
         --train_data data/processed/train.txt \
         --val_data data/processed/val.txt \
-        --model_name_or_path "facebook/mbart-large-cc25" \
+        --model_name_or_path "ai-forever/mGPT" \
+        --tokenizer_path "models/tokenizer/" \
         --output_dir models/language_model
 """
 
 import argparse
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import torch
+from peft import LoraConfig, get_peft_model
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
+    BitsAndBytesConfig,
     DataCollatorForLanguageModeling,
     Trainer,
     TrainingArguments,
@@ -31,6 +36,10 @@ from transformers import (
 )
 
 from datasets import Dataset
+
+# Add parent directory to path to allow importing from `bilingual`
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 
 # Set up logging
 logging.basicConfig(
@@ -86,6 +95,7 @@ def tokenize_function(examples: Dict[str, List[str]], tokenizer, max_length: int
     Returns:
         Dictionary containing tokenized inputs
     """
+    # The tokenizer __call__ method handles the tokenization.
     return tokenizer(
         examples["text"],
         max_length=max_length,
@@ -99,11 +109,16 @@ def train(
     train_data: str,
     val_data: str,
     model_name_or_path: str,
+    tokenizer_path: str,
     output_dir: str,
+    use_qlora: bool = False,
+    lora_r: int = 8,
+    lora_alpha: int = 16,
+    lora_dropout: float = 0.05,
     max_length: int = 128,
     batch_size: int = 8,
     num_epochs: int = 3,
-    learning_rate: float = 5e-5,
+    learning_rate: float = 2e-4,  # Higher LR for LoRA
     weight_decay: float = 0.01,
     warmup_steps: int = 500,
     gradient_accumulation_steps: int = 1,
@@ -120,7 +135,12 @@ def train(
         train_data: Path to training data file (text file with one example per line)
         val_data: Path to validation data file (text file with one example per line)
         model_name_or_path: Model identifier from huggingface.co/models or a local path
+        tokenizer_path: Path to the directory containing the custom tokenizer files
         output_dir: Directory to save the model and checkpoints
+        use_qlora: Whether to use QLoRA for fine-tuning
+        lora_r: LoRA attention dimension
+        lora_alpha: LoRA alpha scaling parameter
+        lora_dropout: Dropout probability for LoRA layers
         max_length: Maximum length of input sequences
         batch_size: Batch size for training and evaluation
         num_epochs: Number of training epochs
@@ -142,21 +162,52 @@ def train(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load tokenizer and model
-    logger.info(f"Loading tokenizer and model from {model_name_or_path}")
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
-    config = AutoConfig.from_pretrained(model_name_or_path)
+    # Load tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
-    # For causal language modeling
+    # Quantization and model loading
+    quantization_config = None
+    if use_qlora:
+        logger.info("Using QLoRA. Preparing 4-bit quantization.")
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+
+    logger.info(f"Loading model from {model_name_or_path}")
+    config = AutoConfig.from_pretrained(model_name_or_path)
     model = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
         config=config,
+        quantization_config=quantization_config,
+        device_map="auto",
     )
 
-    # Add special tokens if they don't exist
-    special_tokens = ["<|bn|>", "<|en|>"]
-    tokenizer.add_tokens(special_tokens, special_tokens=True)
+    # Resize token embeddings before applying LoRA
     model.resize_token_embeddings(len(tokenizer))
+
+    # Add special tokens if they don't exist in the tokenizer
+    special_tokens = ["<|bn|>", "<|en|>"]
+    tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+    model.resize_token_embeddings(len(tokenizer))
+
+    if use_qlora:
+        logger.info("Applying LoRA adapter to the model.")
+        lora_config = LoraConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+            # Typically, target attention query and value layers
+            target_modules=["q_proj", "v_proj"],
+        )
+        model = get_peft_model(model, lora_config)
+        model.print_trainable_parameters()
 
     # Load and preprocess data
     logger.info("Loading and preprocessing data")
@@ -185,24 +236,26 @@ def train(
     # Set up training arguments
     training_args = TrainingArguments(
         output_dir=str(output_dir),
-        evaluation_strategy="epoch",
-        learning_rate=learning_rate,
+        overwrite_output_dir=True,
+        num_train_epochs=num_epochs,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
+        learning_rate=learning_rate,
         weight_decay=weight_decay,
-        save_total_limit=3,
-        num_train_epochs=num_epochs,
-        fp16=fp16,
         warmup_steps=warmup_steps,
         gradient_accumulation_steps=gradient_accumulation_steps,
         max_grad_norm=max_grad_norm,
+        fp16=fp16,
         logging_dir=str(output_dir / "logs"),
         logging_steps=100,
-        save_strategy="epoch",
+        evaluation_strategy="steps",
+        eval_steps=1000,
+        save_strategy="steps",
+        save_steps=1000,
+        save_total_limit=3,
         load_best_model_at_end=True,
-        metric_for_best_model="loss",
-        greater_is_better=False,
-        report_to=["tensorboard"],
+        report_to="tensorboard",
+        seed=seed,
     )
 
     # Initialize Trainer
@@ -219,9 +272,9 @@ def train(
     logger.info("Starting training")
     train_result = trainer.train()
 
-    # Save the model and tokenizer
+    # Save the final model and tokenizer
     trainer.save_model()
-    tokenizer.save_pretrained(output_dir)
+    tokenizer.save_pretrained(str(output_dir))
 
     # Log training summary
     logger.info("Training completed!")
@@ -260,15 +313,27 @@ def main():
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        default="facebook/mbart-large-cc25",
+        default="ai-forever/mGPT",
         help="Model identifier from huggingface.co/models or a local path",
+    )
+    parser.add_argument(
+        "--tokenizer_path",
+        type=str,
+        default="models/tokenizer/",
+        help="Path to the directory containing the custom tokenizer",
     )
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="models/language_model",
+        default="models/bilingual-lm",
         help="Directory to save the model and checkpoints",
     )
+
+    # QLoRA parameters
+    parser.add_argument("--use_qlora", action="store_true", help="Enable QLoRA fine-tuning")
+    parser.add_argument("--lora_r", type=int, default=8, help="LoRA r parameter")
+    parser.add_argument("--lora_alpha", type=int, default=16, help="LoRA alpha parameter")
+    parser.add_argument("--lora_dropout", type=float, default=0.05, help="LoRA dropout")
 
     # Training parameters
     parser.add_argument("--max_length", type=int, default=128, help="Max sequence length")
@@ -309,7 +374,12 @@ def main():
         train_data=args.train_data,
         val_data=args.val_data,
         model_name_or_path=args.model_name_or_path,
+        tokenizer_path=args.tokenizer_path,
         output_dir=args.output_dir,
+        use_qlora=args.use_qlora,
+        lora_r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
         max_length=args.max_length,
         batch_size=args.batch_size,
         num_epochs=args.num_epochs,

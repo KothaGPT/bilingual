@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 import torch
 import torch.nn as nn
 from transformers import (
-    AutoConfig,
     AutoModel,
     AutoTokenizer,
 )
