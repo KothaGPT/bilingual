@@ -1,10 +1,10 @@
 {
   "benchmark_info": {
-    "timestamp": "2025-10-14 23:42:58",
+    "timestamp": "2025-12-10 09:58:47",
     "system_info": {
-      "cpu_count": 8,
-      "memory_gb": 16.0,
-      "python_version": "3.10.18",
+      "cpu_count": 4,
+      "memory_gb": 24.0,
+      "python_version": "3.13.3",
       "cuda_available": false,
       "gpu_count": 0,
       "gpu_name": null
@@ -20,40 +20,40 @@
           "max_tokens": 50,
           "batch_performance": {
             "1": {
-              "avg_latency_ms": 0.0171661376953125,
-              "tokens_per_second": 2912711.111111111,
-              "throughput_requests_per_second": 58254.22222222222,
+              "avg_latency_ms": 0.024080276489257812,
+              "tokens_per_second": 2076388.1188118812,
+              "throughput_requests_per_second": 41527.762376237624,
               "successful_generations": 1,
               "memory_used_mb": 0.0
             },
             "4": {
-              "avg_latency_ms": 0.010013580322265625,
-              "tokens_per_second": 4993219.047619048,
-              "throughput_requests_per_second": 399457.5238095238,
+              "avg_latency_ms": 0.006079673767089844,
+              "tokens_per_second": 8224125.490196078,
+              "throughput_requests_per_second": 657930.0392156863,
               "successful_generations": 4,
               "memory_used_mb": 0.0
             },
             "8": {
-              "avg_latency_ms": 0.006943941116333008,
-              "tokens_per_second": 7200521.888412017,
-              "throughput_requests_per_second": 1152083.5021459227,
+              "avg_latency_ms": 0.009387731552124023,
+              "tokens_per_second": 5326100.317460317,
+              "throughput_requests_per_second": 852176.0507936508,
               "successful_generations": 8,
               "memory_used_mb": 0.0
             }
           },
           "latency_stats": {
-            "mean_latency_ms": 0.011374553044637045,
-            "median_latency_ms": 0.010013580322265625,
-            "p95_latency_ms": 0.016450881958007812,
-            "p99_latency_ms": 0.017023086547851562
+            "mean_latency_ms": 0.013182560602823893,
+            "median_latency_ms": 0.009387731552124023,
+            "p95_latency_ms": 0.02261102199554443,
+            "p99_latency_ms": 0.023786425590515137
           },
           "memory_usage": {},
           "error_rate": 0.0
         }
       },
       "summary": {
-        "avg_latency_ms": 0.011374553044637045,
-        "total_throughput": 16716247.295319844,
+        "avg_latency_ms": 0.013182560602823893,
+        "total_throughput": 17178247.77885385,
         "avg_memory_usage_mb": 0.0,
         "overall_error_rate": 0.0,
         "tasks_completed": 1
