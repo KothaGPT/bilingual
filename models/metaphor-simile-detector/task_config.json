@@ -9,12 +9,25 @@
     "B-SIMILE",
     "I-SIMILE"
   ],
-  "max_length": 256,
+  "max_length": 384,
   "training": {
-    "num_epochs": 15,
-    "batch_size": 16,
-    "learning_rate": 3e-5,
+    "num_epochs": 10,
+    "batch_size": 32,
+    "gradient_accumulation_steps": 1,
+    "learning_rate": 5e-5,
+    "lr_scheduler_type": "cosine_with_restarts",
     "warmup_ratio": 0.1,
-    "weight_decay": 0.01
+    "weight_decay": 0.01,
+    "fp16": true,
+    "evaluation_strategy": "epoch",
+    "save_strategy": "epoch",
+    "load_best_model_at_end": true,
+    "metric_for_best_model": "f1",
+    "greater_is_better": true
+  },
+  "optimization": {
+    "use_amp": true,
+    "gradient_clipping": 1.0,
+    "early_stopping_patience": 3
   }
 }

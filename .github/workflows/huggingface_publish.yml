@@ -1,5 +1,6 @@
 name: 🤗 Hugging Face Publish
 
+# Only trigger on main branch pushes to model files or manual triggers
 on:
   workflow_dispatch:
     inputs:
@@ -7,33 +8,65 @@ on:
         description: "Run publish script in dry-run mode"
         required: false
         default: "false"
+        type: boolean
   push:
     branches:
       - main
     paths:
       - "models/**"
+      - ".github/workflows/huggingface_publish.yml"
+
+# Set job defaults and environment variables
+env:
+  PYTHON_VERSION: '3.11'
+  WORKING_DIR: ${{ github.workspace }}
+  HF_CACHE: ${{ github.workspace }}/.cache/huggingface
+
+# Set permissions for the workflow
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # Needed for OIDC token authentication
 
 jobs:
   validate:
     name: Validate Models
     runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 30
+    env:
+      PYTHONUNBUFFERED: 1
       
-      - name: Setup Python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+      
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
       
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
       - name: Validate model structures
+        id: validate_models
         run: |
+          set -e
+          echo "Validating model structures..."
           python -c "
 import sys
 from pathlib import Path
@@ -45,79 +78,218 @@ required_models = [
     'readability-classifier',
 ]
 
+all_valid = True
 for model in required_models:
     model_path = models_dir / model
     if not model_path.exists():
-        print(f'Warning: {model} not found')
-        continue
-    print(f'✓ Found {model}')
+        print(f'::error::Missing required model directory: {model}')
+        all_valid = False
+    else:
+        print(f'✓ Found {model}')
+
+if not all_valid:
+    sys.exit(1)
 "
       
       - name: Run tests
+        if: steps.validate_models.outcome == 'success'
         run: |
-          pytest tests/ -v --maxfail=3 || echo "Some tests failed"
+          set -e
+          echo "Running tests..."
+          python -m pytest tests/ -v --cov=./ --cov-report=xml --junitxml=test-results.xml
+          
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
 
   publish:
     name: Publish Models
     needs: validate
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 120
+    if: needs.validate.result == 'success' && (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v'))
     
+    env:
+      HF_HUB_DISABLE_PROGRESS_BARS: 1
+      HF_HUB_VERBOSITY: info
+      
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository with LFS
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           lfs: true
       
-      - name: Setup Python
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+      
+      - name: Cache Hugging Face models
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HF_CACHE }}
+          key: ${{ runner.os }}-hf-cache-${{ hashFiles('models/**') }}
+          restore-keys: |
+            ${{ runner.os }}-hf-cache-
       
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install huggingface_hub
+          python -m pip install --upgrade pip setuptools wheel
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install huggingface_hub[cli]>=0.23.0
       
-      - name: Configure Hugging Face CLI
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-
       - name: 🗂️ Prepare Dataset
+        continue-on-error: true
         run: |
-          python scripts/prepare_hf_dataset.py --dataset bilingual_corpus || echo "Dataset not ready yet"
-
+          if [ -f "scripts/prepare_hf_dataset.py" ]; then
+            python scripts/prepare_hf_dataset.py --dataset bilingual_corpus
+          else
+            echo "Dataset preparation script not found, skipping..."
+          fi
+      
       - name: 🧰 Prepare Model Cards
+        if: success() || failure()
         run: |
-          python scripts/huggingface/generate_model_card.py
-
+          if [ -f "scripts/huggingface/generate_model_card.py" ]; then
+            python scripts/huggingface/generate_model_card.py
+          else
+            echo "Model card generation script not found, skipping..."
+          fi
+      
       - name: 🚀 Publish All Models
+        id: publish_models
         run: |
-          bash scripts/huggingface/publish_all.sh ${{ github.event.inputs.dry_run }}
+          set -e
+          if [ -f "scripts/huggingface/publish_all.sh" ]; then
+            chmod +x scripts/huggingface/publish_all.sh
+            ./scripts/huggingface/publish_all.sh ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+          else
+            echo "Publish script not found, skipping..."
+            exit 1
+          fi
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-
+          HF_HUB_CACHE: ${{ env.HF_CACHE }}
+      
       - name: ✅ Validate Published Models
+        if: steps.publish_models.outcome == 'success' && github.event.inputs.dry_run != 'true'
         run: |
-          python scripts/huggingface/test_hf_model.py
+          if [ -f "scripts/huggingface/test_hf_model.py" ]; then
+            python -m pytest scripts/huggingface/test_hf_model.py -v
+          else
+            echo "Model validation script not found, skipping..."
+          fi
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-
-      - name: 📄 Upload Log Artifact
+      
+      - name: 📄 Upload Logs and Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hf_publish_logs
+          name: hf-publish-artifacts-${{ github.run_id }}
           path: |
             logs/
             outputs/
             reports/
+            ${{ env.HF_CACHE }}/logs/
+          retention-days: 7
+          compression-level: 9
 
   notify:
     name: Notify Completion
     runs-on: ubuntu-latest
-    needs: publish
+    needs: [validate, publish]
+    if: always()
+    
     steps:
-      - name: 📨 Send Publish Notification
+      - name: Check job status
+        id: check_status
         run: |
-          echo "✅ Hugging Face models published successfully by $GITHUB_ACTOR"
+          if [[ "${{ needs.validate.result }}" != "success" ]]; then
+            echo "status=validation_failed" >> $GITHUB_OUTPUT
+            echo "message=❌ Model validation failed! Check the validate job logs." >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.publish.result }}" != "success" ]]; then
+            echo "status=publish_failed" >> $GITHUB_OUTPUT
+            echo "message=❌ Model publishing failed! Check the publish job logs." >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Hugging Face models published successfully by $GITHUB_ACTOR" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Send notification
+        uses: actions/github-script@v7
+        if: github.event_name != 'workflow_dispatch'  # Skip for manual runs
+        with:
+          script: |
+            const { status, message } = process.env;
+            const { GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_SERVER_URL } = process.env;
+            const runUrl = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`;
+            
+            // Example: Send to Slack or other notification service
+            // await fetch('https://hooks.slack.com/...', {
+            //   method: 'POST',
+            //   body: JSON.stringify({
+            //     text: `${message}\n${runUrl}`,
+            //   }),
+            // });
+            
+            // For now, just log to workflow
+            console.log(`::notice::${message}`);
+        env:
+          status: ${{ steps.check_status.outputs.status }}
+          message: ${{ steps.check_status.outputs.message }}
+      
+      - name: Update PR comment
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { status, message } = process.env;
+            const { context } = require('@actions/github');
+            const github = require('@actions/github');
+            
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const { owner, repo } = context.repo;
+            const prNumber = context.issue.number;
+            
+            // Find existing comment from this workflow
+            const { data: comments } = await octokit.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+            });
+            
+            const botComment = comments.find(
+              comment => 
+                comment.user.login === 'github-actions[bot]' &&
+                comment.body.includes('## 🤗 Model Publishing Status')
+            );
+            
+            const commentBody = `## 🤗 Model Publishing Status\n\n${message}\n\n[View workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
+            
+            if (botComment) {
+              await octokit.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: botComment.id,
+                body: commentBody,
+              });
+            } else {
+              await octokit.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: commentBody,
+              });
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ steps.check_status.outputs.status }}
+          message: ${{ steps.check_status.outputs.message }}
