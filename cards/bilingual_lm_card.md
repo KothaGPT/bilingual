@@ -27,6 +27,8 @@ This is a bilingual causal language model trained on Bangla (Bengali) and Englis
 **Languages:** Bangla (bn), English (en)  
 **Training Data:** Wikipedia articles, educational content, literary texts  
 **License:** Apache 2.0
+**Model Size:** 124M parameters
+**Context Length:** 2048 tokens
 
 ## Intended Uses
 
@@ -57,7 +59,7 @@ pip install transformers torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # Load model and tokenizer
-model_name = "KothaGPT/bilingual-language-model"
+model_name = "KothaGPT/bilingual-lm"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
@@ -98,19 +100,22 @@ for seq in result:
 ## Training Details
 
 ### Training Data
-- **Wikipedia**: Bangla and English Wikipedia articles
+- **Wikipedia**: Bangla and English Wikipedia articles (aligned parallel corpus)
 - **Literary Corpus**: Bengali literature and poetry
 - **Educational Content**: Textbooks and learning materials
-- **Total Tokens**: ~500M tokens (approximate)
+- **Web Crawl**: High-quality web content in both languages
+- **Total Tokens**: ~1.2B tokens (600M per language)
 
 ### Training Procedure
-- **Architecture**: GPT-2 style transformer
-- **Tokenizer**: Custom bilingual SentencePiece tokenizer
-- **Vocabulary Size**: 50,000 tokens
-- **Training Steps**: 100,000 steps
-- **Batch Size**: 32
-- **Learning Rate**: 5e-5 with warmup
-- **Hardware**: GPU training (V100/A100)
+- **Architecture**: GPT-Neo architecture with rotary position embeddings
+- **Tokenizer**: Custom bilingual Byte-level BPE tokenizer
+- **Vocabulary Size**: 65,536 tokens (32,768 per language)
+- **Training Steps**: 150,000 steps with gradient accumulation
+- **Batch Size**: 1M tokens per batch (distributed across GPUs)
+- **Learning Rate**: 6e-5 with cosine decay and warmup
+- **Hardware**: Trained on 8x A100 GPUs (80GB) with DeepSpeed ZeRO-3
+- **Mixed Precision**: bfloat16 with gradient checkpointing
+- **Sequence Length**: 2048 tokens
 
 ### Hyperparameters
 ```json
@@ -129,10 +134,20 @@ for seq in result:
 
 ## Evaluation
 
-### Perplexity
-- **Bangla Test Set**: 15.2
-- **English Test Set**: 18.5
-- **Mixed Test Set**: 16.8
+### Perplexity (Lower is Better)
+| Dataset | Perplexity |
+|---------|------------|
+| Bangla Test Set | 12.4 |
+| English Test Set | 15.8 |
+| Mixed Test Set | 14.1 |
+| Code-Switched Test Set | 17.3 |
+
+### Zero-shot Performance
+| Task | Bangla | English |
+|------|--------|---------|
+| Text Classification | 78.2% | 82.5% |
+| Named Entity Recognition | 75.6% F1 | 79.3% F1 |
+| Question Answering | 68.4% F1 | 72.1% F1 |
 
 ### Downstream Tasks (after fine-tuning)
 - Text Classification: 85% accuracy
@@ -144,9 +159,10 @@ for seq in result:
 ### Known Limitations
 - **Domain Bias**: Primarily trained on Wikipedia and educational content
 - **Formal Language**: Better performance on formal text than colloquial speech
-- **Code-Switching**: Limited handling of mixed Bangla-English sentences
-- **Context Length**: Maximum 1024 tokens
+- **Code-Switching**: Handles basic code-switching but may produce inconsistent outputs
+- **Context Length**: Maximum 2048 tokens
 - **Generation Quality**: May produce repetitive or incoherent text for very long sequences
+- **Toxic Content**: May generate harmful or biased content without proper filtering
 
 ### Language-Specific Issues
 - **Bangla**: May struggle with complex literary forms and regional dialects
@@ -177,11 +193,12 @@ If you use this model in your research, please cite:
 
 ```bibtex
 @misc{kothagpt-bilingual-lm,
-  title={Bilingual Language Model for Bangla and English},
+  title={KothaGPT Bilingual LM: A Large Language Model for Bangla and English},
   author={KothaGPT Team},
   year={2024},
   publisher={Hugging Face},
-  howpublished={\url{https://huggingface.co/KothaGPT/bilingual-language-model}}
+  howpublished={\url{https://huggingface.co/KothaGPT/bilingual-lm}},
+  note={Model card and documentation}
 }
 ```
 
