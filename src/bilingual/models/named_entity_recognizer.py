@@ -6,12 +6,11 @@ Detects entities like persons, organizations, locations, works, events, etc.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
 from transformers import (
-    AutoConfig,
     AutoModelForTokenClassification,
     AutoTokenizer,
 )

@@ -15,7 +15,6 @@ from bilingual import api
 from bilingual.api import list_available_models
 from bilingual.config import get_settings
 from bilingual.data_augmentation import augment_text
-from bilingual.data_utils import BilingualDataset
 from bilingual.evaluation import bleu_score, evaluate_generation, evaluate_translation, rouge_score
 from bilingual.human_evaluation import (
     calculate_content_safety_score,

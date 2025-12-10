@@ -6,7 +6,7 @@ Fine-tuned on poetry, novels, and literary texts.
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -14,8 +14,6 @@ from transformers import (
     GPT2Config,
     GPT2LMHeadModel,
     PreTrainedTokenizerFast,
-    Trainer,
-    TrainingArguments,
 )
 
 logger = logging.getLogger(__name__)

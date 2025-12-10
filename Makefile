@@ -128,16 +128,9 @@ hf-login:
 hf-upload-model:
 	@echo "Uploading model to Hugging Face Hub..."
 	python3 scripts/huggingface/upload_model.py \
-		--model-dir models/bilingual-lm/ \
-		--repo-id "your-username/bilingual-lm" \
-		--commit-message "Initial model release"
+		--model models/bilingual-lm/ \
+		--repo "KothaGPT/bilingual-lm" \
+		--message "Initial model release"
 
-hf-upload-dataset:
-	@echo "Uploading dataset to Hugging Face Hub..."
-	python3 scripts/huggingface/upload_dataset.py \
-		--dataset-dir datasets/processed/final/ \
-		--repo-id "your-username/bilingual-dataset" \
-		--commit-message "Initial dataset release"
-
-hf-release: hf-login hf-upload-model hf-upload-dataset
-	@echo "Hugging Face release completed successfully!"
+hf-release: hf-login hf-upload-model
+	@echo "Hugging Face model upload completed successfully!"

@@ -11,9 +11,7 @@ This module provides various augmentation methods to expand datasets:
 """
 
 import random
-import re
-from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import List
 
 
 class DataAugmenter:

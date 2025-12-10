@@ -162,6 +162,11 @@ def train(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Load tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
     # Quantization and model loading
     quantization_config = None
     if use_qlora:

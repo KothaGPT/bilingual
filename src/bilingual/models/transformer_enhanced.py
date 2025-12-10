@@ -11,17 +11,18 @@ Features:
 - Flash Attention 2
 """
 
-import math
-from typing import Any, Dict, List, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch.cuda.amp import autocast
 
 try:
-    from flash_attn import flash_attn_func
+    # Keep the import but don't assign it to a name since it's used in the class
+    from flash_attn import flash_attn_func  # noqa: F401
 
     HAS_FLASH_ATTN = True
 except ImportError:
@@ -72,7 +73,8 @@ class RotaryPositionalEmbedding(nn.Module):
         """Applies rotary embeddings to input tensor.
 
         Args:
-            x: Input tensor of shape [batch_size, seq_len, num_heads, head_dim] or [seq_len, batch_size, num_heads, head_dim]
+            x: Input tensor of shape [batch_size, seq_len, num_heads, head_dim] or
+                [seq_len, batch_size, num_heads, head_dim]
             seq_dim: Dimension containing the sequence length (default: -2)
 
         Returns:
@@ -200,7 +202,6 @@ class MultiQueryAttention(nn.Module):
     ) -> Tuple[Tensor, Optional[Tensor]]:
         """Forward pass for multi-query attention."""
         batch_size, tgt_len, _ = query.size()
-        src_len = key.size(1)
 
         # Project queries, keys, values
         q = self.q_proj(query)  # [batch_size, tgt_len, embed_dim]

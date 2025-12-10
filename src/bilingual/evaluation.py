@@ -4,8 +4,21 @@ Evaluation metrics and utilities for bilingual models.
 Provides metrics for generation, translation, and classification tasks.
 """
 
+import math
+import re
 import warnings
+from collections import Counter
 from typing import Any, Dict, List
+
+try:
+    import nltk
+    from nltk.tokenize import word_tokenize
+    from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
+    from nltk.translate.meteor_score import meteor_score
+
+    NLTK_AVAILABLE = True
+except ImportError:
+    NLTK_AVAILABLE = False
 
 
 def compute_bleu(
@@ -34,8 +47,8 @@ def compute_bleu(
         bleu = corpus_bleu(predictions, refs_transposed)
         return float(bleu.score)
 
-    except ImportError:
-        warnings.warn("sacrebleu not installed. Install with: pip install sacrebleu")
+    except ImportError as e:
+        warnings.warn(f"sacrebleu not installed. Install with: pip install sacrebleu. Error: {e}")
         return 0.0
 
 
@@ -71,8 +84,10 @@ def compute_rouge(
 
         return scores
 
-    except ImportError:
-        warnings.warn("rouge-score not installed. Install with: pip install rouge-score")
+    except ImportError as e:
+        warnings.warn(
+            f"rouge-score not installed. Install with: pip install rouge-score. Error: {e}"
+        )
         return {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0}
 
 
@@ -137,8 +152,10 @@ def compute_f1(
         score = f1_score(references, predictions, average=average)
         return float(score)
 
-    except ImportError:
-        warnings.warn("scikit-learn not installed. Install with: pip install scikit-learn")
+    except ImportError as e:
+        warnings.warn(
+            f"scikit-learn not installed. Install with: pip install scikit-learn. Error: {e}"
+        )
         return 0.0
 
 
@@ -176,30 +193,7 @@ def evaluate_model(
     results["dataset"] = dataset_path
     results["model"] = model_name
     results["num_samples"] = str(len(dataset))
-
-
-"""
-Evaluation metrics and utilities for bilingual models.
-
-Provides metrics for generation, translation, and classification tasks.
-"""
-
-import math
-import re
-import warnings
-from collections import Counter
-from typing import Any, Dict, List
-
-try:
-    import nltk
-    from nltk.tokenize import word_tokenize
-    from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
-    from nltk.translate.meteor_score import meteor_score
-
-    NLTK_AVAILABLE = True
-except ImportError:
-    NLTK_AVAILABLE = False
-    print("Warning: NLTK not available. Install with: pip install nltk")
+    return results
 
 
 class BilingualEvaluator:
