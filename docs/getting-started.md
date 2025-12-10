@@ -27,7 +27,7 @@ pip install bilingual[dev]
 Or install from source:
 
 ```bash
-git clone https://github.com/bilingual-nlp/bilingual.git
+git clone https://github.com/kothagpt/bilingual.git
 cd bilingual
 pip install -e .
 ```
@@ -154,8 +154,8 @@ bb.load_model("t5-small")  # Instead of t5-base
 
 ### Getting Help
 
-- Check the [GitHub Issues](https://github.com/bilingual-nlp/bilingual/issues) for known problems
-- Join our [GitHub Discussions](https://github.com/bilingual-nlp/bilingual/discussions) for community support
+- Check the [GitHub Issues](https://github.com/kothagpt/bilingual/issues) for known problems
+- Join our [GitHub Discussions](https://github.com/kothagpt/bilingual/discussions) for community support
 - File a bug report or feature request on GitHub
 
 ---

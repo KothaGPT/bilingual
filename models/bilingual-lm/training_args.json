@@ -14,5 +14,5 @@
   "seed": 42,
   "max_train_samples": null,
   "max_val_samples": null,
-  "fp16": true
+  "fp16": false
 }

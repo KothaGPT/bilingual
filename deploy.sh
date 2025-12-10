@@ -217,7 +217,7 @@ create_deployment_docs() {
 
 ```bash
 # Clone the repository
-git clone https://github.com/bilingual-nlp/bilingual.git
+git clone https://github.com/kothagpt/bilingual.git
 cd bilingual
 
 # Deploy with Docker Compose
@@ -337,7 +337,7 @@ See the [API Documentation](http://localhost:8000/docs) for complete reference.
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/bilingual-nlp/bilingual/issues
+- GitHub Issues: https://github.com/kothagpt/bilingual/issues
 - Documentation: https://bilingual.readthedocs.io
 EOF
 

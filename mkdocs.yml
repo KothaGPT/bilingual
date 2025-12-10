@@ -4,7 +4,7 @@ site_description: >-
   Next-generation bilingual Bangla–English NLP ecosystem for advanced
   text processing, translation, and generation.
 site_author: Bilingual Project Contributors
-site_url: https://bilingual-nlp.github.io/bilingual/
+site_url: https://kothagpt.github.io/bilingual/
 
 # Analytics
 extra:
@@ -24,7 +24,7 @@ extra:
   #       type: negative
 
 # Repository
-repo_url: https://github.com/bilingual-nlp/bilingual
+repo_url: https://github.com/kothagpt/bilingual
 repo_name: bilingual-nlp/bilingual
 edit_uri: edit/main/docs/
 
@@ -162,7 +162,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/bilingual-nlp/bilingual
+      link: https://github.com/kothagpt/bilingual
       name: GitHub Repository
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/bilingual/

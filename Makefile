@@ -89,7 +89,7 @@ train-tokenizer:
 	python3 scripts/train_tokenizer.py --input datasets/processed/final/train.jsonl datasets/processed/final/val.jsonl datasets/processed/final/test.jsonl --output models/tokenizer/ --vocab-size 1000
 
 train-lm:
-	python3 scripts/train_lm.py --train_data datasets/processed/final/train.jsonl --val_data datasets/processed/final/val.jsonl --output_dir models/bilingual-lm/ --model_name_or_path microsoft/DialoGPT-small
+	python3 scripts/train_lm.py --train_data datasets/processed/final/train.jsonl --val_data datasets/processed/final/val.jsonl --output_dir models/bilingual-lm/ --model_name_or_path microsoft/DialoGPT-small --no_fp16
 
 train-translation:
 	python3 scripts/train_translation.py --data datasets/processed/final/ --output models/translation/
