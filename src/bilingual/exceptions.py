@@ -36,3 +36,7 @@ class EvaluationError(BilingualError):
 class ResourceUnavailableError(BilingualError):
     """Raised when a required resource (GPU, File, API) is missing."""
     pass
+
+class ValidationError(BilingualError):
+    """Raised when input validation fails (e.g. payload too large)."""
+    pass

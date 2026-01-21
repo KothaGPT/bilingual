@@ -21,13 +21,19 @@ def load_tokenizer(
     return model_manager.get_tokenizer(model_name, force_reload=force_reload)
 
 
-def load_model(model_name: str, force_reload: bool = False, **kwargs) -> Any:
+def load_model(
+    model_name: str, 
+    version: Optional[str] = None, 
+    force_reload: bool = False, 
+    **kwargs
+) -> Any:
     """Load a model using the central ModelManager."""
     model_type = kwargs.get("model_type", "auto")
     load_in_8bit = kwargs.get("load_in_8bit", True)
     
     return model_manager.load_model(
         model_name=model_name,
+        version=version,
         model_type=model_type,
         load_in_8bit=load_in_8bit,
         force_reload=force_reload
@@ -89,6 +95,7 @@ def tokenize(
 def generate(
     prompt: str,
     model_name: str = "bilingual-small-lm",
+    version: Optional[str] = None,
     max_tokens: int = 100,
     temperature: float = 0.7,
     top_p: float = 0.9,
@@ -112,7 +119,11 @@ def generate(
         >>> generate("Once upon a time, there was a brave rabbit")
         'Once upon a time, there was a brave rabbit who lived in a forest...'
     """
-    model = load_model(model_name)
+    if not prompt or len(prompt) > 5000:
+        from bilingual.exceptions import ValidationError
+        raise ValidationError(f"Prompt length {len(prompt) if prompt else 0} exceeds limit of 5000 or is empty.")
+
+    model = load_model(model_name, version=version)
 
     # Import here to avoid circular dependencies
     from bilingual.models.lm import generate_text
@@ -128,7 +139,12 @@ def generate(
 
 
 def translate(
-    text: str, src: str = "bn", tgt: str = "en", model_name: str = "bilingual-translate", **kwargs
+    text: str, 
+    src: str = "bn", 
+    tgt: str = "en", 
+    model_name: str = "bilingual-translate", 
+    version: Optional[str] = None,
+    **kwargs
 ) -> str:
     """
     Translate text between Bangla and English.
@@ -147,16 +163,25 @@ def translate(
         >>> translate("আমি বই পড়তে ভালোবাসি।", src="bn", tgt="en")
         'I love to read books.'
     """
+    if not text or len(text) > 5000:
+        from bilingual.exceptions import ValidationError
+        raise ValidationError(f"Input text length {len(text) if text else 0} exceeds limit of 5000 or is empty.")
+
     if src == tgt:
         warnings.warn(f"Source and target languages are the same ({src}). Returning original text.")
         return text
 
-    model = load_model(model_name)
-
     # Import here to avoid circular dependencies
     from bilingual.models.translate import translate_text
 
-    return translate_text(model=model, text=text, src_lang=src, tgt_lang=tgt, **kwargs)
+    return translate_text(
+        model=model_name, 
+        text=text, 
+        src_lang=src, 
+        tgt_lang=tgt, 
+        version=version,
+        **kwargs
+    )
 
 
 def readability_check(
@@ -442,14 +467,29 @@ def batch_process(texts: List[str], operation: str, **kwargs) -> List[Any]:
 
     elif operation == "generate":
         model_name = kwargs.get("model_name", "bilingual-small-lm")
-        max_tokens = kwargs.get("max_tokens", 100)
-        return [generate(text, model_name, max_tokens, **kwargs) for text in texts]
+        version = kwargs.get("version")
+        return model_manager.predict_batch(
+            model_name=model_name, 
+            inputs=texts, 
+            version=version,
+            **kwargs
+        )
 
     elif operation == "translate":
         src = kwargs.get("src", "bn")
         tgt = kwargs.get("tgt", "en")
         model_name = kwargs.get("model_name", "bilingual-translate")
-        return [translate(text, src, tgt, model_name) for text in texts]
+        version = kwargs.get("version")
+        
+        from bilingual.models.translate import batch_translate
+        return batch_translate(
+            model=model_name,
+            texts=texts,
+            src_lang=src,
+            tgt_lang=tgt,
+            version=version,
+            **kwargs
+        )
 
     elif operation == "readability_check":
         lang = kwargs.get("lang")
@@ -481,104 +521,18 @@ def fine_tune_model(
 ) -> str:
     """
     Fine-tune a language model on custom data.
-
-    Args:
-        model_name: Name of the base model to fine-tune
-        train_data: List of training examples, each dict with 'input' and 'output' keys
-        output_dir: Directory to save the fine-tuned model
-        epochs: Number of training epochs
-        learning_rate: Learning rate for training
-        batch_size: Batch size for training
-        **kwargs: Additional training parameters
-
-    Returns:
-        Path to the fine-tuned model
-
-    Examples:
-        >>> train_data = [
-        ...     {"input": "Hello, how are you?", "output": "I'm doing well, thank you!"},
-        ...     {"input": "আমি কেমন আছি?", "output": "আমি ভালো আছি, ধন্যবাদ!"}
-        ... ]
-        >>> model_path = fine_tune_model("bilingual-small-lm", train_data, "my_model/")
+    Now delegated to bilingual.training.manager.
     """
-    try:
-        from torch.utils.data import Dataset
-        from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
-    except ImportError:
-        raise ImportError(
-            "PyTorch and transformers are required for fine-tuning. "
-            "Install with: pip install torch transformers"
-        )
-
-    # Load base model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-
-    # Prepare dataset
-    class CustomDataset(Dataset):
-        def __init__(self, data, tokenizer, max_length=512):
-            self.data = data
-            self.tokenizer = tokenizer
-            self.max_length = max_length
-
-        def __len__(self):
-            return len(self.data)
-
-        def __getitem__(self, idx):
-            item = self.data[idx]
-            input_text = item["input"]
-            target_text = item["output"]
-
-            # Combine input and output for language modeling
-            full_text = f"{input_text} {target_text}"
-
-            encodings = self.tokenizer(
-                full_text,
-                truncation=True,
-                padding="max_length",
-                max_length=self.max_length,
-                return_tensors="pt",
-            )
-
-            return {
-                "input_ids": encodings["input_ids"].flatten(),
-                "attention_mask": encodings["attention_mask"].flatten(),
-                "labels": encodings["input_ids"].flatten(),
-            }
-
-    dataset = CustomDataset(train_data, tokenizer)
-
-    # Training arguments
-    training_args = TrainingArguments(
+    from bilingual.training.manager import fine_tune_model as _fine_tune
+    return _fine_tune(
+        model_name=model_name,
+        train_data=train_data,
         output_dir=output_dir,
-        num_train_epochs=epochs,
-        per_device_train_batch_size=batch_size,
+        epochs=epochs,
         learning_rate=learning_rate,
-        save_steps=500,
-        save_total_limit=2,
-        logging_dir=f"{output_dir}/logs",
-        logging_steps=100,
-        **kwargs,
+        batch_size=batch_size,
+        **kwargs
     )
-
-    # Initialize trainer
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=dataset,
-    )
-
-    # Train the model
-    trainer.train()
-
-    # Save the fine-tuned model
-    model.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)
-
-    return output_dir
 
 
 # Convenience aliases

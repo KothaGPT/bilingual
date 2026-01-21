@@ -17,6 +17,7 @@ class ModelEntry:
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     status: str = "active"  # active, deprecated, experimental
+    trust_remote_code: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         return {

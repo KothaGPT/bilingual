@@ -105,6 +105,7 @@ class HealthResponse(BaseModel):
 class RAGRequest(BaseModel):
     query: str = Field(..., min_length=1)
     top_k: int = Field(5, ge=1, le=20)
+    version: Optional[str] = None
 
 class RAGResponse(BaseModel):
     answer: str
