@@ -12,47 +12,26 @@ from bilingual.normalize import normalize_text as _normalize_text
 from bilingual.tokenizer import BilingualTokenizer
 from bilingual.tokenizer import load_tokenizer as _load_tokenizer
 
-# Global cache for loaded models and tokenizers
-_TOKENIZER_CACHE: Dict[str, BilingualTokenizer] = {}
-_MODEL_CACHE: Dict[str, Any] = {}
-
+from bilingual.models.manager import model_manager
 
 def load_tokenizer(
     model_name: str = "bilingual-tokenizer", force_reload: bool = False
-) -> BilingualTokenizer:
-    """
-    Load a tokenizer (with caching).
-
-    Args:
-        model_name: Name or path of the tokenizer model
-        force_reload: Force reload even if cached
-
-    Returns:
-        BilingualTokenizer instance
-    """
-    if model_name not in _TOKENIZER_CACHE or force_reload:
-        _TOKENIZER_CACHE[model_name] = _load_tokenizer(model_name)
-    return _TOKENIZER_CACHE[model_name]
+) -> Any:
+    """Load a tokenizer using the central ModelManager."""
+    return model_manager.get_tokenizer(model_name, force_reload=force_reload)
 
 
 def load_model(model_name: str, force_reload: bool = False, **kwargs) -> Any:
-    """
-    Load a language model (with caching).
-
-    Args:
-        model_name: Name or path of the model
-        force_reload: Force reload even if cached
-        **kwargs: Additional arguments for model loading
-
-    Returns:
-        Loaded model instance
-    """
-    if model_name not in _MODEL_CACHE or force_reload:
-        # Import here to avoid circular dependencies
-        from bilingual.models.loader import load_model_from_name
-
-        _MODEL_CACHE[model_name] = load_model_from_name(model_name, **kwargs)
-    return _MODEL_CACHE[model_name]
+    """Load a model using the central ModelManager."""
+    model_type = kwargs.get("model_type", "auto")
+    load_in_8bit = kwargs.get("load_in_8bit", True)
+    
+    return model_manager.load_model(
+        model_name=model_name,
+        model_type=model_type,
+        load_in_8bit=load_in_8bit,
+        force_reload=force_reload
+    )
 
 
 def normalize_text(text: str, lang: Optional[str] = None, **kwargs) -> str:
